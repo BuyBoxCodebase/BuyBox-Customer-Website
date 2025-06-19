@@ -62,19 +62,10 @@
 
 ## 🖼️ Screenshots
 
-<<<<<<< Updated upstream
 ![Screenshot 2025-06-18 231737](https://github.com/user-attachments/assets/093de6d0-76cd-4e9e-9501-13a299e8d840)
 ![Screenshot 2025-06-18 231538](https://github.com/user-attachments/assets/7e55b6cb-4d61-47d3-8ff7-82790ef72163)
 ![Screenshot 2025-06-18 231458](https://github.com/user-attachments/assets/36de7c76-0a77-4263-a671-8087a5126986)
 
-
-=======
-> _(Add preview images here, e.g., landing page, product view, login)_
-![Landing Page](image.png)
-![Login Page](image-1.png)
-![Product view](image-3.png)
->>>>>>> Stashed changes
----
 
 ## 🧑‍💻 Author
 
@@ -84,8 +75,5 @@ Made with ❤️ by [Soumya Raj Sarkar](https://github.com/Snaju003)
 
 ## 📄 License
 
-<<<<<<< Updated upstream
 MIT License © 2025 BuyBox
-=======
-MIT License © 2025 BuyBox
->>>>>>> Stashed changes
+
