@@ -136,7 +136,7 @@ function SubcategoryPageContent() {
 
   return (
     <motion.div
-      className="container mx-auto px-0 py-8"
+      className="container mx-auto px-0 py-24"
       variants={containerVariants}
       initial="hidden"
       animate="visible">
