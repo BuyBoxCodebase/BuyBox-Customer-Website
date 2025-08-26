@@ -41,7 +41,7 @@ type FormErrors = {
 };
 
 const DELIVERY_COSTS: Record<DeliveryTime, number> = {
-  "24hr": 3,
+  "24hr": 5,
   /* "5hr": 3,
   "3hr": 5 */
 };
