@@ -387,7 +387,7 @@ function CheckoutPageContent() {
                           className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-gray-800 [&:has([data-state=checked])]:border-gray-800 cursor-pointer">
                           <span className="font-semibold">24 Hours</span>
                           <span className="text-sm text-muted-foreground">
-                            $5.00
+                            $3.00
                           </span>
                         </Label>
                       </motion.div>
@@ -756,7 +756,7 @@ function CheckoutPageContent() {
                         <motion.span
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          transition={{ yoyo: Infinity, duration: 0.8 }}>
+                          transition={{ repeat: Infinity, repeatType: "reverse", duration: 0.8 }}>
                           Placing Order...
                         </motion.span>
                       ) : (
