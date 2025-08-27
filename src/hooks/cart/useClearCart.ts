@@ -1,6 +1,5 @@
 import { useState } from "react";
 import axios from "axios";
-import Cookies from "js-cookie";
 
 const useClearCart = () => {
   const [loading, setLoading] = useState(false);
@@ -16,8 +15,8 @@ const useClearCart = () => {
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          withCredentials: true,
         }
       );
 

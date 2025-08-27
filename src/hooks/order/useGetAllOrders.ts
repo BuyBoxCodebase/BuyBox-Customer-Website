@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Order } from "@/types/order/get_all_orders";
-import Cookies from "js-cookie";
-import { useAuth } from "@/context/AuthContext";
 
 const useGetAllOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useAuth();
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -19,9 +19,9 @@ const useGetAllOrders = () => {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/order/get-all-orders`,
         {
           headers: {
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          withCredentials: true,
         }
       );
 
@@ -39,10 +39,10 @@ const useGetAllOrders = () => {
 
   // Fetch orders when token changes
   useEffect(() => {
-    if (isAuthenticated) {
+    if (token) {
       fetchOrders();
     }
-  }, [isAuthenticated]);
+  }, [token]);
 
   // Function to manually refresh orders
   const refreshOrders = () => {

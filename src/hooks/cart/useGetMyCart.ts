@@ -1,7 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
 import { CartResponse } from "@/types/cart/get-my-cart/cart-response";
-import Cookies from "js-cookie";
 
 const useGetMyCart = () => {
   const [cartItem, setCartItem] = useState<CartResponse | null>(null);
@@ -16,7 +15,9 @@ const useGetMyCart = () => {
       const response = await axios.get<CartResponse>(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/cart/get-my-cart`,
         {
-          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
       setCartItem(response.data);

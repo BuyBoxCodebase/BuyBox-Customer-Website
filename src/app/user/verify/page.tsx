@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
-import Cookies from "js-cookie";
+import { headers } from "next/headers";
 import { usePageTracking } from "@/hooks/analytics";
 
 function VerifyPageContent() {
@@ -27,7 +27,7 @@ function VerifyPageContent() {
 
   const { verify, error } = useAuth();
 
-  // console.log(Cookies.get("activationToken"));
+  // console.log(localStorage.getItem("activationToken"));
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -62,7 +62,7 @@ function VerifyPageContent() {
       // await new Promise((resolve) => setTimeout(resolve, 1500));
       await verify({
         activationCode: otp,
-        activationToken: Cookies.get("activationToken") || "",
+        activationToken: localStorage.getItem("activationToken") || "",
       });
       setVerificationStatus("success");
 
@@ -91,7 +91,7 @@ function VerifyPageContent() {
       // Simulate API call
       await verify({
         activationCode: otp,
-        activationToken: Cookies.get("activationToken") || "",
+        activationToken: localStorage.getItem("activationToken") || "",
       });
       // Add actual resend logic here
     } catch (err) {
@@ -100,69 +100,71 @@ function VerifyPageContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white shadow-lg rounded-lg p-6 sm:p-8 m-4">
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold">OTP Verification</h2>
-            <p className="text-gray-600 mt-2">
+    <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+      <div className='w-full max-w-md bg-white shadow-lg rounded-lg p-6 sm:p-8 m-4'>
+        <div className='space-y-6'>
+          <div className='text-center'>
+            <h2 className='text-2xl font-bold'>OTP Verification</h2>
+            <p className='text-gray-600 mt-2'>
               Please enter the 6-digit code sent to your email or phone.
             </p>
           </div>
 
           {verificationStatus === "error" && error && (
-            <Alert variant="destructive">
+            <Alert variant='destructive'>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
           {verificationStatus === "success" && (
-            <Alert className="bg-green-50 border-green-200">
-              <AlertDescription className="text-green-800">
+            <Alert className='bg-green-50 border-green-200'>
+              <AlertDescription className='text-green-800'>
                 Verification successful! Redirecting you to the homepage...
               </AlertDescription>
             </Alert>
           )}
 
-          <div className="space-y-4">
-            <div className="flex justify-center">
+          <div className='space-y-4'>
+            <div className='flex justify-center'>
               <InputOTP
                 value={otp}
                 onChange={setOtp}
                 onComplete={handleComplete}
                 maxLength={6}
-                containerClassName="flex justify-center gap-2"
-                disabled={isVerifying || verificationStatus === "success"}>
+                containerClassName='flex justify-center gap-2'
+                disabled={isVerifying || verificationStatus === "success"}
+              >
                 <InputOTPGroup>
                   {Array.from({ length: 6 }).map((_, index) => (
                     <InputOTPSlot
                       key={index}
                       index={index}
-                      className="w-10 h-10 sm:w-12 sm:h-12 text-center text-lg"
+                      className='w-10 h-10 sm:w-12 sm:h-12 text-center text-lg'
                     />
                   ))}
                 </InputOTPGroup>
               </InputOTP>
             </div>
 
-            <div className="flex flex-col items-center gap-4">
+            <div className='flex flex-col items-center gap-4'>
               {isVerifying && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                <div className='flex items-center gap-2 text-sm text-gray-600'>
+                  <Loader2 className='h-4 w-4 animate-spin' />
                   Verifying...
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className='flex items-center gap-2'>
                 <Button
-                  variant="ghost"
+                  variant='ghost'
                   onClick={handleResend}
                   disabled={
                     isResendDisabled ||
                     isVerifying ||
                     verificationStatus === "success"
                   }
-                  className="text-sm">
+                  className='text-sm'
+                >
                   {isResendDisabled ? (
                     <span>Resend code in {timer}s</span>
                   ) : (
@@ -173,13 +175,14 @@ function VerifyPageContent() {
             </div>
           </div>
 
-          <div className="text-center text-sm text-gray-500">
+          <div className='text-center text-sm text-gray-500'>
             <p>
               Didn't receive the code?{" "}
               <a
-                target="__blank"
-                href="mailto:buyboxsupp0rt@yahoo.com"
-                className="text-blue-600 hover:underline">
+                target='__blank'
+                href='mailto:buyboxsupp0rt@yahoo.com'
+                className='text-blue-600 hover:underline'
+              >
                 Contact Support
               </a>
             </p>

@@ -4,12 +4,14 @@ import {
   CreateOrderRequest,
   CreateOrderResponse,
 } from "@/types/order/create_order";
-import Cookies from "js-cookie";
 
 const useCreateOrder = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orderData, setOrderData] = useState<CreateOrderResponse | null>(null);
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const createOrder = async (orderDetails: CreateOrderRequest) => {
     setLoading(true);
@@ -21,9 +23,9 @@ const useCreateOrder = () => {
         orderDetails,
         {
           headers: {
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          withCredentials: true,
         }
       );
 

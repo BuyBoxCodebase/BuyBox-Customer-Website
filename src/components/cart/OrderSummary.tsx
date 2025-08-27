@@ -24,7 +24,7 @@ export default function OrderSummary() {
 
   // Calculate subtotal using totalPrice from each cart item
   const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const shippingCost = cart.length > 0 ? 3.0 : 0;
+  const shippingCost = cart.length > 0 ? 5.0 : 0;
   const total = subtotal + shippingCost;
 
   return (

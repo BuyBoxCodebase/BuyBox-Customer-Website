@@ -2,7 +2,6 @@
 import { useState } from "react";
 import axios from "axios";
 import { AddCartResponse } from "@/types/cart/add-to-cart/cart-response";
-import Cookies from "js-cookie";
 
 interface Product {
   productId: string;
@@ -27,8 +26,8 @@ const useAddCart = () => {
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          withCredentials: true,
         }
       );
       setLoading(false);

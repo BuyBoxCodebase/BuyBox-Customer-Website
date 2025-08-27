@@ -8,7 +8,7 @@ interface ProductCardProps {
   image: string
 }
 
-export function ProductCard({ name, price, image }: ProductCardProps) {
+export function ProductCard({ name, price, image }: ProductCardProps ) {
   return (
     <div className="space-y-3">
       <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">

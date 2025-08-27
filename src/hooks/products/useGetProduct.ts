@@ -4,6 +4,7 @@ import { Product } from "@/types/product";
 
 const useGetProduct = (productId: string | undefined) => {
   const [product, setProduct] = useState<Product | null>(null);
+  // Set initial loading state to true
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

@@ -17,7 +17,6 @@ import {
   VerifyTokenCredentials,
 } from "@/types/auth";
 import Cookies from "js-cookie";
-import { toast } from "@/hooks/toast/use-toast";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -27,6 +26,30 @@ const initialState: AuthState = {
   isAuthenticated: false,
   error: null,
 };
+
+// Helper function to set token in both localStorage and cookies
+const setAuthToken = (token: string, expiryDays = 7) => {
+  // Set in localStorage
+  localStorage.setItem("token", token);
+
+  // Set in cookies for server-side access
+  Cookies.set("token", token, {
+    expires: expiryDays,
+    path: "/",
+    sameSite: "strict",
+  });
+
+  // Set for axios requests
+  axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+};
+
+// Helper function to remove token from both places
+const removeAuthToken = () => {
+  localStorage.removeItem("token");
+  Cookies.remove("token", { path: "/" });
+  delete axios.defaults.headers.common["Authorization"];
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(initialState);
   const router = useRouter();
@@ -37,43 +60,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get<{ customer: User }>(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/profile/get-details`,
-        {
-          headers: {
-            // Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-      if (response.status == 401 || response.status == 403) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const response = await axios.get<{ customer: User }>(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/profile/get-details`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // console.log(response.data.customer);
         setState((prev) => ({
           ...prev,
-          user: null,
-          isAuthenticated: false,
+          user: response.data.customer,
+          isAuthenticated: true,
           loading: false,
         }));
-        return;
+
+        // Ensure token is set in cookies too
+        Cookies.set("token", token, {
+          expires: 7,
+          path: "/",
+          sameSite: "strict",
+        });
+      } else {
+        setState((prev) => ({ ...prev, loading: false }));
       }
-      const user = response.data.customer;
-      // console.log(user);
-      setState((prev) => ({
-        ...prev,
-        user,
-        isAuthenticated: true,
-        loading: false,
-      }));
     } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
+      removeAuthToken();
       setState((prev) => ({
         ...prev,
         user: null,
         isAuthenticated: false,
         loading: false,
-        error: axiosError.response?.data?.message || "Authentication failed",
       }));
-      console.error("Auth check error:", axiosError);
     }
   };
 
@@ -86,6 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials
       );
       const { accessToken, user } = response.data;
+
+      // Set token in both localStorage and cookies
+      setAuthToken(accessToken);
+
       setState((prev) => ({
         ...prev,
         user,
@@ -114,6 +138,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials
       );
       const { activationToken } = response.data;
+
+      // Set activation token in both places
+      localStorage.setItem("activationToken", activationToken);
       Cookies.set("activationToken", activationToken, {
         expires: 1,
         path: "/",
@@ -145,24 +172,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async (): Promise<boolean> => {
     try {
       setState((prev) => ({ ...prev, loading: true }));
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/auth/logout`,
-        null,
-        {
-          withCredentials: true,
-        }
-      );
-      // console.log(response.data);
-      if (response.status == 201) {
-        toast({
-          title: "Logout successful",
-          description: "You have been logged out successfully.",
-        });
-      }
+      await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/auth/logout`);
     } catch (error) {
       console.error("Logout error:", error);
       return false;
     } finally {
+      // Remove token from both places
+      removeAuthToken();
+      Cookies.remove("activationToken", { path: "/" });
+      localStorage.removeItem("activationToken");
+
       setState({
         ...initialState,
         user: null,
@@ -183,6 +202,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       const { user, accessToken } = response.data;
 
+      // Set token in both localStorage and cookies
+      setAuthToken(accessToken);
+
       setState((prev) => ({
         ...prev,
         user,
@@ -195,63 +217,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...prev,
         loading: false,
         error: axiosError.response?.data?.message || "Verification failed",
-      }));
-      throw error;
-    }
-  };
-
-  const uploadProfilePicture = async (file: File) => {
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/profile/upload/images`,
-        File,
-        {
-          withCredentials: true,
-        }
-      );
-
-      console.log(response.data);
-
-      setState((prev) => ({
-        ...prev,
-        user: prev.user
-          ? { ...prev.user, profilePic: response.data.profilePic }
-          : null,
-      }));
-    } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      setState((prev) => ({
-        ...prev,
-        error: axiosError.response?.data?.message || "Upload failed",
-      }));
-      throw error;
-    }
-  };
-
-  const updateUser = async (data: Partial<User>): Promise<void> => {
-    try {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
-      const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/profile/update-profile`,
-        data,
-        {
-          withCredentials: true,
-        }
-      );
-      const updatedUser = response.data.customer;
-      setState((prev) => ({
-        ...prev,
-        user: updatedUser,
-        loading: false,
-      }));
-      checkAuth();
-      router.push("/user/profile");
-    } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: axiosError.response?.data?.message || "Update failed",
       }));
       throw error;
     }
@@ -270,8 +235,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         clearError,
         verify,
-        uploadProfilePicture,
-        updateUser,
       }}>
       {children}
     </AuthContext.Provider>

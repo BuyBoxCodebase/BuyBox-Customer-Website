@@ -11,8 +11,6 @@ import { useState } from "react";
 import { useCartContext } from "../../context/CartContext";
 import { useToast } from "@/hooks/toast/use-toast";
 import { Product } from "@/types/product";
-import Cookies from "js-cookie";
-import { useAuth } from "@/context/AuthContext";
 
 interface ProductCardProps {
   product: Product;
@@ -23,7 +21,7 @@ export function SubCatCard({ product }: ProductCardProps) {
   const { toast } = useToast();
   const { addProductToCart } = useCartContext();
   const [isAdding, setIsAdding] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const token = localStorage.getItem("token");
 
   // Safely check inventory
   const quantity = product.inventory?.quantity ?? 0;
@@ -35,7 +33,7 @@ export function SubCatCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!isAuthenticated) {
+    if (!token) {
       toast({
         title: "Authentication Required",
         description: "Please log in to add items to your cart.",

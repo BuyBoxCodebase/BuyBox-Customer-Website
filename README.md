@@ -67,6 +67,8 @@
 ![Screenshot 2025-06-18 231458](https://github.com/user-attachments/assets/36de7c76-0a77-4263-a671-8087a5126986)
 
 
+---
+
 ## 🧑‍💻 Author
 
 Made with ❤️ by [Soumya Raj Sarkar](https://github.com/Snaju003)
@@ -76,4 +78,3 @@ Made with ❤️ by [Soumya Raj Sarkar](https://github.com/Snaju003)
 ## 📄 License
 
 MIT License © 2025 BuyBox
-

@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { useCartContext } from "@/context/CartContext";
 import { useEventTracking, usePageTracking } from "@/hooks/analytics";
-import Cookies from "js-cookie";
 import useGetProductWithVariants from "@/hooks/products/useGetProductWithVariants";
 import { useToast } from "@/hooks/toast/use-toast";
 import { OptionGroupDisplay, SelectedOptions } from "@/types/product";
@@ -14,14 +13,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import ProductImageCarousel from "./ProductImageCarousel";
 import ProductDetails from "./ProductDetails";
 import { motion } from "framer-motion";
-import { useAuth } from "@/context/AuthContext";
 
 export default function ProductPageContent() {
   const router = useRouter();
   const { toast } = useToast();
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { isAuthenticated } = useAuth();
+  const token =
+    typeof window != "undefined" ? localStorage.getItem("token") : null;
   usePageTracking();
 
   const { product, loading, error, isVariant } = useGetProductWithVariants(id);
@@ -164,7 +163,7 @@ export default function ProductPageContent() {
   };
 
   const handleAddToCart = async () => {
-    if (!isAuthenticated) {
+    if (!token) {
       toast({
         title: "Authentication Required",
         description: "Please log in to add items to your cart.",
@@ -178,7 +177,7 @@ export default function ProductPageContent() {
       });
       return;
     }
-    if (isAuthenticated && product) {
+    if (token && product) {
       setIsAddingToCart(true);
       try {
         let variantId;

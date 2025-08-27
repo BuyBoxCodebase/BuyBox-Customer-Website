@@ -2,7 +2,6 @@
 import { useState } from "react";
 import axios from "axios";
 import { AddCartResponse } from "@/types/cart/add-to-cart/cart-response";
-import Cookies from "js-cookie";
 
 interface Product {
   productId: string;
@@ -26,7 +25,9 @@ const useRemoveItemCart = () => {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/cart/remove-item/`,
         products,
         {
-          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
       setLoading(false);

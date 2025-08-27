@@ -11,6 +11,7 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen"
 import { ArrowRight } from "lucide-react"
 
 function LoginPageContent() {
+  const { loading, error } = useAuth()
   usePageTracking()
 
   return (

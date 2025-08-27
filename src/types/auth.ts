@@ -5,8 +5,6 @@ export interface User {
   username?: string;
   profilePic?: string;
   isCompleted: boolean;
-  phoneNumber?: string;
-  interests?: string[];
 }
 
 export interface AuthState {
@@ -27,8 +25,6 @@ export interface AuthContextType extends AuthState {
   logout: () => Promise<boolean>;
   verify: (credentials: VerifyTokenCredentials) => Promise<void>;
   clearError: () => void;
-  uploadProfilePicture: (file: File) => Promise<void>;
-  updateUser: (data: Partial<User>) => Promise<void>;
 }
 
 export interface LoginCredentials {
