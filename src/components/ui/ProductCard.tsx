@@ -37,8 +37,8 @@ export function ProductCard({ product }: ProductCardProps) {
     ...(product.images || [])
   ].filter(Boolean);
 
-  // Fallback to placeholder if no images
-  const images = allImages.length > 0 ? allImages : ["/placeholder.png"];
+  // Fallback to placeholder if no images - LIMIT TO MAXIMUM 4 IMAGES
+  const images = allImages.length > 0 ? allImages.slice(0, 4) : ["/placeholder.png"];
 
   // Split the price into dollars and cents for formatting
   const [dollars, cents] = salePrice.toLocaleString().split(".");
@@ -89,9 +89,10 @@ export function ProductCard({ product }: ProductCardProps) {
     }
   };
 
-  // Dynamic image grid layout based on number of images
+  // Dynamic image grid layout based on number of images (MAX 4)
   const renderImageGrid = () => {
-    const imageCount = Math.min(images.length, 5); // Max 5 images to display
+    const imageCount = Math.min(images.length, 4); // Max 4 images to display
+    const totalImages = allImages.length; // Total images for "+more" indicator
     
     if (imageCount === 1) {
       return (
@@ -162,81 +163,37 @@ export function ProductCard({ product }: ProductCardProps) {
       );
     }
     
+    // 4 images - 2x2 grid
     if (imageCount === 4) {
       return (
         <div className="grid grid-cols-2 gap-2 h-full">
-          {/* Top row */}
-          <div className="relative overflow-hidden bg-gray-50">
-            <Image
-              src={images[0]}
-              alt={`${product.name} 1`}
-              fill
-              className="object-cover object-center hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          <div className="relative overflow-hidden bg-gray-50">
-            <Image
-              src={images[1]}
-              alt={`${product.name} 2`}
-              fill
-              className="object-cover object-center hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          {/* Bottom row */}
-          <div className="relative overflow-hidden bg-gray-50">
-            <Image
-              src={images[2]}
-              alt={`${product.name} 3`}
-              fill
-              className="object-cover object-center hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          <div className="relative overflow-hidden bg-gray-50">
-            <Image
-              src={images[3]}
-              alt={`${product.name} 4`}
-              fill
-              className="object-cover object-center hover:scale-105 transition-transform duration-300"
-            />
-          </div>
+          {images.slice(0, 4).map((image, index) => (
+            <div 
+              key={index} 
+              className="relative overflow-hidden bg-gray-50"
+            >
+              <Image
+                src={image}
+                alt={`${product.name} ${index + 1}`}
+                fill
+                className="object-cover object-center hover:scale-105 transition-transform duration-300"
+              />
+              {/* Show "+more" indicator on the 4th image if there are more images */}
+              {index === 3 && totalImages > 4 && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                  <span className="text-white text-sm font-semibold">
+                    +{totalImages - 4} more
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       );
     }
     
-    // 5 or more images - using a 3x2 grid with the first image taking 2 rows
-    return (
-      <div className="grid grid-cols-3 grid-rows-2 gap-2 h-full">
-        <div className="relative row-span-2 col-span-2 overflow-hidden bg-gray-50">
-          <Image
-            src={images[0]}
-            alt={`${product.name} 1`}
-            fill
-            className="object-cover object-center hover:scale-105 transition-transform duration-300"
-          />
-        </div>
-        {images.slice(1, 5).map((image, index) => (
-          <div 
-            key={index} 
-            className="relative overflow-hidden bg-gray-50"
-            style={{ aspectRatio: '1/1' }}
-          >
-            <Image
-              src={image}
-              alt={`${product.name} ${index + 2}`}
-              fill
-              className="object-cover object-center hover:scale-105 transition-transform duration-300"
-            />
-            {index === 3 && images.length > 5 && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <span className="text-white text-sm font-semibold">
-                  +{images.length - 5} more
-                </span>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
+    // Fallback - should not reach here with max 4 images
+    return null;
   };
 
   return (
