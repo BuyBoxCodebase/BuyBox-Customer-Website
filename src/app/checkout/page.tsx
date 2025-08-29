@@ -41,7 +41,7 @@ type FormErrors = {
 };
 
 const DELIVERY_COSTS: Record<DeliveryTime, number> = {
-  "24hr": 3,
+  "24hr": 5,
   /* "5hr": 3,
   "3hr": 5 */
 };
@@ -756,7 +756,7 @@ function CheckoutPageContent() {
                         <motion.span
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          transition={{ yoyo: Infinity, duration: 0.8 }}>
+                          transition={{ repeat: Infinity, repeatType: "reverse", duration: 0.8 }}>
                           Placing Order...
                         </motion.span>
                       ) : (
