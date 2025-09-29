@@ -12,6 +12,7 @@ export interface AuthState {
   loading: boolean;
   isAuthenticated: boolean;
   error: string | null;
+  showWelcomeModal: boolean;
 }
 
 export interface VerifyTokenCredentials {
@@ -25,6 +26,7 @@ export interface AuthContextType extends AuthState {
   logout: () => Promise<boolean>;
   verify: (credentials: VerifyTokenCredentials) => Promise<void>;
   clearError: () => void;
+  hideWelcomeModal: () => void;
 }
 
 export interface LoginCredentials {

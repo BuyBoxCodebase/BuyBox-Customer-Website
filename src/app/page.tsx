@@ -7,6 +7,8 @@ import LandingPage from "@/components/Landing/LandingPage";
 import { usePageTracking } from "../hooks/analytics";
 import AdBanner from "@/components/ad/ad-banner";
 import Signin from "@/components/Landing/Signin";
+import WelcomeBackModal from "@/components/ui/WelcomeBackModal";
+import { useAuth } from "@/context/AuthContext";
 // Animated fallback using Framer Motion
 const LoadingAnimation = () => (
   <motion.div
@@ -22,12 +24,19 @@ const LoadingAnimation = () => (
 // A separate component that uses the hook and renders page content
 function PageContent() {
   usePageTracking();
+  const { showWelcomeModal, hideWelcomeModal, user } = useAuth();
+  
   return (
     <>
       <Hero />
       <Signin />
       {/* <AdBanner /> */}
       <LandingPage />
+      <WelcomeBackModal 
+        isOpen={showWelcomeModal}
+        onClose={hideWelcomeModal}
+        userName={user?.name}
+      />
     </>
   );
 }

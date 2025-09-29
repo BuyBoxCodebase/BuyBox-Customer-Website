@@ -25,6 +25,7 @@ const initialState: AuthState = {
   loading: true,
   isAuthenticated: false,
   error: null,
+  showWelcomeModal: false,
 };
 
 // Helper function to set token in both localStorage and cookies
@@ -75,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           user: response.data.customer,
           isAuthenticated: true,
           loading: false,
+          showWelcomeModal: false,
         }));
 
         // Ensure token is set in cookies too
@@ -84,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sameSite: "strict",
         });
       } else {
-        setState((prev) => ({ ...prev, loading: false }));
+        setState((prev) => ({ ...prev, loading: false, showWelcomeModal: false }));
       }
     } catch (error) {
       removeAuthToken();
@@ -93,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: null,
         isAuthenticated: false,
         loading: false,
+        showWelcomeModal: false,
       }));
     }
   };
@@ -115,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: true,
         loading: false,
+        showWelcomeModal: true,
       }));
 
       router.push("/");
@@ -124,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...prev,
         loading: false,
         error: axiosError.response?.data?.message || "Login failed",
+        showWelcomeModal: false,
       }));
       throw error;
     }
@@ -155,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...prev,
         isAuthenticated: true,
         loading: false,
+        showWelcomeModal: false,
       }));
 
       router.push("/user/verify");
@@ -164,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...prev,
         loading: false,
         error: axiosError.response?.data?.message || "Registration failed",
+        showWelcomeModal: false,
       }));
       throw error;
     }
@@ -187,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: null,
         isAuthenticated: false,
         loading: false,
+        showWelcomeModal: false,
       });
       router.push("/");
     }
@@ -210,6 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: true,
         loading: false,
+        showWelcomeModal: false,
       }));
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
@@ -217,6 +226,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...prev,
         loading: false,
         error: axiosError.response?.data?.message || "Verification failed",
+        showWelcomeModal: false,
       }));
       throw error;
     }
@@ -224,6 +234,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearError = () => {
     setState((prev) => ({ ...prev, error: null }));
+  };
+
+  const hideWelcomeModal = () => {
+    setState((prev) => ({ ...prev, showWelcomeModal: false }));
   };
 
   return (
@@ -235,6 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         clearError,
         verify,
+        hideWelcomeModal,
       }}>
       {children}
     </AuthContext.Provider>

@@ -19,9 +19,11 @@ function CustomerPageContent(){
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    if (token) {
+    const token = searchParams.get("accessToken");
+    const refreshToken = searchParams.get("refreshToken");
+    if (token && refreshToken) {
       localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", refreshToken);
     }
     window.location.href = "/";
   }, [router, searchParams]);

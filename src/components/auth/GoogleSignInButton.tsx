@@ -12,11 +12,11 @@ export default function GoogleSignInButton() {
 
   return (
     <Button
-      variant="yellow"
+      variant="outline"
       className="w-full h-11 rounded-full"
       onClick={handleGoogleSignIn}>
       <div className="flex items-center justify-center gap-2 h-full">
-        {/* <svg
+        <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           className="w-5 h-5"
@@ -37,8 +37,8 @@ export default function GoogleSignInButton() {
             fill="#EA4335"
             d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0c-4.69 0-8.74 2.7-10.71 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"
           />
-        </svg> */}
-        Sign in securely
+        </svg>
+        Sign in with Google
       </div>
     </Button>
   );
