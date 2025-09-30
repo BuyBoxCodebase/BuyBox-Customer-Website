@@ -20,10 +20,10 @@ function CustomerPageContent(){
 
   useEffect(() => {
     const token = searchParams.get("accessToken");
-    const refreshToken = searchParams.get("refreshToken");
-    if (token && refreshToken) {
+   // const refreshToken = searchParams.get("refreshToken");
+    if (token) {
       localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
+      //localStorage.setItem("refreshToken", refreshToken);
     }
     window.location.href = "/";
   }, [router, searchParams]);
