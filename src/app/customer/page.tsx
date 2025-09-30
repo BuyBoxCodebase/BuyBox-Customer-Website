@@ -19,7 +19,7 @@ function CustomerPageContent(){
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get("accessToken");
+    const token = searchParams.get("token");
    // const refreshToken = searchParams.get("refreshToken");
     if (token) {
       localStorage.setItem("token", token);
