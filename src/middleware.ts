@@ -1,58 +1,59 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value
-  const accessToken = request.cookies.get("accessToken")?.value
-  // console.log(token)
+  const accessToken = request.cookies.get("activationToken")?.value
+  const { pathname } = request.nextUrl
 
-  // const token =
-  //   token &&
-    // (await verifyAuth(token).catch((err) => {
-    //   // console.log(err)
-    // }))
+  if(pathname.startsWith("/user/privacy") || pathname.startsWith("/user/terms") || pathname.startsWith("/customer")){ 
+    return NextResponse.next()
+  }
 
-  // Auth pages (login and register)
-  if (request.nextUrl.pathname.startsWith("/user/login") || request.nextUrl.pathname.startsWith("/user/register")) {
-    // If user is authenticated (has valid token), redirect to home page
+  // Auth pages
+  if (
+    pathname.startsWith("/user/login") ||
+    pathname.startsWith("/user/register")
+  ) {
+    // If already logged in, redirect to home
     if (token) {
       return NextResponse.redirect(new URL("/", request.url))
     }
-    // Otherwise, allow access
     return NextResponse.next()
   }
 
   // Verification page
-  if (request.nextUrl.pathname.startsWith("/user/verify")) {
-    // If no token, redirect to login
-    if (accessToken) {
+  if (pathname.startsWith("/user/verify")) {
+    // Only allow users who just signed up (with accessToken)
+    if (!accessToken) {
       return NextResponse.redirect(new URL("/user/login", request.url))
     }
-    
-    // If user is already verified, redirect to home page
-    if (typeof token !== "string" && token) {
+
+    // If already verified, redirect to home
+    if (token) {
       return NextResponse.redirect(new URL("/", request.url))
     }
-    
-    // Allow unverified users with token to access verification page
+
     return NextResponse.next()
   }
 
-  // Protected routes - require verified user
+  // Protect all other routes (sign-up wall)
   if (!token) {
-    // No token at all - redirect to login
     return NextResponse.redirect(new URL("/user/login", request.url))
   }
-  
-  if (typeof token !== "string" && !token) {
-    // Has token but not verified - redirect to verification
-    return NextResponse.redirect(new URL("/user/verify", request.url))
-  }
 
-  // User is authenticated and verified, allow access to protected routes
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/user/login", "/user/register", "/user/verify", "/protected/:path*"],
+  matcher: [
+    "/",                  
+    "/((?!api|_next|favicon\\.ico).*)", 
+    "/user/login",
+    "/user/register",
+    "/user/verify",
+    "/user/privacy",
+    "/user/terms",
+    "/customer/:path*"
+  ],
 }

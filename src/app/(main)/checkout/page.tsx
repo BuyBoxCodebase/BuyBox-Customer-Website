@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useCartContext } from "../../context/CartContext";
+import { useCartContext } from "../../../context/CartContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/toast/use-toast";
 import useCreateOrder from "@/hooks/order/useCreateOrder";

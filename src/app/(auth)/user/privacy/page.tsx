@@ -91,7 +91,7 @@ export default function PrivacyPolicyPage() {
       </div>
       <footer className="mt-6 text-xs text-gray-500">
         <p>© BuyBox. All rights reserved.</p>
-        <p>Customer Terms of Use: <a href="/terms" className="underline text-blue-700">/terms</a></p>
+        <p>Customer Terms of Use: <a href="/user/terms" className="underline text-blue-700">/terms</a></p>
       </footer>
     </main>
   );

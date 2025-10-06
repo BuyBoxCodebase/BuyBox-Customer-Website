@@ -9,6 +9,7 @@ import AdBanner from "@/components/ad/ad-banner";
 import Signin from "@/components/Landing/Signin";
 import WelcomeBackModal from "@/components/ui/WelcomeBackModal";
 import { useAuth } from "@/context/AuthContext";
+import Navbar from "@/components/navbar/Navbar";
 // Animated fallback using Framer Motion
 const LoadingAnimation = () => (
   <motion.div
@@ -28,6 +29,7 @@ function PageContent() {
   
   return (
     <>
+      <Navbar />
       <Hero />
       <Signin />
       {/* <AdBanner /> */}

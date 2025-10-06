@@ -1,5 +1,5 @@
 // app/layout.tsx
-import "./globals.css";
+import "./../globals.css";
 import { Inter } from "next/font/google";
 import type React from "react";
 import Footer from "@/components/footer/Footer";
@@ -31,9 +31,8 @@ export default function RootLayout({
       <body className={`${inter.className} bg-gray-50 min-h-screen flex flex-col`}>
         <AuthProvider>
           <CartProvider>
-            <Toaster />
+            <Navbar />
             <main className="flex-grow pt-14 lg:pt-20">{children}</main>
-            <Footer />
           </CartProvider>
         </AuthProvider>
         <SpeedInsights />

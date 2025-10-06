@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { Loader2, Package, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../../context/AuthContext";
 import { usePageTracking } from "@/hooks/analytics";
 
 function ProfilePageContent() {

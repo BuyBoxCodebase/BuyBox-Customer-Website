@@ -72,7 +72,7 @@ export default function TermsOfUsePage() {
       </div>
       <footer className="mt-6 text-xs text-gray-500">
         <p>© BuyBox. All rights reserved.</p>
-        <p>Privacy Policy: <a href="/privacy" className="underline text-blue-700">/privacy</a></p>
+        <p>Privacy Policy: <a href="/user/privacy" className="underline text-blue-700">/privacy</a></p>
       </footer>
     </main>
   );

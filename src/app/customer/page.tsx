@@ -3,7 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePageTracking } from "@/hooks/analytics";
-
+import Cookies from "js-cookie";
 export default function () {
   
   return(
@@ -20,10 +20,15 @@ function CustomerPageContent(){
 
   useEffect(() => {
     const token = searchParams.get("token");
-   // const refreshToken = searchParams.get("refreshToken");
+   const refreshToken = searchParams.get("refreshToken");
     if (token) {
       localStorage.setItem("token", token);
       //localStorage.setItem("refreshToken", refreshToken);
+       Cookies.set("token", token, {
+          expires: 7,
+          path: "/",
+          sameSite: "strict",
+        });
     }
     window.location.href = "/";
   }, [router, searchParams]);

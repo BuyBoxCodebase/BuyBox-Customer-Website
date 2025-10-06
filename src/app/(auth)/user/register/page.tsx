@@ -186,9 +186,8 @@ function RegisterPageContent() {
               onBlur={handleBlur}
               placeholder="Name"
               required
-              className={`pl-10 bg-white/90 lg:bg-white border-white/20 lg:border-gray-300 text-gray-900 placeholder:text-gray-600 ${errors.name ? "border-red-500" : ""}`}
-            />
-            <User className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" />
+              className="pl-10 rounded-full" />
+            {/* <User className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" /> */}
             {touched.name &&
               (errors.name ? (
                 <XCircle className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" />
@@ -212,9 +211,9 @@ function RegisterPageContent() {
               onBlur={handleBlur}
               placeholder="Email"
               required
-              className={`pl-10 bg-white/90 lg:bg-white border-white/20 lg:border-gray-300 text-gray-900 placeholder:text-gray-600 ${errors.email ? "border-red-500" : ""}`}
+              className="pl-10 rounded-full"
             />
-            <Mail className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" />
+            {/* <Mail className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" /> */}
             {touched.email &&
               (errors.email ? (
                 <XCircle className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" />
@@ -238,10 +237,9 @@ function RegisterPageContent() {
               onBlur={handleBlur}
               placeholder="Phone Number (+263...)"
               required
-              className="pl-10 bg-white/90 lg:bg-white border-white/20 lg:border-gray-300 text-gray-900 placeholder:text-gray-600"
-            // className={`pl-10 ${errors.phoneNumber ? "border-red-500" : ""}`}
+              className="pl-10 rounded-full"            // className={`pl-10 ${errors.phoneNumber ? "border-red-500" : ""}`}
             />
-            <User className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" />
+            {/* <User className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" /> */}
             {touched.phoneNumber &&
               (errors.phoneNumber ? (
                 <XCircle className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" />
@@ -265,9 +263,9 @@ function RegisterPageContent() {
               onBlur={handleBlur}
               placeholder="Password"
               required
-              className={`pl-10 bg-white/90 lg:bg-white border-white/20 lg:border-gray-300 text-gray-900 placeholder:text-gray-600 ${errors.password ? "border-red-500" : ""}`}
+              className="pl-10 rounded-full"
             />
-            <AtSign className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" />
+            {/* <AtSign className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" /> */}
             <Button
               type="button"
               variant="ghost"
@@ -316,10 +314,9 @@ function RegisterPageContent() {
               onBlur={handleBlur}
               placeholder="Confirm Password"
               required
-              className={`pl-10 bg-white/90 lg:bg-white border-white/20 lg:border-gray-300 text-gray-900 placeholder:text-gray-600 ${errors.confirmPassword ? "border-red-500" : ""
-                }`}
+              className="pl-10 rounded-full"
             />
-            <AtSign className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" />
+            {/* <AtSign className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" /> */}
             <Button
               type="button"
               variant="ghost"
@@ -340,19 +337,26 @@ function RegisterPageContent() {
 
         <Button
           type="submit"
-          className="h-12 w-full bg-red-500 hover:bg-red-600"
+           className="h-12 w-full rounded-full"
+            style={{ backgroundColor: "#4E008E" }}
           disabled={loading}>
           {loading ? "Creating account..." : "Sign Up"}
         </Button>
 
         <div className="text-center">
+            <Link href="/user/login" className="text-sm text-gray-600 hover:text-gray-800">
+              Login
+            </Link>
+          </div>
+
+        {/* <div className="text-center">
           <span className="text-black lg:text-black">Already have an account? </span>
           <Link href="/user/login" className="text-red-400 lg:text-red-500 hover:text-red-300 lg:hover:text-red-600">
             Login
           </Link>
-        </div>
+        </div> */}
 
-        <div className="relative">
+        {/* <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
 
@@ -361,19 +365,23 @@ function RegisterPageContent() {
             <span className="px-2 bg-gray-50 text-gray-500">Or</span>
 
           </div>
-        </div>
+        </div> */}
       </form>
 
-      <GoogleSignInButton />
+      <div className="flex flex-col items-center space-y-6">
+                <div className="w-full max-w-xs">
+                  <GoogleSignInButton />
+                </div>
+              </div>
 
       <div className="space-y-2 text-center text-sm mt-8">
         <span className="text-gray-200 lg:text-gray-600">
-          <Link href="/terms" className="text-red-400 lg:text-red-500 hover:text-red-300 lg:hover:text-red-600">
+          <Link href="/user/terms" className="text-red-400 lg:text-red-500 hover:text-red-300 lg:hover:text-red-600">
             Terms of use |
           </Link>
         </span>
         <span>
-          <Link href="/privacy" className="text-blue-400 lg:text-blue-500 hover:text-blue-300 lg:hover:text-blue-600">
+          <Link href="/user/privacy" className="text-blue-400 lg:text-blue-500 hover:text-blue-300 lg:hover:text-blue-600">
             Privacy Policy
           </Link>
         </span>

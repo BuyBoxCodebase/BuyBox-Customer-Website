@@ -86,7 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sameSite: "strict",
         });
       } else {
+        //router.push("/user/login");
         setState((prev) => ({ ...prev, loading: false, showWelcomeModal: false }));
+        //route to login page
+        
       }
     } catch (error) {
       removeAuthToken();
