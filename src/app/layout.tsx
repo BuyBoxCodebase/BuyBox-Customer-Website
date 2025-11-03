@@ -32,8 +32,7 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <Toaster />
-            <main className="flex-grow pt-14 lg:pt-20">{children}</main>
-            <Footer />
+            <main className="flex-grow">{children}</main>
           </CartProvider>
         </AuthProvider>
         <SpeedInsights />

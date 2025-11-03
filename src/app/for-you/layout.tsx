@@ -27,11 +27,10 @@ export default function RootLayout({
 }) {
   return (
     <>
-<div className={`${inter.className} bg-gray-50 min-h-screen flex flex-col`}>
-            <Navbar />
-            <main className="flex-grow pt-14 lg:pt-20">{children}</main>
-            <Footer />
-</div>
+  
+        <Navbar/>
+            <main className="flex-grow">{children}</main>
+
     </>
   );
 }

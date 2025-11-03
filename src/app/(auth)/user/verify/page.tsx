@@ -65,7 +65,7 @@ function VerifyPageContent() {
         activationToken: localStorage.getItem("activationToken") || "",
       });
       setVerificationStatus("success");
-
+      router.refresh();
       // For demo purposes, let's consider "123456" as the correct OTP
       // if (completedOtp === "123456") {
       //   setVerificationStatus("success");

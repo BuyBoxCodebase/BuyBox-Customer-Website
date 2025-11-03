@@ -32,6 +32,7 @@ export const SearchBar = ({
     >
       <div className="relative flex items-center w-full">
         <input
+          placeholder="Search Buybox"
           type="search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

@@ -19,18 +19,30 @@ function CustomerPageContent(){
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get("token");
-   const refreshToken = searchParams.get("refreshToken");
-    if (token) {
-      localStorage.setItem("token", token);
-      //localStorage.setItem("refreshToken", refreshToken);
-       Cookies.set("token", token, {
-          expires: 7,
-          path: "/",
-          sameSite: "strict",
-        });
+    const token = searchParams.get("accessToken");
+    const refreshToken = searchParams.get("refreshToken");
+    if (token && refreshToken) {
+      localStorage.setItem("accessToken", token);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("token", token); 
+      
+      Cookies.set("accessToken", token, {
+        expires: 7,
+        path: "/",
+        sameSite: "strict",
+      });
+      Cookies.set("refreshToken", refreshToken, {
+        expires: 7,
+        path: "/",
+        sameSite: "strict",
+      });
+      Cookies.set("token", token, {
+        expires: 7,
+        path: "/",
+        sameSite: "strict",
+      });
     }
-    window.location.href = "/";
+    window.location.href = "/for-you";
   }, [router, searchParams]);
 
   return null;

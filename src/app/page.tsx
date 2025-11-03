@@ -10,6 +10,7 @@ import Signin from "@/components/Landing/Signin";
 import WelcomeBackModal from "@/components/ui/WelcomeBackModal";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/navbar/Navbar";
+import Footer from "@/components/footer/Footer";
 // Animated fallback using Framer Motion
 const LoadingAnimation = () => (
   <motion.div
@@ -39,6 +40,7 @@ function PageContent() {
         onClose={hideWelcomeModal}
         userName={user?.name}
       />
+      <Footer />
     </>
   );
 }
