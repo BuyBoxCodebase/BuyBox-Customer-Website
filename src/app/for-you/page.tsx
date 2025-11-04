@@ -7,20 +7,8 @@ import useGetAllVideo from "@/hooks/videos/useGetVideos";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { OptimizedVideoPlayer } from "@/components/video/OptimizedVideoPlayer";
 
-// Temporary wrapper hook
-const useGetAllVideos = () => {
-  const [loading, setLoading] = useState(true);
-  const { videos, loading: loader } = useGetAllVideo();
-
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 500);
-  }, []);
-
-  return { videos, loading };
-};
-
 const ForYouPage = () => {
-  const { videos, loading } = useGetAllVideos();
+  const { videos, loading } = useGetAllVideo();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [muted, setMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -34,33 +22,45 @@ const ForYouPage = () => {
 
   // Intersection observer for current video detection
   useEffect(() => {
-    if (!containerRef.current || videos.length === 0) return;
+    if (!containerRef.current || videos.length === 0 || loading) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const index = wrapperRefs.current.findIndex((el) => el === entry.target);
-          if (index === -1) return;
-          if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
-            setCurrentIndex(index);
-            setIsPlaying(true);
-            setShowPlayPrompt(false);
-          }
-        });
-      },
-      { 
-        root: containerRef.current, 
-        threshold: [0.5, 0.7, 0.9],
-        rootMargin: "0px"
-      }
-    );
+    // Small delay to ensure DOM is fully ready
+    const setupObserver = () => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const index = wrapperRefs.current.findIndex((el) => el === entry.target);
+            if (index === -1) return;
+            if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
+              setCurrentIndex(index);
+              setIsPlaying(true);
+              setShowPlayPrompt(false);
+            }
+          });
+        },
+        { 
+          root: containerRef.current, 
+          threshold: [0.5, 0.7, 0.9],
+          rootMargin: "0px"
+        }
+      );
 
-    wrapperRefs.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
+      wrapperRefs.current.forEach((el) => {
+        if (el) observer.observe(el);
+      });
 
-    return () => observer.disconnect();
-  }, [videos.length]);
+      return observer;
+    };
+
+    const timeoutId = setTimeout(() => {
+      const observer = setupObserver();
+      return () => observer?.disconnect();
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [videos.length, loading]);
 
   // Handle play state changes from OptimizedVideoPlayer
   const handlePlayStateChange = (playing: boolean) => {

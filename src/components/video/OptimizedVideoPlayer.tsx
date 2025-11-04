@@ -92,7 +92,7 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
   // Smooth play/pause handling
   const smoothPlay = useCallback(async () => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !src) return;
 
     // Cancel any pending play attempt
     if (playAttemptRef.current) {
@@ -117,10 +117,16 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
       try {
         // Wait for video to be ready
         if (video.readyState < 2) {
-          await new Promise<void>((resolve) => {
+          await new Promise<void>((resolve, reject) => {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max wait
+            
             const checkReady = () => {
+              attempts++;
               if (video.readyState >= 2) {
                 resolve();
+              } else if (attempts >= maxAttempts) {
+                reject(new Error("Video load timeout"));
               } else {
                 rafRef.current = requestAnimationFrame(checkReady);
               }
@@ -143,12 +149,12 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
           retries--;
           await new Promise((resolve) => setTimeout(resolve, 100));
         } else {
-          console.warn("Video play failed:", error.name);
+          console.warn("Video play failed:", error.name, error.message);
           break;
         }
       }
     }
-  }, [muted, onPlayStateChange]);
+  }, [muted, onPlayStateChange, src]);
 
   const smoothPause = useCallback(() => {
     const video = videoRef.current;
@@ -169,24 +175,31 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
   // Handle active state changes
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !src) return;
 
-    if (isActive) {
-      smoothPlay();
-    } else {
-      smoothPause();
-      // Reset non-active videos to start for better UX
-      if (video.currentTime > 0) {
-        video.currentTime = 0;
+    // Wait for video element to be fully initialized
+    const handleActivation = async () => {
+      if (isActive) {
+        // Small delay to ensure video element is ready after mount
+        await new Promise(resolve => setTimeout(resolve, 50));
+        smoothPlay();
+      } else {
+        smoothPause();
+        // Reset non-active videos to start for better UX
+        if (video.currentTime > 0) {
+          video.currentTime = 0;
+        }
       }
-    }
+    };
+
+    handleActivation();
 
     return () => {
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [isActive, smoothPlay, smoothPause]);
+  }, [isActive, smoothPlay, smoothPause, src]);
 
   // Handle mute changes for active video
   useEffect(() => {
