@@ -120,7 +120,7 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
           await new Promise<void>((resolve, reject) => {
             let attempts = 0;
             const maxAttempts = 50; // 5 seconds max wait
-            
+
             const checkReady = () => {
               attempts++;
               if (video.readyState >= 2) {
@@ -244,18 +244,18 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
       className={className}
       loop
       playsInline
+      muted={muted}
+      autoPlay={isActive && muted}
       preload={preloadStrategy}
       onClick={onClick}
-      // Disable default controls
       controls={false}
-      // Optimize for mobile
       disablePictureInPicture
       disableRemotePlayback
-      // Performance optimizations
       style={{
         objectFit: "cover",
         willChange: isActive ? "transform" : "auto",
       }}
     />
+
   );
 };
