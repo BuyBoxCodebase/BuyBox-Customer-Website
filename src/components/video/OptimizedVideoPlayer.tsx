@@ -13,14 +13,7 @@ interface OptimizedVideoPlayerProps {
   className?: string;
 }
 
-/**
- * TikTok-style optimized video player component
- * Features:
- * - Adaptive preloading (priority videos load first)
- * - Smooth playback transitions
- * - Memory-efficient buffering
- * - Automatic quality adjustment
- */
+
 export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
   src,
   isActive,
@@ -61,14 +54,12 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
     };
 
     const handleWaiting = () => {
-      // Video is buffering
       if (isActive) {
         console.log("Video buffering...");
       }
     };
 
     const handleStalled = () => {
-      // Network stalled, try to recover
       if (isActive && video.readyState < 3) {
         video.load();
       }
@@ -89,17 +80,22 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
     };
   }, [isActive, onLoadComplete, onLoadStart]);
 
-  // Smooth play/pause handling
+  // ✅ FIX #2: Safari iOS autoplay handling logic
   const smoothPlay = useCallback(async () => {
     const video = videoRef.current;
     if (!video || !src) return;
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      video.muted = true; // Safari only allows autoplay if muted
+    }
 
     // Cancel any pending play attempt
     if (playAttemptRef.current) {
       try {
         await playAttemptRef.current;
-      } catch (e) {
-        // Ignore
+      } catch (_) {
+        // ignore
       }
     }
 
@@ -108,25 +104,15 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
       video.currentTime = 0;
     }
 
-    // Ensure muted state
-    video.muted = muted;
-
-    // Try to play with retry logic
     let retries = 3;
     while (retries > 0) {
       try {
-        // Wait for video to be ready
+        // Wait for the video to be ready
         if (video.readyState < 2) {
-          await new Promise<void>((resolve, reject) => {
-            let attempts = 0;
-            const maxAttempts = 50; // 5 seconds max wait
-
+          await new Promise<void>((resolve) => {
             const checkReady = () => {
-              attempts++;
               if (video.readyState >= 2) {
                 resolve();
-              } else if (attempts >= maxAttempts) {
-                reject(new Error("Video load timeout"));
               } else {
                 rafRef.current = requestAnimationFrame(checkReady);
               }
@@ -138,14 +124,13 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
         playAttemptRef.current = video.play();
         await playAttemptRef.current;
         onPlayStateChange?.(true);
-        break;
+        break; // success
       } catch (error: any) {
-        if (error.name === "NotAllowedError" && !muted && retries === 3) {
-          // Try muted
-          video.muted = true;
-          retries--;
+        if (error.name === "NotAllowedError" && isIOS) {
+          console.warn("Safari autoplay blocked — waiting for user gesture...");
+          break; // stop retrying, user must interact
         } else if (error.name === "AbortError") {
-          // Play was interrupted, retry
+          // Try again after small delay
           retries--;
           await new Promise((resolve) => setTimeout(resolve, 100));
         } else {
@@ -160,7 +145,6 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
-    // Cancel RAF if running
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
@@ -177,15 +161,12 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
     const video = videoRef.current;
     if (!video || !src) return;
 
-    // Wait for video element to be fully initialized
     const handleActivation = async () => {
       if (isActive) {
-        // Small delay to ensure video element is ready after mount
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         smoothPlay();
       } else {
         smoothPause();
-        // Reset non-active videos to start for better UX
         if (video.currentTime > 0) {
           video.currentTime = 0;
         }
@@ -201,14 +182,13 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
     };
   }, [isActive, smoothPlay, smoothPause, src]);
 
-  // Handle mute changes for active video
+  // Handle mute changes
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !isActive) return;
 
     video.muted = muted;
 
-    // If unmuting and video is paused, try to play
     if (!muted && video.paused && isActive) {
       smoothPlay();
     }
@@ -245,7 +225,6 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
       loop
       playsInline
       muted={muted}
-      autoPlay={isActive && muted}
       preload={preloadStrategy}
       onClick={onClick}
       controls={false}
@@ -256,6 +235,5 @@ export const OptimizedVideoPlayer: React.FC<OptimizedVideoPlayerProps> = ({
         willChange: isActive ? "transform" : "auto",
       }}
     />
-
   );
 };
