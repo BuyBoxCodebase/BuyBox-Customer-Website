@@ -7,4 +7,9 @@ export interface Video {
   videoUrl: string;
   createdAt: string;
   updatedAt: string;
+  product: Price;
+}
+
+interface Price{
+  basePrice: number;
 }

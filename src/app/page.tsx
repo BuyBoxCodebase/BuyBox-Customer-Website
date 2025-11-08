@@ -285,7 +285,7 @@ const ForYouPage = () => {
                     </p>
                     <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
                       <span className="text-white text-sm font-medium">
-                        Size: {video.size}
+                        Size: {video.size} : Price: ${video.product.basePrice}
                       </span>
                     </div>
                   </div>
