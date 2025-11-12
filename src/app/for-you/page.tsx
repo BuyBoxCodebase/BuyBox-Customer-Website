@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import useGetAllVideo from "@/hooks/videos/useGetVideos";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { OptimizedVideoPlayer } from "@/components/video/OptimizedVideoPlayer";
+import { useCartContext } from "../../context/CartContext";
+import { useToast } from "@/hooks/toast/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { useEventTracking } from "@/hooks/analytics/useEventTracking";
 
 const ForYouPage = () => {
   const { videos, loading } = useGetAllVideo();
@@ -15,10 +19,15 @@ const ForYouPage = () => {
   const [showPlayPause, setShowPlayPause] = useState(false);
   const [showPlayPrompt, setShowPlayPrompt] = useState(false);
   const [videoStates, setVideoStates] = useState<{ [key: string]: boolean }>({});
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
   const playPauseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
+  const { addProductToCart } = useCartContext();
+  const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const { trackAddtoCart } = useEventTracking();
 
   // Intersection observer for current video detection
   useEffect(() => {
@@ -97,9 +106,52 @@ const ForYouPage = () => {
     playPauseTimeoutRef.current = setTimeout(() => setShowPlayPause(false), 800);
   };
 
-  const handleBuyClick = (e: React.MouseEvent, productId: string) => {
+  const handleBuyClick = async (e: React.MouseEvent, productId: string, video: any) => {
     e.stopPropagation();
-    router.push(`/product/${productId}`);
+
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to add items to your cart.",
+        variant: "default",
+        action: (
+          <Button variant="orange" onClick={() => router.push("/user/login")}>
+            Log In
+          </Button>
+        ),
+      });
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      await addProductToCart([
+        {
+          productId: productId,
+          quantity: 1,
+          variantId: null,
+        },
+      ]);
+      
+      // Track the add to cart event
+      trackAddtoCart(productId, 1, 0); // You may want to pass the actual price if available
+
+      toast({
+        title: "Added to cart",
+        description: `${video.caption} has been added to your cart.`,
+      });
+
+      // Route to cart page
+      router.push("/cart");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const toggleMute = (e: React.MouseEvent) => {
@@ -236,11 +288,19 @@ const ForYouPage = () => {
                   {/* Buy button */}
                   <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
                     <Button
-                      onClick={(e) => handleBuyClick(e, video.productId)}
+                      onClick={(e) => handleBuyClick(e, video.productId, video)}
                       size="icon"
+                      disabled={isAddingToCart}
                       className="h-14 w-14 rounded-full bg-white hover:bg-gray-100 shadow-lg"
                     >
-                      <ShoppingCart className="h-6 w-6 text-black" />
+                      {isAddingToCart ? (
+                        <svg className="animate-spin h-6 w-6 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <ShoppingCart className="h-6 w-6 text-black" />
+                      )}
                     </Button>
                   </div>
 
