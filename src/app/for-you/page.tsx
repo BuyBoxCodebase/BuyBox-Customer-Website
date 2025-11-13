@@ -132,17 +132,13 @@ const ForYouPage = () => {
           variantId: null,
         },
       ]);
-      
-      // Track the add to cart event
-      trackAddtoCart(productId, 1, 0); // You may want to pass the actual price if available
+      trackAddtoCart(productId, 1, 0); 
 
       toast({
         title: "Added to cart",
         description: `${video.caption} has been added to your cart.`,
       });
 
-      // Route to cart page
-      router.push("/cart");
     } catch (error) {
       toast({
         title: "Error",
