@@ -266,7 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         showWelcomeModal: true,
       }));
 
-      router.push("/for-you");
+      router.push("/");
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       setState((prev) => ({

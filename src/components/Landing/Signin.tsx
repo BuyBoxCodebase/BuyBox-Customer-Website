@@ -41,7 +41,7 @@ const Signin = () => {
           <Button
             variant="yellow"
             className="w-full h-11 rounded-full"
-            onClick={() => router.push('/for-you')}
+            onClick={() => router.push('/')}
           >
             <div className="flex items-center justify-center gap-2 h-full">
               Go to For You

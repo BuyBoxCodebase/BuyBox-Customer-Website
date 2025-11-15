@@ -1,58 +1,3 @@
-// "use client";
-
-// import { Suspense } from "react";
-// import { motion } from "framer-motion";
-// import Hero from "@/components/Landing/Hero";
-// import LandingPage from "@/components/Landing/LandingPage";
-// import { usePageTracking } from "../hooks/analytics";
-// import AdBanner from "@/components/ad/ad-banner";
-// import Signin from "@/components/Landing/Signin";
-// import WelcomeBackModal from "@/components/ui/WelcomeBackModal";
-// import { useAuth } from "@/context/AuthContext";
-// import Navbar from "@/components/navbar/Navbar";
-// import Footer from "@/components/footer/Footer";
-// // Animated fallback using Framer Motion
-// const LoadingAnimation = () => (
-//   <motion.div
-//     className="flex items-center justify-center min-h-screen"
-//     initial={{ opacity: 0, y: 20 }}
-//     animate={{ opacity: 1, y: 0 }}
-//     exit={{ opacity: 0, y: -20 }}
-//     transition={{ duration: 0.5 }}>
-//     <div className="text-2xl font-bold">Loading...</div>
-//   </motion.div>
-// );
-
-// // A separate component that uses the hook and renders page content
-// function PageContent() {
-//   usePageTracking();
-//   const { showWelcomeModal, hideWelcomeModal, user } = useAuth();
-  
-//   return (
-//     <>
-//       <Navbar />
-//       <Hero />
-//       <Signin />
-//       {/* <AdBanner /> */}
-//       <LandingPage />
-//       <WelcomeBackModal 
-//         isOpen={showWelcomeModal}
-//         onClose={hideWelcomeModal}
-//         userName={user?.name}
-//       />
-//       <Footer />
-//     </>
-//   );
-// }
-
-// // Home component wraps PageContent with Suspense
-// export default function Home() {
-//   return (
-//     <Suspense fallback={<LoadingAnimation />}>
-//       <PageContent />
-//     </Suspense>
-//   );
-// }
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -61,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import useGetAllVideo from "@/hooks/videos/useGetVideos";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { OptimizedVideoPlayer } from "@/components/video/OptimizedVideoPlayer";
+import { useCartContext } from "../context/CartContext";
+import { useToast } from "@/hooks/toast/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { useEventTracking } from "@/hooks/analytics/useEventTracking";
 import Navbar from "@/components/navbar/Navbar";
 
 const ForYouPage = () => {
@@ -71,10 +20,15 @@ const ForYouPage = () => {
   const [showPlayPause, setShowPlayPause] = useState(false);
   const [showPlayPrompt, setShowPlayPrompt] = useState(false);
   const [videoStates, setVideoStates] = useState<{ [key: string]: boolean }>({});
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
   const playPauseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
+  const { addProductToCart } = useCartContext();
+  const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const { trackAddtoCart } = useEventTracking();
 
   // Intersection observer for current video detection
   useEffect(() => {
@@ -153,9 +107,48 @@ const ForYouPage = () => {
     playPauseTimeoutRef.current = setTimeout(() => setShowPlayPause(false), 800);
   };
 
-  const handleBuyClick = (e: React.MouseEvent, productId: string) => {
+  const handleBuyClick = async (e: React.MouseEvent, productId: string, video: any) => {
     e.stopPropagation();
-    router.push(`/product/${productId}`);
+
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to add items to your cart.",
+        variant: "default",
+        action: (
+          <Button variant="orange" onClick={() => router.push("/user/login")}>
+            Log In
+          </Button>
+        ),
+      });
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      await addProductToCart([
+        {
+          productId: productId,
+          quantity: 1,
+          variantId: null,
+        },
+      ]);
+      trackAddtoCart(productId, 1, 0); 
+
+      toast({
+        title: "Added to cart",
+        description: `${video.caption} has been added to your cart.`,
+      });
+
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const toggleMute = (e: React.MouseEvent) => {
@@ -173,7 +166,7 @@ const ForYouPage = () => {
 
   return (
     <>
-    <Navbar />
+    <Navbar/>
       <div className="h-screen w-full flex items-center justify-center ">
         <style jsx global>{`
           .hide-scrollbar::-webkit-scrollbar {
@@ -293,11 +286,19 @@ const ForYouPage = () => {
                   {/* Buy button */}
                   <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
                     <Button
-                      onClick={(e) => handleBuyClick(e, video.productId)}
+                      onClick={(e) => handleBuyClick(e, video.productId, video)}
                       size="icon"
+                      disabled={isAddingToCart}
                       className="h-14 w-14 rounded-full bg-white hover:bg-gray-100 shadow-lg"
                     >
-                      <ShoppingCart className="h-6 w-6 text-black" />
+                      {isAddingToCart ? (
+                        <svg className="animate-spin h-6 w-6 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <ShoppingCart className="h-6 w-6 text-black" />
+                      )}
                     </Button>
                   </div>
 
@@ -318,16 +319,7 @@ const ForYouPage = () => {
                   </div>
 
                   {/* Video indicator dots */}
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-1 z-10 pointer-events-none">
-                    {videos.map((_, idx) => (
-                      <div
-                        key={idx}
-                        className={`h-1 rounded-full transition-all ${
-                          idx === index ? "w-8 bg-white" : "w-1 bg-white/50"
-                        }`}
-                      />
-                    ))}
-                  </div>
+                 
                 </div>
               );
             })}

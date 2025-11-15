@@ -42,7 +42,7 @@ function CustomerPageContent(){
         sameSite: "strict",
       });
     }
-    window.location.href = "/for-you";
+    window.location.href = "/";
   }, [router, searchParams]);
 
   return null;
