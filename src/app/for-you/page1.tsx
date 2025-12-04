@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import useGetAllVideo from "@/hooks/videos/useGetVideos";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { OptimizedVideoPlayer } from "@/components/video/OptimizedVideoPlayer";
-import { useCartContext } from "../../context/CartContext";
 import { useToast } from "@/hooks/toast/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useEventTracking } from "@/hooks/analytics/useEventTracking";
+import Navbar from "@/components/navbar/Navbar";
+import { useCartContext } from "@/context/CartContext";
 
 const ForYouPage = () => {
   const { videos, loading } = useGetAllVideo();
@@ -165,6 +166,7 @@ const ForYouPage = () => {
 
   return (
     <>
+    <Navbar/>
       <div className="h-screen w-full flex items-center justify-center ">
         <style jsx global>{`
           .hide-scrollbar::-webkit-scrollbar {
@@ -276,7 +278,7 @@ const ForYouPage = () => {
                     </p>
                     <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
                       <span className="text-white text-sm font-medium">
-                        Size: {video.size}
+                        Size: {video.size} : Price: ${video.product.basePrice}
                       </span>
                     </div>
                   </div>
@@ -317,16 +319,7 @@ const ForYouPage = () => {
                   </div>
 
                   {/* Video indicator dots */}
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-1 z-10 pointer-events-none">
-                    {videos.map((_, idx) => (
-                      <div
-                        key={idx}
-                        className={`h-1 rounded-full transition-all ${
-                          idx === index ? "w-8 bg-white" : "w-1 bg-white/50"
-                        }`}
-                      />
-                    ))}
-                  </div>
+                 
                 </div>
               );
             })}
