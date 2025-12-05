@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { ShoppingCart, Volume2, VolumeX, Play, Pause, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useGetAllVideo from "@/hooks/videos/useGetVideos";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
@@ -156,6 +156,36 @@ const ForYouPage = () => {
     setMuted(!muted);
   };
 
+  const handleShare = async (e: React.MouseEvent, video: any) => {
+    e.stopPropagation();
+
+    const shareTitle = video?.product?.name ?? video?.caption ?? "Check this out";
+    const shareUrl = window.location.href;
+    const shareText = `Shop now ${shareTitle}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
+      } catch (err) {
+        console.error("Error sharing:", err);
+        toast({ title: "Share failed", description: "Unable to share right now." });
+      }
+      return;
+    }
+
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({ title: "Link copied", description: "Video link copied to clipboard." });
+        return;
+      } catch (err) {
+        console.error("Clipboard write failed:", err);
+      }
+    }
+
+    toast({ title: "Share not available", description: "Unable to share from this device." });
+  };
+
   if (loading) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-white">
@@ -284,7 +314,7 @@ const ForYouPage = () => {
                   </div>
 
                   {/* Buy button */}
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 flex flex-col items-center gap-3">
                     <Button
                       onClick={(e) => handleBuyClick(e, video.productId, video)}
                       size="icon"
@@ -299,6 +329,15 @@ const ForYouPage = () => {
                       ) : (
                         <ShoppingCart className="h-6 w-6 text-black" />
                       )}
+                    </Button>
+
+                    <Button
+                      onClick={(e) => handleShare(e, video)}
+                      size="icon"
+                      variant="secondary"
+                      className="h-12 w-12 rounded-full bg-white/80 hover:bg-white shadow-lg"
+                    >
+                      <Share2 className="h-5 w-5 text-black" />
                     </Button>
                   </div>
 
