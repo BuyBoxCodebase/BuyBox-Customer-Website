@@ -11,7 +11,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../../../../context/AuthContext";
-import { headers } from "next/headers";
 import { usePageTracking } from "@/hooks/analytics";
 
 function VerifyPageContent() {

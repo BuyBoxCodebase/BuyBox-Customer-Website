@@ -17,8 +17,6 @@ import {
   VerifyTokenCredentials,
 } from "@/types/auth";
 import Cookies from "js-cookie";
-import { headers } from "next/headers";
-import router from "next/router";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
