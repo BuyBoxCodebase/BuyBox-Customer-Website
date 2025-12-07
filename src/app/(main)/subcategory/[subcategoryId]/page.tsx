@@ -1,198 +1,392 @@
 "use client";
-import { ProductCard } from "@/components/ui/ProductCard";
-import useGetAllProducts from "@/hooks/products/useGetAllProducts";
-import { useParams } from "next/navigation";
-import { useState, useEffect, Suspense } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useRef, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { ShoppingCart, Volume2, VolumeX, Play, Pause, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import useGetAllVideo from "@/hooks/videos/useGetVideos";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
-import { usePageTracking } from "@/hooks/analytics";
-import { Product } from "@/types/product";
+import { OptimizedVideoPlayer } from "@/components/video/OptimizedVideoPlayer";
+import { useToast } from "@/hooks/toast/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { useEventTracking } from "@/hooks/analytics/useEventTracking";
+import Navbar from "@/components/navbar/Navbar";
+import { useCartContext } from "@/context/CartContext";
+import useGetAllSubVideo from "@/hooks/videos/useGetVideoSub";
 
-function SubcategoryPageContent() {
+const ForYouPage = () => {
   const params = useParams();
-  usePageTracking();
-  const [isLoading, setIsLoading] = useState(true);
-  const subcategoryParam = Array.isArray(params.subcategoryId)
-    ? params.subcategoryId[0]
-    : params.subcategoryId;
-
-  // Decode the parameter and split it into categoryId and subCategoryName.
-  const decodedParam = subcategoryParam
-    ? decodeURIComponent(subcategoryParam)
-    : "";
-  const [categoryId, subCategoryName] = decodedParam.split("/");
-
-  // Fetch products using the categoryId
-  const { products, loading } = useGetAllProducts(categoryId);
-
-  // Format the subcategory name for display (replace hyphens with spaces, capitalize)
-  const formattedSubCategoryName = subCategoryName
-    ? subCategoryName
-        .trim()
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (char) => char.toUpperCase())
-    : "";
+  const { videos, loading } = useGetAllSubVideo(params.subcategoryId as string);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [muted, setMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showPlayPause, setShowPlayPause] = useState(false);
+  const [showPlayPrompt, setShowPlayPrompt] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const playPauseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const router = useRouter();
+  const { addProductToCart } = useCartContext();
+  const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const { trackAddtoCart } = useEventTracking();
 
   useEffect(() => {
-    if (!loading) {
-      setIsLoading(false);
-    }
-  }, [loading]);
+    if (!containerRef.current || videos.length === 0 || loading) return;
 
-  // Animation variants for content transitions
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        when: "beforeChildren",
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring" as const,
-        stiffness: 300,
-        damping: 24,
-      },
-    },
-  };
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
-  // Check if the products object is empty
-  if (Object.keys(products).length === 0) {
-    return (
-      <motion.div
-        className="container mx-auto px-4 py-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}>
-        <motion.h1 className="text-3xl font-bold mb-8" variants={itemVariants}>
-          {formattedSubCategoryName}
-        </motion.h1>
-        <motion.div
-          className="bg-gray-50 rounded-xl p-8 text-center"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}>
-          <p className="text-gray-600 text-lg">
-            No products available in this category.
-          </p>
-        </motion.div>
-      </motion.div>
-    );
-  }
-
-  // Find products that match the subcategory
-  const filteredProductGroups = Object.entries(products)
-    .map(([groupName, productArray]) => {
-      // Filter products based on the subCategory.name property instead of direct subCategory value
-      const filteredProducts = productArray.filter(
-        (product: any) => product.subCategory?.name === subCategoryName
+    // Small delay to ensure DOM is fully ready
+    const setupObserver = () => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const index = wrapperRefs.current.findIndex((el) => el === entry.target);
+            if (index === -1) return;
+            if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
+              setCurrentIndex(index);
+              setIsPlaying(true);
+              setShowPlayPrompt(false);
+            }
+          });
+        },
+        { 
+          root: containerRef.current, 
+          threshold: [0.5, 0.7, 0.9],
+          rootMargin: "0px"
+        }
       );
 
-      return {
-        groupName,
-        products: filteredProducts,
-      };
-    })
-    .filter((group) => group.products.length > 0);
+      wrapperRefs.current.forEach((el) => {
+        if (el) observer.observe(el);
+      });
 
-  const hasMatchingProducts = filteredProductGroups.length > 0;
+      return observer;
+    };
 
-  // console.log(filteredProductGroups);
+    const timeoutId = setTimeout(() => {
+      const observer = setupObserver();
+      return () => observer?.disconnect();
+    }, 100);
 
-  if (!hasMatchingProducts) {
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [videos.length, loading]);
+
+  const handlePlayStateChange = (playing: boolean) => {
+    setIsPlaying(playing);
+    if (!playing) {
+      setShowPlayPrompt(true);
+    }
+  };
+
+  const handleManualPlay = () => {
+    setIsPlaying(true);
+    setShowPlayPrompt(false);
+  };
+
+  const handleVideoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (showPlayPrompt) {
+      handleManualPlay();
+      return;
+    }
+
+    const newPlayingState = !isPlaying;
+    setIsPlaying(newPlayingState);
+    showPlayPauseIcon(newPlayingState);
+  };
+
+  const showPlayPauseIcon = (playing: boolean) => {
+    setShowPlayPause(true);
+    if (playPauseTimeoutRef.current) clearTimeout(playPauseTimeoutRef.current);
+    playPauseTimeoutRef.current = setTimeout(() => setShowPlayPause(false), 800);
+  };
+
+  const handleBuyClick = async (e: React.MouseEvent, productId: string, video: any) => {
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to add items to your cart.",
+        variant: "default",
+        action: (
+          <Button variant="orange" onClick={() => router.push("/user/login")}>
+            Log In
+          </Button>
+        ),
+      });
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      await addProductToCart([
+        {
+          productId: productId,
+          quantity: 1,
+          variantId: null,
+        },
+      ]);
+      trackAddtoCart(productId, 1, 0); 
+
+      toast({
+        title: "Added to cart",
+        description: `${video.caption} has been added to your cart.`,
+      });
+
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMuted(!muted);
+  };
+
+  const handleShare = async (e: React.MouseEvent, video: any) => {
+    e.stopPropagation();
+
+    const shareTitle = video?.product?.name ?? video?.caption ?? "Check this out";
+    const shareUrl = window.location.href;
+    const shareText = `Shop now ${shareTitle}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
+      } catch (err) {
+        console.error("Error sharing:", err);
+        toast({ title: "Share failed", description: "Unable to share right now." });
+      }
+      return;
+    }
+
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({ title: "Link copied", description: "Video link copied to clipboard." });
+        return;
+      } catch (err) {
+        console.error("Clipboard write failed:", err);
+      }
+    }
+
+    toast({ title: "Share not available", description: "Unable to share from this device." });
+  };
+
+  if (loading) {
     return (
-      <motion.div
-        className="container mx-auto px-4 py-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}>
-        <motion.h1 className="text-3xl font-bold mb-8" variants={itemVariants}>
-          {formattedSubCategoryName}
-        </motion.h1>
-        <motion.div
-          className="bg-gray-50 rounded-xl p-8 text-center shadow-sm"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}>
-          <p className="text-gray-600 text-lg">
-            No products available in this subcategory.
-          </p>
-        </motion.div>
-      </motion.div>
+      <div className="h-screen w-full flex items-center justify-center bg-white">
+        <LoadingScreen />
+      </div>
     );
   }
 
+   if (!loading && (!videos || videos.length === 0)) {
+    return (
+      <>
+        <Navbar />
+        <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center px-4">
+            <ShoppingCart className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              No products available
+            </h2>
+            <p className="text-gray-600 mb-6">
+              There are currently no products in this category.
+            </p>
+            <Button
+              onClick={() => router.push("/")}
+              className=""
+            >
+              Browse Other Categories
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
   return (
-    <motion.div
-      className="container mx-auto px-0 py-24"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible">
-      <motion.div className="mb-8 pl-4" variants={itemVariants}>
-        <h1 className="text-3xl font-bold">{formattedSubCategoryName}</h1>
-        <p className="text-gray-600 mt-2">
-          Browse our selection of {formattedSubCategoryName} products
-        </p>
-      </motion.div>
+    <>
+    <Navbar/>
+      <div className="h-screen w-full flex items-center justify-center ">
+        <style jsx global>{`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          @keyframes fadeInOut {
+            0% {
+              opacity: 0;
+              transform: scale(0.8);
+            }
+            20% {
+              opacity: 1;
+              transform: scale(1);
+            }
+            80% {
+              opacity: 1;
+              transform: scale(1);
+            }
+            100% {
+              opacity: 0;
+              transform: scale(0.8);
+            }
+          }
+          .animate-fade-in-out {
+            animation: fadeInOut 0.8s ease-in-out;
+          }
+          @keyframes pulse {
+            0%,
+            100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+            50% {
+              transform: scale(1.1);
+              opacity: 0.8;
+            }
+          }
+          .animate-pulse-slow {
+            animation: pulse 2s ease-in-out infinite;
+          }
+        `}</style>
 
-      {filteredProductGroups.map(
-        ({ groupName, products: filteredProducts }, groupIndex) => {
-          // Sort products by inventory quantity (highest first)
-          const sortedProducts = [...filteredProducts].sort((a, b) => {
-            const aQty = a.inventory?.quantity || 0;
-            const bQty = b.inventory?.quantity || 0;
-            return bQty - aQty;
-          });
+        <div className="relative h-full w-full max-w-md mx-auto bg-black shadow-2xl">
+          <div
+            ref={containerRef}
+            className="h-full w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth hide-scrollbar"
+          >
+            {videos.map((video, index) => {
+              const isCurrentVideo = index === currentIndex;
+              const isPriorityVideo = Math.abs(index - currentIndex) <= 1; 
 
-          return (
-            <motion.div
-              key={groupName}
-              className="mb-12"
-              variants={itemVariants}
-              transition={{ delay: 0.1 * groupIndex }}>
-              {groupName !== subCategoryName && (
-                <motion.h2
-                  className="text-2xl font-bold mb-6 pl-2"
-                  variants={itemVariants}>
-                  {groupName}
-                </motion.h2>
-              )}
+              return (
+                <div
+                  key={video.id}
+                  ref={(el) => {
+                    wrapperRefs.current[index] = el;
+                  }}
+                  className="relative h-full w-full snap-start snap-always flex items-center justify-center"
+                >
+                  <OptimizedVideoPlayer
+                    src={video.videoUrl}
+                    isActive={isCurrentVideo && isPlaying}
+                    isPriority={isPriorityVideo}
+                    muted={muted}
+                    onPlayStateChange={handlePlayStateChange}
+                    onClick={handleVideoClick}
+                    className="absolute inset-0 w-full h-full object-cover cursor-pointer"
+                  />
 
-              <div className="grid grid-cols-1 gap-0">
-                {sortedProducts.map((product: Product, index) => (
-                  <motion.div
-                    key={product.id}
-                    variants={itemVariants}
-                    custom={index}
-                    transition={{ delay: 0.05 * index }}>
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          );
-        }
-      )}
-    </motion.div>
+                  {/* Play Prompt Overlay */}
+                  {isCurrentVideo && showPlayPrompt && (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center z-30 bg-black/40 cursor-pointer"
+                    onClick={handleManualPlay}
+                  >
+                    <div className="flex flex-col items-center gap-4 animate-pulse-slow">
+                      <div className="bg-white rounded-full p-6 shadow-2xl">
+                        <Play className="h-16 w-16 text-black fill-black" />
+                      </div>
+                      <p className="text-white text-lg font-semibold">Tap to play</p>
+                    </div>
+                  </div>
+                  )}
+
+                  {/* Play/Pause Overlay */}
+                  {isCurrentVideo && showPlayPause && !showPlayPrompt && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                    <div className="bg-black/50 rounded-full p-6 backdrop-blur-sm animate-fade-in-out">
+                      {isPlaying ? (
+                        <Pause className="h-16 w-16 text-white" />
+                      ) : (
+                        <Play className="h-16 w-16 text-white" />
+                      )}
+                    </div>
+                  </div>
+                  )}
+
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+
+                  {/* Bottom caption */}
+                  <div className="absolute bottom-20 left-4 right-20 z-10 pointer-events-none">
+                    <p className="text-white text-lg font-semibold mb-2 drop-shadow-lg">
+                      {video.caption}
+                    </p>
+                    <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                      <span className="text-white text-sm font-medium">
+                        Size: {video.size} : Price: ${video.product.basePrice}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Buy button */}
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 flex flex-col items-center gap-3">
+                    <Button
+                      onClick={(e) => handleBuyClick(e, video.productId, video)}
+                      size="icon"
+                      disabled={isAddingToCart}
+                      className="h-14 w-14 rounded-full bg-white hover:bg-gray-100 shadow-lg"
+                    >
+                      {isAddingToCart ? (
+                        <svg className="animate-spin h-6 w-6 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <ShoppingCart className="h-6 w-6 text-black" />
+                      )}
+                    </Button>
+
+                    <Button
+                      onClick={(e) => handleShare(e, video)}
+                      size="icon"
+                      variant="secondary"
+                      className="h-12 w-12 rounded-full bg-white/80 hover:bg-white shadow-lg"
+                    >
+                      <Share2 className="h-5 w-5 text-black" />
+                    </Button>
+                  </div>
+
+                  {/* Mute button */}
+                  <div className="absolute bottom-20 right-4 z-10">
+                    <Button
+                      onClick={toggleMute}
+                      size="icon"
+                      variant="ghost"
+                      className="h-12 w-12 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm"
+                    >
+                      {muted ? (
+                        <VolumeX className="h-5 w-5 text-white" />
+                      ) : (
+                        <Volume2 className="h-5 w-5 text-white" />
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Video indicator dots */}
+                 
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </>
   );
-}
+};
 
-export default function SubcategoryPage() {
-  return (
-    <Suspense fallback={<LoadingScreen />}>
-      <SubcategoryPageContent />
-    </Suspense>
-  );
-}
+export default ForYouPage;

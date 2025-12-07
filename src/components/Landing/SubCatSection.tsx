@@ -21,7 +21,8 @@ export default function SubCatSection({
   // Transform subcategories into the format expected by HoverEffect
   const formattedItems = subcategories.map((subCategory) => ({
     title: subCategory.name,
-    link: `/subcategory/${subCategory.categoryId}%2F${subCategory.name}`,
+    // link: `/subcategory/${subCategory.categoryId}%2F${subCategory.name}`,
+    link: `/subcategory/${subCategory.id}`,
     image: subCategory.imageUrl,
   }));
 
