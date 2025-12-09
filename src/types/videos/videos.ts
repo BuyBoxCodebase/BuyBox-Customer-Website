@@ -1,3 +1,4 @@
+import { Variant } from "../product";
 
 export interface Video {
   id: string;
@@ -8,6 +9,7 @@ export interface Video {
   createdAt: string;
   updatedAt: string;
   product: Price;
+  variants: Variant[];
 }
 
 interface Price{

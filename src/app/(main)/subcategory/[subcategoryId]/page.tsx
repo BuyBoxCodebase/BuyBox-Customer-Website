@@ -12,6 +12,7 @@ import { useEventTracking } from "@/hooks/analytics/useEventTracking";
 import Navbar from "@/components/navbar/Navbar";
 import { useCartContext } from "@/context/CartContext";
 import useGetAllSubVideo from "@/hooks/videos/useGetVideoSub";
+import { VariantSelectionModal } from "@/components/ui/VariantSelectionModal";
 
 const ForYouPage = () => {
   const params = useParams();
@@ -22,6 +23,8 @@ const ForYouPage = () => {
   const [showPlayPause, setShowPlayPause] = useState(false);
   const [showPlayPrompt, setShowPlayPrompt] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
   const playPauseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -120,13 +123,27 @@ const ForYouPage = () => {
       return;
     }
 
+    // Check if product has variants
+    const hasVariants = video.product?.variants && video.product.variants.length > 0;
+    
+    if (hasVariants) {
+      // Show variant selection modal
+      setSelectedVideo(video);
+      setIsVariantModalOpen(true);
+    } else {
+      // Add to cart directly with null variantId
+      await addToCartWithVariant(productId, null, video);
+    }
+  };
+
+  const addToCartWithVariant = async (productId: string, variantId: string | null, video: any) => {
     setIsAddingToCart(true);
     try {
       await addProductToCart([
         {
           productId: productId,
           quantity: 1,
-          variantId: null,
+          variantId: variantId,
         },
       ]);
       trackAddtoCart(productId, 1, 0); 
@@ -144,6 +161,12 @@ const ForYouPage = () => {
       });
     } finally {
       setIsAddingToCart(false);
+    }
+  };
+
+  const handleVariantConfirm = async (variantId: string) => {
+    if (selectedVideo) {
+      await addToCartWithVariant(selectedVideo.productId, variantId, selectedVideo);
     }
   };
 
@@ -217,6 +240,20 @@ const ForYouPage = () => {
   return (
     <>
     <Navbar/>
+      {/* Variant Selection Modal */}
+      {selectedVideo && (
+        <VariantSelectionModal
+          isOpen={isVariantModalOpen}
+          onClose={() => {
+            setIsVariantModalOpen(false);
+            setSelectedVideo(null);
+          }}
+          variants={selectedVideo.product?.variants || []}
+          onConfirm={handleVariantConfirm}
+          productName={selectedVideo.caption || selectedVideo.product?.name || "Product"}
+        />
+      )}
+      
       <div className="h-screen w-full flex items-center justify-center ">
         <style jsx global>{`
           .hide-scrollbar::-webkit-scrollbar {
