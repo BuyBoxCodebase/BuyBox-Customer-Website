@@ -16,7 +16,7 @@ export default function Footer() {
             </motion.div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1 text-sm text-gray-600">
-                <p>© 2025 BuyBox </p>
+                <p>© 2026 BuyBox </p>
                 {/* <Link href='/'>@buybox</Link> */}
               </div>
               <div className="text-sm flex">
