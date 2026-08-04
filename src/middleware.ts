@@ -6,7 +6,8 @@ export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("activationToken")?.value
   const { pathname } = request.nextUrl
 
-  if(pathname.startsWith("/user/privacy") || pathname.startsWith("/user/terms") || pathname.startsWith("/customer")){ 
+  // Public routes
+  if(pathname === "/" || pathname.startsWith("/user/privacy") || pathname.startsWith("/user/terms") || pathname.startsWith("/customer")){
     return NextResponse.next()
   }
 

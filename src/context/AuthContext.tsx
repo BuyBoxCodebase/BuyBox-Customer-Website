@@ -138,8 +138,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (error) => {
         const originalRequest = error.config;
 
+        // Guests (no stored token) can browse public pages like the homepage —
+        // a 401 there is expected and must not bounce them to login.
+        const hasStoredToken =
+          !!localStorage.getItem("accessToken") || !!localStorage.getItem("token");
+
         // If error is 401 and we haven't retried yet
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && hasStoredToken && !originalRequest._retry) {
           originalRequest._retry = true;
 
           const newAccessToken = await refreshAccessToken();
