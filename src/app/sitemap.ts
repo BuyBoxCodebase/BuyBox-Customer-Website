@@ -9,7 +9,8 @@ const BASE_URL = "https://www.buyboxie.com";
 async function getProducts(): Promise<Product[]> {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/get-all-product/`
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/get-all-product/`,
+      { timeout: 10_000 }
     );
     return Object.values(res.data).flat() as Product[];
   } catch (e) {
@@ -83,6 +84,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           priority: 0.8,
         }))
   );
+
+  // A backend outage must never fail the build — but a sitemap that silently
+  // ships with only static routes is invisible SEO damage, so say so loudly.
+  if (categories.length === 0 || products.length === 0) {
+    console.warn(
+      `\n[sitemap] DEGRADED: built with ${categories.length} categories and ` +
+        `${products.length} products from ${process.env.NEXT_PUBLIC_BACKEND_URL}.\n` +
+        `[sitemap] Deploy will succeed, but search engines will only see ` +
+        `${staticRoutes.length} static URLs. Check the backend is reachable.\n`
+    );
+  }
 
   return [
     ...staticRoutes,
