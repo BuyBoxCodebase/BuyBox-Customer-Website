@@ -5,7 +5,7 @@ export const getCategories = async ():Promise<Category[]> => {
   try {
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/category/get`,
-      { timeout: 10_000 }
+      { timeout: 30_000 }
     );
     return Array.isArray(response.data) ? response.data : [];
   } catch (err) {

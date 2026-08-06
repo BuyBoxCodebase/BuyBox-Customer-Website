@@ -10,7 +10,9 @@ async function getProducts(): Promise<Product[]> {
   try {
     const res = await axios.get(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/get-all-product/`,
-      { timeout: 10_000 }
+      // Endpoint returns ~1.3MB and consistently takes ~15s; keep generous
+      // headroom so a slow-but-healthy backend still yields a full sitemap.
+      { timeout: 45_000 }
     );
     return Object.values(res.data).flat() as Product[];
   } catch (e) {
