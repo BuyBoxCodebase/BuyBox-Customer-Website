@@ -1,17 +1,15 @@
-"use client";
-
+'use client';
 import { Suspense } from "react";
 import { motion } from "framer-motion";
 import Hero from "@/components/Landing/Hero";
 import LandingPage from "@/components/Landing/LandingPage";
 import { usePageTracking } from "../hooks/analytics";
-import AdBanner from "@/components/ad/ad-banner";
 import Signin from "@/components/Landing/Signin";
 import WelcomeBackModal from "@/components/ui/WelcomeBackModal";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
-// Animated fallback using Framer Motion
+
 const LoadingAnimation = () => (
   <motion.div
     className="flex items-center justify-center min-h-screen"
@@ -23,19 +21,16 @@ const LoadingAnimation = () => (
   </motion.div>
 );
 
-// A separate component that uses the hook and renders page content
 function PageContent() {
   usePageTracking();
   const { showWelcomeModal, hideWelcomeModal, user } = useAuth();
-
   return (
     <>
       <Navbar />
       <Hero />
       <Signin />
-      {/* <AdBanner /> */}
       <LandingPage />
-      <WelcomeBackModal 
+      <WelcomeBackModal
         isOpen={showWelcomeModal}
         onClose={hideWelcomeModal}
         userName={user?.name}
@@ -45,7 +40,6 @@ function PageContent() {
   );
 }
 
-// Home component wraps PageContent with Suspense
 export default function Home() {
   return (
     <Suspense fallback={<LoadingAnimation />}>

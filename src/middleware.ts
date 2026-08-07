@@ -6,6 +6,12 @@ export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("activationToken")?.value
   const { pathname } = request.nextUrl
 
+  // Crawler-facing files: must stay reachable without auth or Google sees a
+  // login redirect instead of robots.txt / sitemap.xml.
+  if (pathname === "/robots.txt" || pathname === "/sitemap.xml") {
+    return NextResponse.next()
+  }
+
   // Public routes
   if(pathname === "/" || pathname.startsWith("/user/privacy") || pathname.startsWith("/user/terms") || pathname.startsWith("/customer")){
     return NextResponse.next()
@@ -49,7 +55,8 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/",                  
-    "/((?!api|_next|favicon\\.ico).*)", 
+    // Crawler + static files must never hit the auth wall
+    "/((?!api|_next|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|txt|xml)).*)",
     "/user/login",
     "/user/register",
     "/user/verify",
