@@ -12,8 +12,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Public routes
-  if(pathname === "/" || pathname.startsWith("/user/privacy") || pathname.startsWith("/user/terms") || pathname.startsWith("/customer")){
+  // Public routes.
+  // Browsing is open Amazon-style: product, category and subcategory pages are
+  // all listed in sitemap.xml, so walling them off made every indexed URL
+  // redirect to /user/login. Cart, checkout and orders stay behind the wall,
+  // and add-to-cart still prompts guests to log in.
+  const publicBrowsePaths = ["/product", "/category", "/subcategory"]
+  if(
+    pathname === "/" ||
+    publicBrowsePaths.some((p) => pathname.startsWith(p)) ||
+    pathname.startsWith("/user/privacy") ||
+    pathname.startsWith("/user/terms") ||
+    pathname.startsWith("/customer")
+  ){
     return NextResponse.next()
   }
 

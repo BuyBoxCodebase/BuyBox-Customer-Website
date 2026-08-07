@@ -95,7 +95,7 @@ export function SubCatCard({ product }: ProductCardProps) {
       <Card className="overflow-hidden relative group hover:shadow-lg transition-shadow">
         <div className="aspect-square relative">
           <Image
-            src={product.images[0] || "/placeholder.png"}
+            src={product.images[0] || "/placeholder.svg"}
             alt={product.name}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"

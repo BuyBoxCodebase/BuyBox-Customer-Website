@@ -38,7 +38,7 @@ export function ProductCard({ product }: ProductCardProps) {
   ].filter(Boolean);
 
   // Fallback to placeholder if no images - LIMIT TO MAXIMUM 4 IMAGES
-  const images = allImages.length > 0 ? allImages.slice(0, 4) : ["/placeholder.png"];
+  const images = allImages.length > 0 ? allImages.slice(0, 4) : ["/placeholder.svg"];
 
   // Split the price into dollars and cents for formatting
   const [dollars, cents] = salePrice.toLocaleString().split(".");
