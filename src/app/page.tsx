@@ -19,7 +19,9 @@ export default function Home() {
         <LandingPage />
       </Suspense>
 
-      <HomeClientWrapper />
+      <Suspense fallback={null}>
+        <HomeClientWrapper />
+      </Suspense>
       <Footer />
     </>
   );
