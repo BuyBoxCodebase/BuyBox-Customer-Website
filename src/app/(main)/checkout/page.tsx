@@ -24,9 +24,12 @@ import useCartStore from "@/zustand/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEventTracking, usePageTracking } from "@/hooks/analytics";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import type { PaymentMode as BackendPaymentMode } from "@/types/order/get_order_details";
 
 type LocationMode = "none" | "manual" | "current";
-type PaymentMode = "CASH_ON_DELIVERY" | "ONLINE";
+// "ONLINE" is a UI-only placeholder for the online-payment checkbox, which is
+// still disabled. It is not a backend PaymentMode, so it is rejected before submit.
+type PaymentMode = BackendPaymentMode | "ONLINE";
 type DeliveryTime = "24hr" /* | "5hr" | "3hr" */;
 
 type FormErrors = {
@@ -212,6 +215,15 @@ function CheckoutPageContent() {
         ? currentLocation
         : `${formData.address}, ${formData.city}, ${formData.state}`;
 
+    const paymentMode = formData.paymentMode;
+    if (paymentMode === "ONLINE") {
+      setFormErrors((prev) => ({
+        ...prev,
+        paymentMode: "Online payment is not available yet",
+      }));
+      return;
+    }
+
     try {
       // console.log(cart);
       const orderData = {
@@ -219,7 +231,7 @@ function CheckoutPageContent() {
         phoneNumber: formData.phoneNumber,
         address: completeAddress,
         cartId: cartId!,
-        paymentMode: formData.paymentMode,
+        paymentMode,
         deliveryTime: formData.deliveryTime,
       };
       // console.log(orderData);
