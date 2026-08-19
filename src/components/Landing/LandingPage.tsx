@@ -1,23 +1,19 @@
-"use client";
-import useGetAllCategory from "@/hooks/category/useGetAllCategory";
 import React from "react";
 import SubCatSection from "./SubCatSection";
-import LandingPageSkeleton from "../Skeleton/LandingSkeleton";
+import { Category } from "@/types/category";
 
-const LandingPage = () => {
-  const { categories, loading } = useGetAllCategory();
+import { getCategories } from "@/lib/get-category";
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 pt-8">
-        <LandingPageSkeleton />
-      </div>
-    );
+const LandingPage = async () => {
+  const categories = await getCategories();
+  
+  if (!categories || categories.length === 0) {
+    return null;
   }
 
   return (
     <div className="container mx-auto px-2 md:px-4 lg:px-4">
-      {categories.map((category) => (
+      {categories.map((category: Category) => (
         <SubCatSection
           key={category.id}
           categoryTitle={category.name}
