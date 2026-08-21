@@ -28,7 +28,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head />
-      <body className={`${inter.className} bg-gray-50 min-h-screen flex flex-col`}>
+      {/* extensions (ColorZilla, Grammarly, password managers) inject attributes
+          onto <body> before React hydrates — suppress the resulting mismatch
+          warning here rather than let it mask real hydration bugs deeper in the tree */}
+      <body
+        suppressHydrationWarning
+        className={`${inter.className} bg-gray-50 min-h-screen flex flex-col`}
+      >
         <AuthProvider>
           <CartProvider>
             <Toaster />
