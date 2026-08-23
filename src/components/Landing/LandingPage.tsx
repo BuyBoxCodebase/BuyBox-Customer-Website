@@ -6,7 +6,6 @@ import { getCategories } from "@/lib/get-category";
 
 const LandingPage = async () => {
   const categories = await getCategories();
-  
   if (!categories || categories.length === 0) {
     return null;
   }
