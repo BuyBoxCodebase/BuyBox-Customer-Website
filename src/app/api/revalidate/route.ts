@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const { tag, secret } = await request.json();
     
     // In production, ensure REVALIDATION_SECRET is set in your .env
-    const expectedSecret = process.env.REVALIDATION_SECRET || "default-secret-change-me";
+    const expectedSecret = process.env.REVALIDATION_SECRET;
     
     if (secret !== expectedSecret) {
       return NextResponse.json({ message: "Invalid secret" }, { status: 401 });
