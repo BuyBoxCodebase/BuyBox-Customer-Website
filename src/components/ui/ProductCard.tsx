@@ -15,9 +15,19 @@ import { useAuth } from "@/context/AuthContext";
 
 interface ProductCardProps {
   product: Product;
+  /**
+   * "grid" is the vertical tile: image on top, details under it. It is the
+   * default because most callers (the rails, the 6-up category grids) give the
+   * card a ~200px column, and the horizontal card needs roughly 500px before
+   * its image column and its text stop fighting for the same space.
+   * "list" is that horizontal card, for the full-width search and subcategory
+   * results.
+   */
+  layout?: "grid" | "list";
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, layout = "grid" }: ProductCardProps) {
+  const isList = layout === "list";
   const router = useRouter();
   const { toast } = useToast();
   const { addProductToCart } = useCartContext();
@@ -197,22 +207,30 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="block group mb-4">
-      <Card className="flex flex-col sm:flex-row bg-white hover:shadow-xl transition-all duration-300 h-full overflow-hidden border border-gray-200 shadow-md">
+    <Link href={`/product/${product.id}`} className="group flex h-full flex-col pb-4">
+      <Card
+        className={`flex flex-1 flex-col ${
+          isList ? "sm:flex-row" : ""
+        } bg-white hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 shadow-md`}
+      >
         {/* Dynamic Image Grid - Enhanced styling */}
-        <div className="relative flex-shrink-0 h-80 sm:h-68 w-full sm:w-56 md:w-64 lg:w-72 p-3">
+        <div
+          className={`relative flex-shrink-0 h-80 w-full ${
+            isList ? "sm:w-56 md:w-64 lg:w-72" : ""
+          } p-3`}
+        >
           {renderImageGrid()}
         </div>
 
         {/* Product Details - Same as before */}
-        <div className="flex flex-col justify-between flex-1 p-4 sm:p-5">
+        <div className="flex flex-col justify-between flex-1 min-w-0 p-4 sm:p-5">
           <div className="flex-1">
             {/* Title & Description */}
             <div className="mb-4">
-              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
+              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight min-h-[2.5em]">
                 {product.name}
               </h1>
-              <h2 className="text-sm sm:text-sm text-gray-600 mt-2 line-clamp-3">
+              <h2 className="text-sm sm:text-sm text-gray-600 mt-2 line-clamp-3 min-h-[3.75rem]">
                 {product.description}
               </h2>
             </div>
@@ -244,7 +262,9 @@ export function ProductCard({ product }: ProductCardProps) {
           <button
             onClick={handleAddToCart}
             disabled={isAdding || isOutOfStock}
-            className={`w-full sm:w-48 h-9 sm:h-10 px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 ${
+            className={`w-full ${
+              isList ? "sm:w-48" : ""
+            } h-9 sm:h-10 px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 ${
               isOutOfStock
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-yellow-400 text-black hover:bg-yellow-500 shadow-sm hover:shadow-md"
