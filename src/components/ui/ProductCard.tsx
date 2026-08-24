@@ -197,10 +197,10 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="block group mb-4">
-      <Card className="flex flex-col sm:flex-row bg-white hover:shadow-xl transition-all duration-300 h-full overflow-hidden border border-gray-200 shadow-md">
+    <Link href={`/product/${product.id}`} className="group flex h-full flex-col pb-4">
+      <Card className="flex flex-1 flex-col sm:flex-row bg-white hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 shadow-md">
         {/* Dynamic Image Grid - Enhanced styling */}
-        <div className="relative flex-shrink-0 h-80 sm:h-68 w-full sm:w-56 md:w-64 lg:w-72 p-3">
+        <div className="relative flex-shrink-0 h-80 sm:h-72 w-full sm:w-56 md:w-64 lg:w-72 p-3">
           {renderImageGrid()}
         </div>
 
@@ -209,10 +209,10 @@ export function ProductCard({ product }: ProductCardProps) {
           <div className="flex-1">
             {/* Title & Description */}
             <div className="mb-4">
-              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
+              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight min-h-[2.5em]">
                 {product.name}
               </h1>
-              <h2 className="text-sm sm:text-sm text-gray-600 mt-2 line-clamp-3">
+              <h2 className="text-sm sm:text-sm text-gray-600 mt-2 line-clamp-3 min-h-[3.75rem]">
                 {product.description}
               </h2>
             </div>
