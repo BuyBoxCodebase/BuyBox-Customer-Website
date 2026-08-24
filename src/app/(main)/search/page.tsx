@@ -117,7 +117,7 @@ function SearchResults() {
             animate="show">
             {sortedSearchResults.map((product) => (
               <motion.div key={product.id} variants={itemVariants}>
-                <ProductCard product={product} />
+                <ProductCard product={product} layout="list" />
               </motion.div>
             ))}
           </motion.div>

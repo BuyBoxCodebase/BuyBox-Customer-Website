@@ -177,7 +177,7 @@ function SubcategoryPageContent() {
                     variants={itemVariants}
                     custom={index}
                     transition={{ delay: 0.05 * index }}>
-                    <ProductCard product={product} />
+                    <ProductCard product={product} layout="list" />
                   </motion.div>
                 ))}
               </div>
