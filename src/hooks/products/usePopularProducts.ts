@@ -12,7 +12,7 @@ export interface PopularProductSnapshot {
   product?: Product;
 }
 
-export default function usePopularProducts(categoryId: string, customerId?: string | null, limit: number = 20) {
+export default function usePopularProducts(categoryId?: string | null, customerId?: string | null, limit: number = 20) {
   const [popularProducts, setPopularProducts] = useState<PopularProductSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -21,7 +21,10 @@ export default function usePopularProducts(categoryId: string, customerId?: stri
     const fetchPopularProducts = async () => {
       setLoading(true);
       try {
-        let url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/popular?categoryId=${categoryId}&limit=${limit}`;
+        let url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/popular?limit=${limit}`;
+        if (categoryId) {
+          url += `&categoryId=${categoryId}`;
+        }
         if (customerId) {
           url += `&customerId=${customerId}`;
         }
@@ -42,9 +45,7 @@ export default function usePopularProducts(categoryId: string, customerId?: stri
       }
     };
 
-    if (categoryId) {
-      fetchPopularProducts();
-    }
+    fetchPopularProducts();
   }, [categoryId, customerId, limit]);
 
   return { popularProducts, loading, error };

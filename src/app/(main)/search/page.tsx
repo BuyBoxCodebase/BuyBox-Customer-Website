@@ -6,6 +6,8 @@ import useGetAllProducts from "@/hooks/products/useGetAllProducts";
 import { useSearchProducts } from "@/hooks/products/useSearchProducts";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/ui/ProductCard";
+import { MasonryProductCard } from "@/components/ui/MasonryProductCard";
+import { MasonryGrid } from "@/components/ui/MasonryGrid";
 import { Loader2 } from "lucide-react";
 import { usePageTracking } from "@/hooks/analytics";
 import { Product } from "@/types/product";
@@ -92,8 +94,8 @@ function SearchResults() {
   }
 
   return (
-    <div className="pt-4">
-      <h1 className="text-2xl font-bold mb-4 pl-2">
+    <div className="pt-4 px-6">
+      <h1 className="text-2xl font-bold mb-4">
         Search Results for "{query}"
       </h1>
       {sortedSearchResults.length === 0 ? (
@@ -111,15 +113,18 @@ function SearchResults() {
             Found {sortedSearchResults.length} results for "{query}"
           </p>
           <motion.div
-            className="grid grid-cols-1 gap-0"
             variants={containerVariants}
             initial="hidden"
             animate="show">
-            {sortedSearchResults.map((product) => (
-              <motion.div key={product.id} variants={itemVariants}>
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
+            <MasonryGrid
+              items={sortedSearchResults}
+              distributeLeftToRight={true}
+              renderItem={(product) => (
+                <motion.div key={product.id} variants={itemVariants} className="w-full">
+                  <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} />
+                </motion.div>
+              )}
+            />
           </motion.div>
         </>
       )}
@@ -137,14 +142,18 @@ function SearchPageLoading({ query }: { query: string }) {
 
       {/* Animated grid loading using framer-motion */}
       <motion.div
-        className="grid grid-cols-1 gap-0"
+        className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4"
         variants={containerVariants}
         initial="hidden"
-        animate="show">
-        {[...Array(8)].map((_, index) => (
-          <motion.div key={index} variants={itemVariants}>
-            <ProductCardSkeleton />
-          </motion.div>
+        animate="show"
+      >
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            variants={itemVariants}
+            className="bg-gray-200 rounded-lg animate-pulse break-inside-avoid"
+            style={{ height: `${[250, 300, 200, 350, 280, 220, 310, 270][i % 8]}px` }}
+          />
         ))}
       </motion.div>
     </div>

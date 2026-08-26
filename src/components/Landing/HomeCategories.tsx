@@ -15,7 +15,8 @@ const HomeCategories = async () => {
       {categories.map((category: Category) => (
         <SubCatSection
           key={category.id}
-          categoryTitle={category.name}
+          // categoryTitle={category.name}
+          categoryTitle={"Categories"}
           subcategories={category.subCategories}
           isLast={category.id === categories[categories.length - 1].id}
         />
