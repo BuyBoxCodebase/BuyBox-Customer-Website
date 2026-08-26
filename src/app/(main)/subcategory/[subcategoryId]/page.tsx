@@ -53,6 +53,7 @@ export default async function SubcategoryPage({ params }: { params: Promise<{ su
       <SubcategoryPageClient 
         data={data} 
         formattedSubCategoryName={formattedSubCategoryName} 
+        categoryId={categoryId}
       />
     </Suspense>
   );

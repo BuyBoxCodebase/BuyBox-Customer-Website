@@ -5,16 +5,16 @@ import { motion } from "framer-motion";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { usePageTracking } from "@/hooks/analytics";
 import { Product } from "@/types/product";
-
+import PopularProducts from "@/components/recommendation/PopularProducts";
 interface SubcategoryPageClientProps {
   data: { groupName: string; products: Product[] } | null;
   formattedSubCategoryName: string;
+  categoryId: string;
 }
 
-export default function SubcategoryPageClient({ data, formattedSubCategoryName }: SubcategoryPageClientProps) {
+export default function SubcategoryPageClient({ data, formattedSubCategoryName, categoryId }: SubcategoryPageClientProps) {
   usePageTracking();
   const [isClient, setIsClient] = useState(false);
-
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -75,22 +75,23 @@ export default function SubcategoryPageClient({ data, formattedSubCategoryName }
 
   return (
     <motion.div
-      className="container mx-auto px-0 py-24"
+      className="container mx-auto px-0 pt-5"
       variants={containerVariants}
       initial="hidden"
       animate="visible">
       <motion.div className="mb-8 pl-4" variants={itemVariants}>
         <h1 className="text-3xl font-bold">{formattedSubCategoryName}</h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-gray-600 text-sm">
           Browse our selection of {formattedSubCategoryName} products
         </p>
       </motion.div>
-
+      <PopularProducts categoryId={categoryId} />
       <motion.div
-        className="mb-12"
+        className="mb-12 px-4"
         variants={itemVariants}
         transition={{ delay: 0.1 }}>
-        <div className="grid grid-cols-1 gap-0">
+        <h2 className="text-2xl font-bold mb-6 text-gray-900">All Products</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {data.products.map((product: Product, index: number) => (
             <motion.div
               key={product.id}

@@ -138,7 +138,7 @@ function CategoryPageContent() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6 text-center">{categoryTitle}</h1>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {categoryProducts.map((product: Product) => (
           <div key={product.id} className="relative">
             <ProductCard product={product} />

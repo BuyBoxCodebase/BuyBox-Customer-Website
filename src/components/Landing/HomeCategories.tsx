@@ -4,7 +4,7 @@ import { Category } from "@/types/category";
 
 import { getCategories } from "@/lib/get-category";
 
-const LandingPage = async () => {
+const HomeCategories = async () => {
   const categories = await getCategories();
   if (!categories || categories.length === 0) {
     return null;
@@ -24,4 +24,4 @@ const LandingPage = async () => {
   );
 };
 
-export default LandingPage;
+export default HomeCategories;

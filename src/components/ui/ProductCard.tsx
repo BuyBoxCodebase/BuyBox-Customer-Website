@@ -197,10 +197,10 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="block group mb-4">
-      <Card className="flex flex-col sm:flex-row bg-white hover:shadow-xl transition-all duration-300 h-full overflow-hidden border border-gray-200 shadow-md">
+    <Link href={`/product/${product.id}`} className="block group h-full">
+      <Card className="flex flex-col bg-white hover:shadow-xl transition-all duration-300 h-full overflow-hidden border border-gray-200 shadow-md">
         {/* Dynamic Image Grid - Enhanced styling */}
-        <div className="relative flex-shrink-0 h-80 sm:h-68 w-full sm:w-56 md:w-64 lg:w-72 p-3">
+        <div className="relative w-full aspect-[4/4] p-3">
           {renderImageGrid()}
         </div>
 
