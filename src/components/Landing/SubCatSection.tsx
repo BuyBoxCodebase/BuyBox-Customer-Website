@@ -64,11 +64,11 @@ export default function SubCatSection({
                 >
                   <Card className="transition-all duration-300">
                     {subCategory.imageUrl && (
-                      <div className="aspect-[4/3] relative object-cover">
+                      <div className="relative object-cover">
                         <img
                           src={subCategory.imageUrl}
                           alt={subCategory.name}
-                          className="w-[298px] rounded-xl h-72 object-cover"
+                          className="w-36 h-48 md:w-[298px] md:h-72 rounded-xl object-cover"
                         />
                       </div>
                     )}

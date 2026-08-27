@@ -121,7 +121,7 @@ function SearchResults() {
               distributeLeftToRight={true}
               renderItem={(product) => (
                 <motion.div key={product.id} variants={itemVariants} className="w-full">
-                  <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} />
+                  <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} dynamicBackground={false} />
                 </motion.div>
               )}
             />

@@ -26,12 +26,35 @@ export const useEventTracking = () => {
     });
   };
 
+  const trackProductActionToBackend = async (productId: string, type: 'VIEW' | 'CART_ADD') => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return; // backend requires auth for clustering
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      await fetch(`${backendUrl}/events/product`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ productId, type })
+      });
+    } catch (e) {
+      console.error('Failed to log event to backend', e);
+    }
+  };
+
+  const trackProductView = (productId: string) => {
+    trackProductActionToBackend(productId, 'VIEW');
+  };
+
   const trackAddtoCart = (productId: string, quantity: number, price: number) => {
     trackEvent('add_to_cart', {
       product_id: productId,
       quantity,
       price
     });
+    trackProductActionToBackend(productId, 'CART_ADD');
   }
 
   const trackOrder = (orderId: string, total: number, currency: string,phoneNumber:string) => {
@@ -54,6 +77,7 @@ export const useEventTracking = () => {
     trackSearch,
     trackCustomEvent,
     trackAddtoCart,
-    trackOrder
+    trackOrder,
+    trackProductView
   };
 };

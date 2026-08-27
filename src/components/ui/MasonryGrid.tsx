@@ -59,9 +59,12 @@ export function MasonryGrid<T>({ items, renderItem, distributeLeftToRight = fals
   });
 
   return (
-    <div className="flex gap-4 items-start w-full">
+    <div 
+      className="grid gap-4 items-start w-full"
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
       {columnData.map((col, colIndex) => (
-        <div key={colIndex} className="flex flex-col gap-4 flex-1">
+        <div key={colIndex} className="flex flex-col gap-4">
           {col.map((item, itemIndex) => (
             <React.Fragment key={itemIndex}>
               {renderItem(item, colIndex + itemIndex * columns)}
