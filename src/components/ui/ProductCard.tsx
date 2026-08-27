@@ -9,6 +9,15 @@ import { AddToCartButton } from "@/components/ui/AddToCartButton";
 
 interface ProductCardProps {
   product: Product;
+  /**
+   * "grid" is the vertical tile: image on top, details under it. It is the
+   * default because most callers (the rails, the 6-up category grids) give the
+   * card a ~200px column, and the horizontal card needs roughly 500px before
+   * its image column and its text stop fighting for the same space.
+   * "list" is that horizontal card, for the full-width search and subcategory
+   * results.
+   */
+  layout?: "grid" | "list";
 }
 
 export function ProductCard({ product }: ProductCardProps) {
@@ -149,14 +158,14 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Product Details - Same as before */}
-        <div className="flex flex-col justify-between flex-1 p-4 sm:p-5">
+        <div className="flex flex-col justify-between flex-1 min-w-0 p-4 sm:p-5">
           <div className="flex-1">
             {/* Title & Description */}
             <div className="mb-4">
-              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
+              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight min-h-[2.5em]">
                 {product.name}
               </h1>
-              <h2 className="text-sm sm:text-sm text-gray-600 mt-2 line-clamp-3">
+              <h2 className="text-sm sm:text-sm text-gray-600 mt-2 line-clamp-3 min-h-[3.75rem]">
                 {product.description}
               </h2>
             </div>
