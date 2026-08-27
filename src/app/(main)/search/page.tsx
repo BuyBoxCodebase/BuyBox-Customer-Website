@@ -109,9 +109,6 @@ function SearchResults() {
         </div>
       ) : (
         <>
-          <p className="text-gray-600 mb-4 pl-2">
-            Found {sortedSearchResults.length} results for "{query}"
-          </p>
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -121,7 +118,7 @@ function SearchResults() {
               distributeLeftToRight={true}
               renderItem={(product) => (
                 <motion.div key={product.id} variants={itemVariants} className="w-full">
-                  <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} dynamicBackground={false} />
+                  <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} dynamicBackground={true} />
                 </motion.div>
               )}
             />
