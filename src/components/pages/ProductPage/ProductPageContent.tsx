@@ -25,9 +25,15 @@ export default function ProductPageContent() {
 
   const { product, loading, error, isVariant } = useGetProductWithVariants(id);
   const { addProductToCart } = useCartContext();
-  const { trackAddtoCart } = useEventTracking();
+  const { trackAddtoCart, trackProductView } = useEventTracking();
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  useEffect(() => {
+    if (product && product.id) {
+      trackProductView(product.id);
+    }
+  }, [product?.id]);
 
   const [availableOptions, setAvailableOptions] = useState<
     OptionGroupDisplay[]

@@ -207,9 +207,10 @@ export default async function SubcategoryPage({ params }: { params: Promise<{ su
 export default function SubcategoryPage() {
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <SubcategoryPageClient
-        data={data}
-        formattedSubCategoryName={formattedSubCategoryName}
+      <SubcategoryPageClient 
+        data={data} 
+        formattedSubCategoryName={formattedSubCategoryName} 
+        categoryId={categoryId}
       />
     </Suspense>
   );
