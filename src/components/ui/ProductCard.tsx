@@ -6,6 +6,9 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Product } from "@/types/product";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
+import { TrackImpression } from "@/components/analytics/TrackImpression";
+import { trackEvent } from "@/lib/analytics/core";
+import { ProductEventType } from "@/lib/analytics/constants";
 
 interface ProductCardProps {
   product: Product;
@@ -150,8 +153,19 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="block group h-full">
-      <Card className="flex flex-col bg-white hover:shadow-xl transition-all duration-300 h-full overflow-hidden border border-gray-200 shadow-md">
+    <TrackImpression productId={product.id} categoryId={product.categoryId || undefined}>
+      <Link 
+        href={`/product/${product.id}`} 
+        className="block group h-full"
+        onClick={() => {
+          trackEvent({
+            type: ProductEventType.PRODUCT_CLICK,
+            productId: product.id,
+            categoryId: product.categoryId || undefined
+          });
+        }}
+      >
+        <Card className="flex flex-col bg-white hover:shadow-xl transition-all duration-300 h-full overflow-hidden border border-gray-200 shadow-md">
         {/* Dynamic Image Grid - Enhanced styling */}
         <div className="relative w-full aspect-[4/4] p-3">
           {renderImageGrid()}
@@ -201,5 +215,6 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </Card>
     </Link>
+    </TrackImpression>
   );
 }

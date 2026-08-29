@@ -4,6 +4,9 @@ import React, {useState} from "react";
 import Link from "next/link";
 import { Product } from "@/types/product";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
+import { TrackImpression } from "@/components/analytics/TrackImpression";
+import { trackEvent } from "@/lib/analytics/core";
+import { ProductEventType } from "@/lib/analytics/constants";
 
 export function MasonryProductCard({ 
   product, 
@@ -82,81 +85,90 @@ export function MasonryProductCard({
     : "text-red-500";
 
   return (
-    <Link 
-      href={`/product/${product.id}`} 
-      className={`relative flex flex-col h-full group break-inside-avoid rounded-xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-700 ${
-        dynamicBackground 
-          ? (cardStyle.ready ? "opacity-100 translate-y-0 border-white/10" : "opacity-0 translate-y-4 border-transparent") 
-          : "bg-white border-gray-100"
-      }`}
-      style={dynamicBackground ? { backgroundColor: cardStyle.bg || '#1c1a1f' } : undefined}
-    >
-      {/* Glow Layer (spans entire card behind everything) */}
-      {dynamicBackground && cardStyle.ready && (
-        <div 
-          className="absolute inset-[-20%] bg-cover bg-center blur-[48px] saturate-150 scale-110 opacity-90 z-0"
-          style={{ backgroundImage: `url(${mainImage})` }}
-        />
-      )}
-
-      {/* Image Container */}
-      <div className={`relative w-full ${dynamicBackground ? "" : "overflow-hidden bg-gray-50"}`}>
-        <img
-          src={mainImage}
-          alt={product.name}
-          crossOrigin={dynamicBackground ? "anonymous" : undefined}
-          onLoad={dynamicBackground ? (e) => analyzeImage(e.currentTarget) : undefined}
-          className={`w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500 relative z-[1] ${
-            dynamicBackground ? "[mask-image:linear-gradient(to_bottom,black_75%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_75%,transparent_100%)]" : ""
-          }`}
-          loading="lazy"
-        />
-        
-        {!hideBadge && (
-          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-2 py-1 flex items-center z-[3]">
-            <span className="italic mr-1">HOT</span> Seller
-          </div>
+    <TrackImpression productId={product.id} categoryId={product.categoryId || undefined}>
+      <Link 
+        href={`/product/${product.id}`} 
+        className={`relative flex flex-col h-full group break-inside-avoid rounded-xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-700 ${
+          dynamicBackground 
+            ? (cardStyle.ready ? "opacity-100 translate-y-0 border-white/10" : "opacity-0 translate-y-4 border-transparent") 
+            : "bg-white border-gray-100"
+        }`}
+        style={dynamicBackground ? { backgroundColor: cardStyle.bg || '#1c1a1f' } : undefined}
+        onClick={() => {
+          trackEvent({
+            type: ProductEventType.PRODUCT_CLICK,
+            productId: product.id,
+            categoryId: product.categoryId || undefined
+          });
+        }}
+      >
+        {/* Glow Layer (spans entire card behind everything) */}
+        {dynamicBackground && cardStyle.ready && (
+          <div 
+            className="absolute inset-[-20%] bg-cover bg-center blur-[48px] saturate-150 scale-110 opacity-90 z-0"
+            style={{ backgroundImage: `url(${mainImage})` }}
+          />
         )}
-      </div>
 
-      {/* Scrim Veil (spans entire card to provide contrast for text) */}
-      {dynamicBackground && cardStyle.ready && (
-        <div className={`absolute inset-0 z-[2] pointer-events-none bg-gradient-to-b ${
-          isDark 
-            ? "from-transparent via-black/20 to-black/80" 
-            : "from-transparent via-white/20 to-white/90"
-        }`} />
-      )}
-
-      <div className={`flex flex-col justify-between flex-1 relative z-[3] ${showAddToCart ? 'p-4' : 'p-3'} ${dynamicBackground ? '-mt-8' : ''}`}>
-        <div>
-          <h3 className={`text-sm font-medium line-clamp-2 leading-tight transition-colors ${titleColor}`}>
-            {product.name}
-          </h3>
+        {/* Image Container */}
+        <div className={`relative w-full ${dynamicBackground ? "" : "overflow-hidden bg-gray-50"}`}>
+          <img
+            src={mainImage}
+            alt={product.name}
+            crossOrigin={dynamicBackground ? "anonymous" : undefined}
+            onLoad={dynamicBackground ? (e) => analyzeImage(e.currentTarget) : undefined}
+            className={`w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500 relative z-[1] ${
+              dynamicBackground ? "[mask-image:linear-gradient(to_bottom,black_75%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_75%,transparent_100%)]" : ""
+            }`}
+            loading="lazy"
+          />
           
-          <p className={`text-xs mt-1 line-clamp-1 ${descColor}`}>
-            {product.description}
-          </p>
-          
-          <div className="mt-2 flex items-baseline gap-1">
-            <span className={`font-bold text-lg ${priceColor}`}>
-              ${dollars}
-            </span>
-            <span className={`font-bold text-xs ${priceColor}`}>
-              {cents ? `.${cents}` : ".00"}
-            </span>
-          </div>
+          {!hideBadge && (
+            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-2 py-1 flex items-center z-[3]">
+              <span className="italic mr-1">HOT</span> Seller
+            </div>
+          )}
         </div>
 
-        {showAddToCart && (
-          <div className={`mt-3 pt-3 border-t ${dynamicBackground ? (isDark ? "border-white/10" : "border-black/10") : "border-gray-100"}`}>
-            <AddToCartButton 
-              product={product} 
-              className="w-full h-9 sm:h-10 px-4 py-2 text-xs sm:text-sm font-medium rounded-full" 
-            />
-          </div>
+        {/* Scrim Veil (spans entire card to provide contrast for text) */}
+        {dynamicBackground && cardStyle.ready && (
+          <div className={`absolute inset-0 z-[2] pointer-events-none bg-gradient-to-b ${
+            isDark 
+              ? "from-transparent via-black/20 to-black/80" 
+              : "from-transparent via-white/20 to-white/90"
+          }`} />
         )}
-      </div>
-    </Link>
+
+        <div className={`flex flex-col justify-between flex-1 relative z-[3] ${showAddToCart ? 'p-4' : 'p-3'} ${dynamicBackground ? '-mt-8' : ''}`}>
+          <div>
+            <h3 className={`text-sm font-medium line-clamp-2 leading-tight transition-colors ${titleColor}`}>
+              {product.name}
+            </h3>
+            
+            <p className={`text-xs mt-1 line-clamp-1 ${descColor}`}>
+              {product.description}
+            </p>
+            
+            <div className="mt-2 flex items-baseline gap-1">
+              <span className={`font-bold text-lg ${priceColor}`}>
+                ${dollars}
+              </span>
+              <span className={`font-bold text-xs ${priceColor}`}>
+                {cents ? `.${cents}` : ".00"}
+              </span>
+            </div>
+          </div>
+
+          {showAddToCart && (
+            <div className={`mt-3 pt-3 border-t ${dynamicBackground ? (isDark ? "border-white/10" : "border-black/10") : "border-gray-100"}`}>
+              <AddToCartButton 
+                product={product} 
+                className="w-full h-9 sm:h-10 px-4 py-2 text-xs sm:text-sm font-medium rounded-full" 
+              />
+            </div>
+          )}
+        </div>
+      </Link>
+    </TrackImpression>
   );
 }

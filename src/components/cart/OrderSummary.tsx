@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useCartContext } from "../../context/CartContext";
+import { trackEvent } from "@/lib/analytics/core";
+import { ProductEventType } from "@/lib/analytics/constants";
 import { Loader2, Trash2 } from "lucide-react";
 import useCartStore from "@/zustand/cartStore";
 
@@ -48,6 +50,12 @@ export default function OrderSummary() {
       <div className="space-y-2">
         <Link
           href="/checkout"
+          onClick={() => {
+            trackEvent({
+              type: ProductEventType.CHECKOUT_STARTED,
+              metadata: { cartTotal: total, itemsCount: cart.length }
+            });
+          }}
           className={cart.length === 0 ? "pointer-events-none" : ""}>
           <Button
             variant="default"

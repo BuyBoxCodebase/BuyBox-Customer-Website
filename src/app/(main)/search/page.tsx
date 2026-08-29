@@ -1,14 +1,16 @@
 "use client";
 
-import { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
 import useGetAllProducts from "@/hooks/products/useGetAllProducts";
 import { useSearchProducts } from "@/hooks/products/useSearchProducts";
 import { useSearchParams } from "next/navigation";
-import { MasonryProductCard } from "@/components/ui/MasonryProductCard";
 import { MasonryGrid } from "@/components/ui/MasonryGrid";
+import { MasonryProductCard } from "@/components/ui/MasonryProductCard";
 import { MasonrySkeleton } from "@/components/ui/MasonrySkeleton";
 import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPlaceholders";
+import { trackEvent } from "@/lib/analytics/core";
+import { ProductEventType } from "@/lib/analytics/constants";
 import { Loader2 } from "lucide-react";
 import { usePageTracking } from "@/hooks/analytics";
 import { Product } from "@/types/product";
@@ -36,6 +38,15 @@ function SearchResults() {
   const query = searchParams.get("q") || "";
   const { products, loading } = useGetAllProducts();
   const { searchResults } = useSearchProducts(products, query);
+
+  React.useEffect(() => {
+    if (query) {
+      trackEvent({
+        type: ProductEventType.SEARCH,
+        metadata: { query }
+      });
+    }
+  }, [query]);
 
   // Sort search results by availability
   const sortedSearchResults = [...searchResults].sort((a, b) => {

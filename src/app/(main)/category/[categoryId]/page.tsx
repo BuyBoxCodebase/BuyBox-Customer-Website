@@ -7,6 +7,8 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { Product } from "@/types/product";
 import { ProductsSkeleton } from "@/components/Skeleton/Product";
 import { usePageTracking } from "@/hooks/analytics";
+import { trackEvent } from "@/lib/analytics/core";
+import { ProductEventType } from "@/lib/analytics/constants";
 
 // Custom hook for responsive columns (same as before)
 const useResponsiveColumns = () => {
@@ -46,6 +48,11 @@ function CategoryPageContent() {
           ? decodeURIComponent(params.categoryId)
           : decodeURIComponent(params.categoryId[0]);
       setCategoryId(decodedId);
+      
+      trackEvent({
+        type: ProductEventType.CATEGORY_VIEW,
+        categoryId: decodedId
+      });
     } else {
       setCategoryId(null);
     }
