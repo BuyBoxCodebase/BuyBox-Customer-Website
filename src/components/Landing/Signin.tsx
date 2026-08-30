@@ -15,7 +15,7 @@ const Signin = () => {
   };
 
   return (
-    !isAuthenticated ? (
+    !isAuthenticated && (
       <>
         <div className="container w-full py-4 px-2 mx-auto md:px-4 lg:px-8">
           <p className="font-bold pb-4 ml-2 sm:text-2xl text-xl">
@@ -32,24 +32,7 @@ const Signin = () => {
           </Button>
         </div>
       </>
-    ) : (
-      <>
-        <div className="container w-full py-4 px-2 mx-auto md:px-4 lg:px-8">
-          <p className="font-bold pb-4 ml-2 sm:text-2xl text-xl">
-            Check out the for you page
-          </p>
-          <Button
-            variant="yellow"
-            className="w-full h-11 rounded-full"
-            onClick={() => router.push('/for-you')}
-          >
-            <div className="flex items-center justify-center gap-2 h-full">
-              Go to For You
-            </div>
-          </Button>
-        </div>
-      </>
-    )
+    ) 
   );
 };
 

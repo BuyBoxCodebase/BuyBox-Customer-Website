@@ -11,9 +11,13 @@ interface MasonryGridProps<T> {
    * If false, falls back to native CSS columns (top-to-bottom).
    */
   distributeLeftToRight?: boolean;
+  /**
+   * Optional placeholder elements to fill empty grid spots when items don't perfectly fill columns.
+   */
+  placeholders?: React.ReactNode[];
 }
 
-export function MasonryGrid<T>({ items, renderItem, distributeLeftToRight = false }: MasonryGridProps<T>) {
+export function MasonryGrid<T>({ items, renderItem, distributeLeftToRight = false, placeholders }: MasonryGridProps<T>) {
   const [columns, setColumns] = useState(4);
   const [mounted, setMounted] = useState(false);
 
@@ -51,12 +55,28 @@ export function MasonryGrid<T>({ items, renderItem, distributeLeftToRight = fals
   }
 
   // JS Layout: Create columns array
-  const columnData: T[][] = Array.from({ length: columns }, () => []);
+  const columnData: React.ReactNode[][] = Array.from({ length: columns }, () => []);
   
   // Distribute items left-to-right (Row by Row)
   items.forEach((item, index) => {
-    columnData[index % columns].push(item);
+    columnData[index % columns].push(
+      <React.Fragment key={index}>
+        {renderItem(item, index)}
+      </React.Fragment>
+    );
   });
+
+  // Inject placeholders into empty spots at the end of the grid
+  const emptySpots = items.length % columns === 0 ? 0 : columns - (items.length % columns);
+  if (placeholders && emptySpots > 0) {
+    for (let i = 0; i < Math.min(emptySpots, placeholders.length); i++) {
+      columnData[(items.length + i) % columns].push(
+        <React.Fragment key={`placeholder-${i}`}>
+          {placeholders[i]}
+        </React.Fragment>
+      );
+    }
+  }
 
   return (
     <div 
@@ -65,9 +85,9 @@ export function MasonryGrid<T>({ items, renderItem, distributeLeftToRight = fals
     >
       {columnData.map((col, colIndex) => (
         <div key={colIndex} className="flex flex-col gap-4">
-          {col.map((item, itemIndex) => (
+          {col.map((content, itemIndex) => (
             <React.Fragment key={itemIndex}>
-              {renderItem(item, colIndex + itemIndex * columns)}
+              {content}
             </React.Fragment>
           ))}
         </div>

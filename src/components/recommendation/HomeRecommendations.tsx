@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import ProductRail from "./ProductRail";
+import ProductGrid from "./ProductGrid";
+import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPlaceholders";
 import { Category } from "@/types/category";
 
 interface HomeRecommendationsProps {
@@ -26,44 +27,52 @@ export default function HomeRecommendations({
 }: HomeRecommendationsProps) {
   const { isAuthenticated } = useAuth();
   const [forYou, setForYou] = useState<"pending" | "shown" | "empty">("pending");
+  const [prevAuth, setPrevAuth] = useState(isAuthenticated);
 
-  // logging in or out invalidates whatever the last rail told us
-  useEffect(() => setForYou("pending"), [isAuthenticated]);
+  // Synchronously reset state when authentication changes to prevent race conditions 
+  // with child component fetches triggering before a useEffect runs.
+  if (prevAuth !== isAuthenticated) {
+    setPrevAuth(isAuthenticated);
+    setForYou("pending");
+  }
 
   // while a signed-in user's feed is still resolving we show nothing generic,
   // otherwise the rails would flash in and get pulled out from under them
   const showGeneric = !isAuthenticated || forYou === "empty";
 
+  const gridPlaceholders = [
+    <SearchPlaceholder key="p1" />,
+    <ExplorePlaceholder key="p2" />
+  ];
+
   return (
     <div className="container mx-auto px-2 md:px-4 lg:px-4">
-      {isAuthenticated && (
-        <ProductRail
+      {isAuthenticated ? (
+        <ProductGrid
           title="More for you"
           endpoint="/recommendation/for-you?limit=12"
           authenticated
           seeAllHref="/for-you"
           onResult={(visible) => setForYou(visible ? "shown" : "empty")}
+          placeholders={gridPlaceholders}
         />
-      )}
-
-      {showGeneric && (
-        <>
-          <ProductRail
-            title="Trending now"
-            endpoint="/recommendation/trending?limit=12"
-            seeAllHref="/market"
-          />
-
-          {categories.slice(0, maxCategoryRails).map((category) => (
-            <ProductRail
-              key={category.id}
-              title={`Popular in ${category.name}`}
-              endpoint={`/recommendation/trending?categoryId=${category.id}&limit=12`}
-              seeAllHref={`/category/${category.id}`}
-            />
-          ))}
-        </>
-      )}
+      ) :
+        <ProductGrid
+          title="More for you"
+          endpoint="/recommendation/trending?limit=12"
+          seeAllHref="/market"
+          placeholders={gridPlaceholders}
+        />
+      }
+      {categories.slice(0, maxCategoryRails).map((category) => (
+        <ProductGrid
+          key={category.id}
+          title={`Popular in ${category.name}`}
+          endpoint={`/recommendation/trending?categoryId=${category.id}&limit=12`}
+          seeAllHref={`/category/${category.id}`}
+          placeholders={gridPlaceholders}
+        />
+      ))}
     </div>
   );
 }
