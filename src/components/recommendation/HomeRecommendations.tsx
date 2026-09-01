@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import ProductGrid from "./ProductGrid";
-import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPlaceholders";
+import ProductRail from "./ProductRail";
 import { Category } from "@/types/category";
 
 interface HomeRecommendationsProps {
@@ -38,39 +37,31 @@ export default function HomeRecommendations({
 
   // while a signed-in user's feed is still resolving we show nothing generic,
   // otherwise the rails would flash in and get pulled out from under them
-  const showGeneric = !isAuthenticated || forYou === "empty";
-
-  const gridPlaceholders = [
-    <SearchPlaceholder key="p1" />,
-    <ExplorePlaceholder key="p2" />
-  ];
 
   return (
     <div className="container mx-auto px-2 md:px-4 lg:px-4">
       {isAuthenticated ? (
-        <ProductGrid
+        <ProductRail
           title="More for you"
           endpoint="/recommendation/for-you?limit=12"
           authenticated
           seeAllHref="/for-you"
           onResult={(visible) => setForYou(visible ? "shown" : "empty")}
-          placeholders={gridPlaceholders}
         />
-      ) :
-        <ProductGrid
+      ) : (
+        <ProductRail
           title="More for you"
           endpoint="/recommendation/trending?limit=12"
           seeAllHref="/market"
-          placeholders={gridPlaceholders}
         />
-      }
+      )}
+
       {categories.slice(0, maxCategoryRails).map((category) => (
-        <ProductGrid
+        <ProductRail
           key={category.id}
           title={`Popular in ${category.name}`}
           endpoint={`/recommendation/trending?categoryId=${category.id}&limit=12`}
           seeAllHref={`/category/${category.id}`}
-          placeholders={gridPlaceholders}
         />
       ))}
     </div>

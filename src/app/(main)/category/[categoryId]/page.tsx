@@ -6,9 +6,31 @@ import useGetAllProducts from "@/hooks/products/useGetAllProducts";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Product } from "@/types/product";
 import { ProductsSkeleton } from "@/components/Skeleton/Product";
+import { MasonryGrid } from "@/components/ui/MasonryGrid";
+import { MasonryProductCard } from "@/components/ui/MasonryProductCard";
+import { MasonrySkeleton } from "@/components/ui/MasonrySkeleton";
+import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPlaceholders";
+import { motion } from "framer-motion";
 import { usePageTracking } from "@/hooks/analytics";
 import { trackEvent } from "@/lib/analytics/core";
 import { ProductEventType } from "@/lib/analytics/constants";
+
+// Variants for container and items
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 },
+};
 
 // Custom hook for responsive columns (same as before)
 const useResponsiveColumns = () => {
@@ -115,7 +137,17 @@ function CategoryPageContent() {
 
   // Render loading state
   if (productsLoading || categoryId === null) {
-    return <ProductsSkeleton columns={columns} />;
+    return (
+      <div className="container mx-auto p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <MasonrySkeleton />
+        </motion.div>
+      </div>
+    );
   }
 
   // Render error state
@@ -143,28 +175,43 @@ function CategoryPageContent() {
 
   // Render normal state with all products in a grid
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">{categoryTitle}</h1>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-        {categoryProducts.map((product: Product) => (
-          <div key={product.id} className="relative">
-            <ProductCard product={product} />
-            {(product.inventory?.quantity === 0 ||
-              product.inventory?.quantity === undefined) && (
-              <span className="absolute top-0 left-0 bg-red-500 text-black px-2 py-1 text-xs">
-                Sold Out
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
+    <div className="pt-4 px-6">
+      <h1 className="text-2xl font-bold mb-4">{categoryTitle}</h1>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show">
+        <MasonryGrid
+          items={categoryProducts}
+          distributeLeftToRight={true}
+          renderItem={(product) => (
+            <motion.div key={product.id} variants={itemVariants} className="w-full relative group">
+              <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} dynamicBackground={true} />
+              {(product.inventory?.quantity === 0 ||
+                product.inventory?.quantity === undefined) && (
+                <span className="absolute top-2 right-2 bg-red-500 text-white font-bold px-2 py-1 text-xs z-10 rounded shadow-md">
+                  Sold Out
+                </span>
+              )}
+            </motion.div>
+          )}
+          placeholders={[
+            <SearchPlaceholder key="p1" />,
+            <ExplorePlaceholder key="p2" />
+          ]}
+        />
+      </motion.div>
     </div>
   );
 }
 
 export default function CategoryPage() {
   return (
-    <Suspense fallback={<ProductsSkeleton columns={2} />}>
+    <Suspense fallback={
+      <div className="container mx-auto p-4">
+        <MasonrySkeleton />
+      </div>
+    }>
       <CategoryPageContent />
     </Suspense>
   );

@@ -6,6 +6,9 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { usePageTracking } from "@/hooks/analytics";
 import { Product } from "@/types/product";
 import PopularProducts from "@/components/recommendation/PopularProducts";
+import { MasonryGrid } from "@/components/ui/MasonryGrid";
+import { MasonryProductCard } from "@/components/ui/MasonryProductCard";
+import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPlaceholders";
 interface SubcategoryPageClientProps {
   data: { groupName: string; products: Product[] } | null;
   formattedSubCategoryName: string;
@@ -91,17 +94,19 @@ export default function SubcategoryPageClient({ data, formattedSubCategoryName, 
         variants={itemVariants}
         transition={{ delay: 0.1 }}>
         <h2 className="text-2xl font-bold mb-6 text-gray-900">All Products</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {data.products.map((product: Product, index: number) => (
-            <motion.div
-              key={product.id}
-              variants={itemVariants}
-              custom={index}
-              transition={{ delay: 0.05 * index }}>
-              <ProductCard product={product} />
+        <MasonryGrid
+          items={data.products}
+          distributeLeftToRight={true}
+          renderItem={(product) => (
+            <motion.div key={product.id} variants={itemVariants} className="w-full relative group">
+              <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} dynamicBackground={true} />
             </motion.div>
-          ))}
-        </div>
+          )}
+          placeholders={[
+            <SearchPlaceholder key="p1" />,
+            <ExplorePlaceholder key="p2" />
+          ]}
+        />
       </motion.div>
     </motion.div>
   );
