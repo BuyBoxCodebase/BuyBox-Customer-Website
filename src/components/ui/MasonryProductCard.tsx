@@ -124,8 +124,8 @@ export function MasonryProductCard({
           />
           
           {!hideBadge && (
-            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-2 py-1 flex items-center z-[3]">
-              <span className="italic mr-1">HOT</span> Seller
+            <div className="absolute bottom-0 left-0 w-full bg-black/70 backdrop-blur-md text-white border-t border-white/10 text-[13px] font-bold px-2 py-1.5 flex items-center z-[3]">
+              <span className="italic mr-1 text-gray-300">HOT</span> Seller
             </div>
           )}
         </div>

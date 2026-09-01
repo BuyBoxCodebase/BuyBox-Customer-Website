@@ -42,7 +42,7 @@ export default function HomePagePopularProducts() {
         items={trendingProducts}
         distributeLeftToRight={true}
         renderItem={(product) => (
-          <MasonryProductCard key={product.id} product={product} />
+          <MasonryProductCard key={product.id} product={product} hideBadge/>
         )}
         placeholders={[
           <SearchPlaceholder key="p1" />,
