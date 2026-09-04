@@ -19,10 +19,10 @@ export function MasonryProductCard({
   showAddToCart?: boolean,
   dynamicBackground?: boolean
 }) {
+
   const salePrice = product.price ?? product.basePrice;
   const [dollars, cents] = salePrice.toLocaleString().split(".");
   const quantity = product.inventory?.quantity ?? 0;
-  const isOutOfStock = quantity === 0;
   
   // Use the first image or fallback
   const mainImage = product.images?.[0] || product.defaultVariant?.images?.[0] || "/placeholder.svg";
@@ -139,7 +139,7 @@ export function MasonryProductCard({
           }`} />
         )}
 
-        <div className={`flex flex-col justify-between flex-1 relative z-[3] ${showAddToCart ? 'p-4' : 'p-3'} ${dynamicBackground ? '-mt-8' : ''}`}>
+        <div className={`flex flex-col justify-between flex-1 relative z-[3] border-t ${dynamicBackground ? (isDark ? "border-white/10" : "border-black/10") : "border-gray-100"} ${showAddToCart ? 'p-4' : 'p-3'}`}>
           <div>
             <h3 className={`text-sm font-medium line-clamp-2 leading-tight transition-colors ${titleColor}`}>
               {product.name}
@@ -149,24 +149,29 @@ export function MasonryProductCard({
               {product.description}
             </p>
             
-            <div className="mt-2 flex items-baseline gap-1">
-              <span className={`font-bold text-lg ${priceColor}`}>
-                ${dollars}
-              </span>
-              <span className={`font-bold text-xs ${priceColor}`}>
-                {cents ? `.${cents}` : ".00"}
-              </span>
+            <div className="mt-2 flex items-center justify-between">
+              <div className="flex items-baseline gap-1">
+                <span className={`font-bold text-lg ${priceColor}`}>
+                  ${dollars}
+                </span>
+                <span className={`font-bold text-xs ${priceColor}`}>
+                  {cents ? `.${cents}` : ".00"}
+                </span>
+              </div>
+              
+              {showAddToCart && (
+                <div onClick={(e) => e.preventDefault()} className="relative z-10">
+                  <AddToCartButton 
+                    product={product} 
+                    iconOnly={true}
+                    className="flex items-center justify-center w-8 h-8 rounded-full" 
+                  />
+                </div>
+              )}
             </div>
           </div>
 
-          {showAddToCart && (
-            <div className={`mt-3 pt-3 border-t ${dynamicBackground ? (isDark ? "border-white/10" : "border-black/10") : "border-gray-100"}`}>
-              <AddToCartButton 
-                product={product} 
-                className="w-full h-9 sm:h-10 px-4 py-2 text-xs sm:text-sm font-medium rounded-full" 
-              />
-            </div>
-          )}
+
         </div>
       </Link>
     </TrackImpression>
