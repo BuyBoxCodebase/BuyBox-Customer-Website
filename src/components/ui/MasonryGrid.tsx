@@ -80,7 +80,7 @@ export function MasonryGrid<T>({ items, renderItem, distributeLeftToRight = fals
 
   return (
     <div 
-      className="grid gap-4 items-start w-full"
+      className="grid gap-2  md:gap-4 items-start w-full"
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
     >
       {columnData.map((col, colIndex) => (

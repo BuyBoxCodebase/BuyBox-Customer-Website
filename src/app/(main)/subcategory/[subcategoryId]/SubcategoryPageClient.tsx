@@ -90,7 +90,7 @@ export default function SubcategoryPageClient({ data, formattedSubCategoryName, 
       </motion.div>
       <PopularProducts categoryId={categoryId} />
       <motion.div
-        className="mb-12 px-4"
+        className="mb-12 px-2 md:px-4"
         variants={itemVariants}
         transition={{ delay: 0.1 }}>
         <h2 className="text-2xl font-bold mb-6 text-gray-900">All Products</h2>

@@ -73,7 +73,7 @@ function SearchResults() {
   }
 
   return (
-    <div className="pt-4 px-6">
+    <div className="pt-4 px-2 md:px-6">
       <h1 className="text-2xl font-bold mb-4">
         Search Results for "{query}"
       </h1>
