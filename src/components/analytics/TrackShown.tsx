@@ -4,13 +4,13 @@ import { useEffect, useRef } from "react";
 import { trackEvent } from "@/lib/analytics/core";
 import { ProductEventType } from "@/lib/analytics/constants";
 
-interface TrackImpressionProps {
+interface TrackShownProps {
   productId: string;
   categoryId?: string;
   children: React.ReactNode;
 }
 
-export function TrackImpression({ productId, categoryId, children }: TrackImpressionProps) {
+export function TrackShown({ productId, categoryId, children }: TrackShownProps) {
   const ref = useRef<HTMLDivElement>(null);
   const tracked = useRef(false);
 
@@ -22,7 +22,7 @@ export function TrackImpression({ productId, categoryId, children }: TrackImpres
         if (entry.isIntersecting && !tracked.current) {
           tracked.current = true;
           trackEvent({
-            type: ProductEventType.IMPRESSION,
+            type: ProductEventType.SHOWN,
             productId,
             categoryId,
           });
