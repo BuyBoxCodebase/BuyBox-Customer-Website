@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import ProductImageCarousel from "./ProductImageCarousel";
 import ProductDetails from "./ProductDetails";
 import { motion } from "framer-motion";
+import PopularProducts from "@/components/recommendation/PopularProducts";
 
 export default function ProductPageContent() {
   const router = useRouter();
@@ -355,6 +356,12 @@ export default function ProductPageContent() {
           </div>
         </div>
       </div>
+
+      {product?.categoryId && (
+        <div className="mt-12 md:mt-16">
+          <PopularProducts categoryId={product.categoryId} />
+        </div>
+      )}
     </motion.div>
   );
 }

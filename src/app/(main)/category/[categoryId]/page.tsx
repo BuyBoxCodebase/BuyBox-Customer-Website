@@ -32,31 +32,9 @@ const itemVariants = {
   show: { opacity: 1, y: 0 },
 };
 
-// Custom hook for responsive columns (same as before)
-const useResponsiveColumns = () => {
-  const [columns, setColumns] = useState(2);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width >= 1024) setColumns(6);
-      else if (width >= 768) setColumns(4);
-      else if (width >= 640) setColumns(3);
-      else setColumns(2);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  return columns;
-};
-
 function CategoryPageContent() {
   const params = useParams();
   usePageTracking();
-  const columns = useResponsiveColumns();
   const { products, loading: productsLoading, error } = useGetAllProducts();
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [categoryTitle, setCategoryTitle] = useState("Category");
@@ -118,19 +96,6 @@ function CategoryPageContent() {
     if (filteredProducts.length > 0 && filteredProducts[0].category) {
       setCategoryTitle(filteredProducts[0].category.name);
     }
-
-    // // Sort products - in-stock items first
-    // const sortedProducts = [...filteredProducts].sort((a, b) => {
-    //   const getQuantity = (product: Product): number =>
-    //     product.inventory?.quantity ?? 0;
-
-    //   const quantityA = getQuantity(a);
-    //   const quantityB = getQuantity(b);
-
-    //   if (quantityA > 0 && quantityB === 0) return -1;
-    //   if (quantityA === 0 && quantityB > 0) return 1;
-    //   return 0;
-    // });
 
     setCategoryProducts(sortedProducts);
   }, [products, categoryId]);

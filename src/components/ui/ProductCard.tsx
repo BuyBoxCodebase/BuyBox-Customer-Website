@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Product } from "@/types/product";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
-import { TrackImpression } from "@/components/analytics/TrackImpression";
+import { TrackShown } from "@/components/analytics/TrackShown";
 import { trackEvent } from "@/lib/analytics/core";
 import { ProductEventType } from "@/lib/analytics/constants";
 
@@ -153,7 +153,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <TrackImpression productId={product.id} categoryId={product.categoryId || undefined}>
+    <TrackShown productId={product.id} categoryId={product.categoryId || undefined}>
       <Link 
         href={`/product/${product.id}`} 
         className="block group h-full"
@@ -215,6 +215,6 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </Card>
     </Link>
-    </TrackImpression>
+    </TrackShown>
   );
 }

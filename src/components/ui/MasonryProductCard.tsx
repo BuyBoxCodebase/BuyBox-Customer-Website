@@ -4,7 +4,7 @@ import React, {useState} from "react";
 import Link from "next/link";
 import { Product } from "@/types/product";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
-import { TrackImpression } from "@/components/analytics/TrackImpression";
+import { TrackShown } from "@/components/analytics/TrackShown";
 import { trackEvent } from "@/lib/analytics/core";
 import { ProductEventType } from "@/lib/analytics/constants";
 
@@ -85,7 +85,7 @@ export function MasonryProductCard({
     : "text-red-500";
 
   return (
-    <TrackImpression productId={product.id} categoryId={product.categoryId || undefined}>
+    <TrackShown productId={product.id} categoryId={product.categoryId || undefined}>
       <Link 
         href={`/product/${product.id}`} 
         className={`relative flex flex-col h-full group break-inside-avoid rounded-xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-700 ${
@@ -174,6 +174,6 @@ export function MasonryProductCard({
 
         </div>
       </Link>
-    </TrackImpression>
+    </TrackShown>
   );
 }
