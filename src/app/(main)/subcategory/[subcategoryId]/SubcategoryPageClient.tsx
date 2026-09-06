@@ -99,7 +99,7 @@ export default function SubcategoryPageClient({ data, formattedSubCategoryName, 
           distributeLeftToRight={true}
           renderItem={(product) => (
             <motion.div key={product.id} variants={itemVariants} className="w-full relative group">
-              <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} dynamicBackground={true} />
+              <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} dynamicBackground={false} />
             </motion.div>
           )}
           placeholders={[

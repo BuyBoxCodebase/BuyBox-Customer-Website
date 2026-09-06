@@ -22,7 +22,6 @@ export function MasonryProductCard({
 
   const salePrice = product.price ?? product.basePrice;
   const [dollars, cents] = salePrice.toLocaleString().split(".");
-  const quantity = product.inventory?.quantity ?? 0;
   
   // Use the first image or fallback
   const mainImage = product.images?.[0] || product.defaultVariant?.images?.[0] || "/placeholder.svg";

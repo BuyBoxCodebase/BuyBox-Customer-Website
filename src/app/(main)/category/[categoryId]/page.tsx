@@ -140,7 +140,7 @@ function CategoryPageContent() {
 
   // Render normal state with all products in a grid
   return (
-    <div className="pt-4 px-6">
+    <div className="pt-4 px-2 md:px-6">
       <h1 className="text-2xl font-bold mb-4">{categoryTitle}</h1>
       <motion.div
         variants={containerVariants}
@@ -151,7 +151,7 @@ function CategoryPageContent() {
           distributeLeftToRight={true}
           renderItem={(product) => (
             <motion.div key={product.id} variants={itemVariants} className="w-full relative group">
-              <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} dynamicBackground={true} />
+              <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} dynamicBackground={false} />
               {(product.inventory?.quantity === 0 ||
                 product.inventory?.quantity === undefined) && (
                 <span className="absolute top-2 right-2 bg-red-500 text-white font-bold px-2 py-1 text-xs z-10 rounded shadow-md">
