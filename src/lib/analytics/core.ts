@@ -11,6 +11,9 @@ export function getSessionId(): string {
   if (!sessionId) {
     sessionId = uuidv4();
     sessionStorage.setItem(SESSION_KEY, sessionId);
+    setTimeout(() => {
+      trackEvent({ type: ProductEventType.SESSION_STARTED }).catch(console.error);
+    }, 0);
   }
   return sessionId;
 }
