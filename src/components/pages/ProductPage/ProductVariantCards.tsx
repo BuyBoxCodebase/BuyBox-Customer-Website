@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { trackEvent } from "@/lib/analytics/core";
-import { ProductEventType } from "@/lib/analytics/constants";
+import { UserEventType } from "@/lib/analytics/constants";
 
 interface ProductVariantCardsProps {
   product: Product;
@@ -28,7 +28,7 @@ export default function ProductVariantCards({
     if (variant.inventory && variant.inventory?.[0].quantity > 0) {
       const optionValues = variant.options.map((opt) => opt.optionValue.value).join(" + ");
       trackEvent({
-        type: ProductEventType.SIZE_SELECTED,
+        type: UserEventType.SIZE_SELECTED,
         productId: product.id,
         categoryId: product.categoryId || undefined,
         metadata: { size: optionValues }

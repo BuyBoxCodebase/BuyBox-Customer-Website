@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
-import { ProductEventType } from './constants';
+import { UserEventType } from './constants';
 
 const SESSION_KEY = 'buybox_session_id';
 
@@ -12,7 +12,7 @@ export function getSessionId(): string {
     sessionId = uuidv4();
     sessionStorage.setItem(SESSION_KEY, sessionId);
     setTimeout(() => {
-      trackEvent({ type: ProductEventType.SESSION_STARTED }).catch(console.error);
+      trackEvent({ type: UserEventType.SESSION_STARTED }).catch(console.error);
     }, 0);
   }
   return sessionId;
@@ -34,7 +34,7 @@ function parsePlatform(userAgent: string): string {
 }
 
 interface TrackEventPayload {
-  type: ProductEventType;
+  type: UserEventType;
   productId?: string;
   categoryId?: string;
   metadata?: any;
