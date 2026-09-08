@@ -8,7 +8,7 @@ import { Product } from "@/types/product";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
 import { TrackShown } from "@/components/analytics/TrackShown";
 import { trackEvent } from "@/lib/analytics/core";
-import { ProductEventType } from "@/lib/analytics/constants";
+import { UserEventType } from "@/lib/analytics/constants";
 
 interface ProductCardProps {
   product: Product;
@@ -159,7 +159,7 @@ export function ProductCard({ product }: ProductCardProps) {
         className="block group h-full"
         onClick={() => {
           trackEvent({
-            type: ProductEventType.PRODUCT_CLICK,
+            type: UserEventType.PRODUCT_CLICK,
             productId: product.id,
             categoryId: product.categoryId || undefined
           });

@@ -10,7 +10,7 @@ import { MasonryProductCard } from "@/components/ui/MasonryProductCard";
 import { MasonrySkeleton } from "@/components/ui/MasonrySkeleton";
 import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPlaceholders";
 import { trackEvent } from "@/lib/analytics/core";
-import { ProductEventType } from "@/lib/analytics/constants";
+import { UserEventType } from "@/lib/analytics/constants";
 import { Loader2 } from "lucide-react";
 import { usePageTracking } from "@/hooks/analytics";
 import { Product } from "@/types/product";
@@ -42,7 +42,7 @@ function SearchResults() {
   React.useEffect(() => {
     if (query) {
       trackEvent({
-        type: ProductEventType.SEARCH,
+        type: UserEventType.SEARCH,
         metadata: { query }
       });
     }

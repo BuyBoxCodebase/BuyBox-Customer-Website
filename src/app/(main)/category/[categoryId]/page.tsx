@@ -13,7 +13,7 @@ import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPl
 import { motion } from "framer-motion";
 import { usePageTracking } from "@/hooks/analytics";
 import { trackEvent } from "@/lib/analytics/core";
-import { ProductEventType } from "@/lib/analytics/constants";
+import { UserEventType } from "@/lib/analytics/constants";
 
 // Variants for container and items
 const containerVariants = {
@@ -50,7 +50,7 @@ function CategoryPageContent() {
       setCategoryId(decodedId);
       
       trackEvent({
-        type: ProductEventType.CATEGORY_VIEW,
+        type: UserEventType.CATEGORY_VIEW,
         categoryId: decodedId
       });
     } else {

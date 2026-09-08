@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import useCartStore from "@/zustand/cartStore";
 import { trackEvent } from "@/lib/analytics/core";
-import { ProductEventType } from "@/lib/analytics/constants";
+import { UserEventType } from "@/lib/analytics/constants";
 import useAddCart from "@/hooks/cart/useAddCart";
 import useClearCart from "@/hooks/cart/useClearCart";
 import useGetMyCart from "@/hooks/cart/useGetMyCart";
@@ -226,7 +226,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     if (!item) return;
 
     trackEvent({
-      type: ProductEventType.REMOVE_FROM_CART,
+      type: UserEventType.REMOVE_FROM_CART,
       productId: item.productId,
       metadata: { variantId: item.variantId, quantity: item.quantity }
     });

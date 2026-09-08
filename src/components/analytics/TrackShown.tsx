@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { trackEvent } from "@/lib/analytics/core";
-import { ProductEventType } from "@/lib/analytics/constants";
+import { UserEventType } from "@/lib/analytics/constants";
 
 interface TrackShownProps {
   productId: string;
@@ -22,7 +22,7 @@ export function TrackShown({ productId, categoryId, children }: TrackShownProps)
         if (entry.isIntersecting && !tracked.current) {
           tracked.current = true;
           trackEvent({
-            type: ProductEventType.SHOWN,
+            type: UserEventType.SHOWN,
             productId,
             categoryId,
           });

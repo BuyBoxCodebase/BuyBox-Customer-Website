@@ -1,5 +1,5 @@
-// Constants matching the Prisma enum ProductEventType exactly
-export enum ProductEventType {
+// Constants matching the Prisma enum UserEventType exactly
+export enum UserEventType {
   VIEW = "VIEW",
   CART_ADD = "CART_ADD",
   ORDER_COMPLETED = "ORDER_COMPLETED",

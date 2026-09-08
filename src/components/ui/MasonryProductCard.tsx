@@ -6,7 +6,7 @@ import { Product } from "@/types/product";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
 import { TrackShown } from "@/components/analytics/TrackShown";
 import { trackEvent } from "@/lib/analytics/core";
-import { ProductEventType } from "@/lib/analytics/constants";
+import { UserEventType } from "@/lib/analytics/constants";
 
 export function MasonryProductCard({ 
   product, 
@@ -95,7 +95,7 @@ export function MasonryProductCard({
         style={dynamicBackground ? { backgroundColor: cardStyle.bg || '#1c1a1f' } : undefined}
         onClick={() => {
           trackEvent({
-            type: ProductEventType.PRODUCT_CLICK,
+            type: UserEventType.PRODUCT_CLICK,
             productId: product.id,
             categoryId: product.categoryId || undefined
           });

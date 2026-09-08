@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useCartContext } from "../../context/CartContext";
 import { trackEvent } from "@/lib/analytics/core";
-import { ProductEventType } from "@/lib/analytics/constants";
+import { UserEventType } from "@/lib/analytics/constants";
 import { Loader2, Trash2 } from "lucide-react";
 import useCartStore from "@/zustand/cartStore";
 
@@ -52,7 +52,7 @@ export default function OrderSummary() {
           href="/checkout"
           onClick={() => {
             trackEvent({
-              type: ProductEventType.CHECKOUT_STARTED,
+              type: UserEventType.CHECKOUT_STARTED,
               metadata: { cartTotal: total, itemsCount: cart.length }
             });
           }}
