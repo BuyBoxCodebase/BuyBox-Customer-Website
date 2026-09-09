@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/admin/',
     },
-    sitemap: 'https://buybox1.co.za/sitemap.xml',
+    sitemap: 'https://treides.com/sitemap.xml',
   };
 }

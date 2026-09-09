@@ -43,7 +43,7 @@ function LoginPageContent() {
   };
 
   return (
-    <AuthLayout title="Buybox" subtitle="Find the right shoe at the right price">
+    <AuthLayout title="Treides" subtitle="Life, beautifully uncomplicated">
       <div className="space-y-8">
         {/* Email/password login form */}
         <form onSubmit={handleSubmit} className="space-y-4">

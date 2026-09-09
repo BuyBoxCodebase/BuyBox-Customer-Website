@@ -167,8 +167,8 @@ function RegisterPageContent() {
 
   return (
     <AuthLayout
-      title="Buybox"
-      subtitle="Find the right shoe at the right price">
+      title="Treides"
+      subtitle="Life, beautifully uncomplicated">
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <Alert variant="destructive">

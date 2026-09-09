@@ -180,7 +180,7 @@ function VerifyPageContent() {
               Didn't receive the code?{" "}
               <a
                 target='__blank'
-                href='mailto:buyboxsupp0rt@yahoo.com'
+                href='mailto:contact@treides.com'
                 className='text-blue-600 hover:underline'
               >
                 Contact Support

@@ -4,7 +4,7 @@ import axios from "axios";
 import { Product } from "@/types/product";
 import { Category, SubCategory } from "@/types/category";
 
-const BASE_URL = "https://www.buyboxie.com";
+const BASE_URL = "https://www.treides.com";
 
 const getBackendUrl = (): string | undefined => process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
 

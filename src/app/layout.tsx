@@ -13,7 +13,7 @@ import { Analytics } from "@vercel/analytics/react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "BuyBox - Happiness, Delivered",
+  title: "Treides - Shopping that comes to you",
   description: "Shop the latest in fashion, beauty, and more",
   verification: {
     google: "7jNi_sOZvDz9zyHHP1tMi3DF7ZEI46AQp2XFyPnlVvY",
