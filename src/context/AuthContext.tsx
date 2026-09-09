@@ -6,7 +6,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import {
   AuthContextType,
@@ -116,6 +116,24 @@ const refreshAccessToken = async (): Promise<string | null> => {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(initialState);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Enforce onboarding if the user has < 3 interests
+  useEffect(() => {
+    if (
+      state.isAuthenticated &&
+      state.user &&
+      (!state.user.preferences || Object.keys(state.user.preferences).length === 0)
+    ) {
+      // Don't redirect if they are already on onboarding or trying to log out
+      if (
+        pathname !== "/user/onboarding" &&
+        !pathname.startsWith("/user/logout")
+      ) {
+        router.push("/user/onboarding");
+      }
+    }
+  }, [state.isAuthenticated, state.user, pathname, router]);
 
   // Set up axios interceptor for token refresh
   useEffect(() => {
@@ -390,6 +408,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, showWelcomeModal: false }));
   };
 
+  const updateUser = (updates: Partial<User>) => {
+    setState((prev) => ({
+      ...prev,
+      user: prev.user ? { ...prev.user, ...updates } : null,
+    }));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -400,6 +425,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearError,
         verify,
         hideWelcomeModal,
+        updateUser,
       }}>
       {children}
     </AuthContext.Provider>
