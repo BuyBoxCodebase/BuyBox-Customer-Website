@@ -19,8 +19,8 @@ export default function HomeRecommendations({
         <ProductRail
           key={category.id}
           title={`Popular in ${category.name}`}
-          endpoint={`/product/popular?categoryId=${category.id}&limit=12`}
           seeAllHref={`/category/${category.id}`}
+          categoryId={category.id}
         />
       ))}
     </div>
