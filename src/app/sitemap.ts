@@ -18,13 +18,13 @@ async function getProducts(): Promise<Product[]> {
 
   try {
     const res = await axios.get(`${backendUrl}/product/get-all-product/`, {
-      timeout: 3000,
+      // Endpoint returns ~1.3MB and consistently takes ~15s; keep generous
+      // headroom so a slow-but-healthy backend still yields a full sitemap.
+      timeout: 45_000,
     });
     return Object.values(res.data).flat() as Product[];
   } catch (e) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("Sitemap: failed to fetch products; using empty product list.", e);
-    }
+    console.error("Sitemap: failed to fetch products", e);
     return [];
   }
 }
@@ -37,56 +37,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Static routes
   const staticRoutes: MetadataRoute.Sitemap = [
-  const [categories, products] = await Promise.all([
-    getCategories(),
-    getProducts(),
-  ]);
-
-  // Static routes
-  const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
-      url: BASE_URL,
       lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 1.0,
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
       url: `${BASE_URL}/search`,
-      url: `${BASE_URL}/search`,
       lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.5,
-    },
-  ];
-
-  // Category routes
-  const categoryRoutes: MetadataRoute.Sitemap = categories.map(
-    (category: Category) => ({
-      url: `${BASE_URL}/category/${category.id}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    })
-  );
-
-  // Subcategory routes
-  const subcategoryRoutes: MetadataRoute.Sitemap = categories.flatMap(
-    (category: Category) =>
-      (category.subCategories || []).map((sub: SubCategory) => ({
-        url: `${BASE_URL}/subcategory/${category.id}%2F${encodeURIComponent(sub.name)}`,
-        lastModified: new Date(),
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
-      }))
-  );
-
-  // Product routes
-  const productRoutes: MetadataRoute.Sitemap = products.map(
-    (product: Product) => ({
-      url: `${BASE_URL}/product/${product.id}`,
       changeFrequency: "weekly",
       priority: 0.5,
     },
@@ -135,6 +94,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           priority: 0.8,
         }))
   );
+
+  // A backend outage must never fail the build — but a sitemap that silently
+  // ships with only static routes is invisible SEO damage, so say so loudly.
+  if (categories.length === 0 || products.length === 0) {
+    console.warn(
+      `\n[sitemap] DEGRADED: built with ${categories.length} categories and ` +
+        `${products.length} products from ${process.env.NEXT_PUBLIC_BACKEND_URL}.\n` +
+        `[sitemap] Deploy will succeed, but search engines will only see ` +
+        `${staticRoutes.length} static URLs. Check the backend is reachable.\n`
+    );
+  }
 
   return [
     ...staticRoutes,
