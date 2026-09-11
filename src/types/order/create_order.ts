@@ -1,10 +1,12 @@
+import type { OrderStatus, PaymentMode } from "./get_order_details";
+
 // Types for the request payload
 export interface CreateOrderRequest {
   email: string;
   phoneNumber: string;
   address: string;
   cartId: string;
-  paymentMode: "CASH_ON_DELIVERY" | "ONLINE";
+  paymentMode: PaymentMode;
   deliveryTime?: string;
 }
 
@@ -28,9 +30,9 @@ export interface CreateOrderResponse {
   email: string;
   phoneNumber: number;
   address: string;
-  status: "PENDING" | "COMPLETED" | "CANCELLED";
+  status: OrderStatus;
   totalAmount: number;
-  paymentMode: "CASH_ON_DELIVERY" | "ONLINE";
+  paymentMode: PaymentMode;
   createdAt: string;
   updatedAt: string;
   products: OrderProduct[];

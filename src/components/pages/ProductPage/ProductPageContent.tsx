@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import ProductImageCarousel from "./ProductImageCarousel";
 import ProductDetails from "./ProductDetails";
 import { motion } from "framer-motion";
+import PopularProducts from "@/components/recommendation/PopularProducts";
 
 export default function ProductPageContent() {
   const router = useRouter();
@@ -25,9 +26,15 @@ export default function ProductPageContent() {
 
   const { product, loading, error, isVariant } = useGetProductWithVariants(id);
   const { addProductToCart } = useCartContext();
-  const { trackAddtoCart } = useEventTracking();
+  const { trackAddtoCart, trackProductView } = useEventTracking();
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  useEffect(() => {
+    if (product && product.id) {
+      trackProductView(product.id);
+    }
+  }, [product?.id]);
 
   const [availableOptions, setAvailableOptions] = useState<
     OptionGroupDisplay[]
@@ -349,6 +356,12 @@ export default function ProductPageContent() {
           </div>
         </div>
       </div>
+
+      {product?.categoryId && (
+        <div className="mt-12 md:mt-16">
+          <PopularProducts categoryId={product.categoryId} />
+        </div>
+      )}
     </motion.div>
   );
 }

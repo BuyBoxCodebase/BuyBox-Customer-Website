@@ -6,7 +6,25 @@ export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("activationToken")?.value
   const { pathname } = request.nextUrl
 
-  if(pathname.startsWith("/user/privacy") || pathname.startsWith("/user/terms") || pathname.startsWith("/customer")){ 
+  // Crawler-facing files: must stay reachable without auth or Google sees a
+  // login redirect instead of robots.txt / sitemap.xml.
+  if (pathname === "/robots.txt" || pathname === "/sitemap.xml") {
+    return NextResponse.next()
+  }
+
+  // Public routes.
+  // Browsing is open Amazon-style: product, category and subcategory pages are
+  // all listed in sitemap.xml, so walling them off made every indexed URL
+  // redirect to /user/login. Cart, checkout and orders stay behind the wall,
+  // and add-to-cart still prompts guests to log in.
+  const publicBrowsePaths = ["/product", "/category", "/subcategory"]
+  if(
+    pathname === "/" ||
+    publicBrowsePaths.some((p) => pathname.startsWith(p)) ||
+    pathname.startsWith("/user/privacy") ||
+    pathname.startsWith("/user/terms") ||
+    pathname.startsWith("/customer")
+  ){
     return NextResponse.next()
   }
 
@@ -48,7 +66,8 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/",                  
-    "/((?!api|_next|favicon\\.ico).*)", 
+    // Crawler + static files must never hit the auth wall
+    "/((?!api|_next|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|txt|xml)).*)",
     "/user/login",
     "/user/register",
     "/user/verify",

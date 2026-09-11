@@ -1,21 +1,24 @@
 import { Category } from "@/types/category";
-import axios from "axios";
 
-const getBackendUrl = (): string | undefined => process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
-
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL 
 export const getCategories = async (): Promise<Category[]> => {
-  const backendUrl = getBackendUrl();
-
-  if (!backendUrl) {
-    console.warn("NEXT_PUBLIC_BACKEND_URL is not set. Skipping category fetch for sitemap.");
-    return [];
-  }
-
   try {
-    const response = await axios.get(`${backendUrl}/category/get`, {
-      timeout: 3000,
-    });
-    return response.data;
+    const response = await fetch(
+      `${BASE_URL}/category/get`,
+      {
+        next: { 
+          tags: ['categories'],
+          revalidate: 10800 // 3 hours in seconds (fallback TTL)
+        },
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch categories: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
   } catch (err) {
     if (process.env.NODE_ENV !== "production") {
       console.warn("Sitemap: failed to fetch categories; using empty category list.", err);

@@ -1,3 +1,5 @@
+import type { OrderStatus, PaymentMode } from "./get_order_details";
+
 // Types for the user in response
 interface User {
   name: string;
@@ -17,8 +19,8 @@ export interface Order {
   email: string;
   phoneNumber: number;
   user: User;
-  status: "PENDING" | "COMPLETED" | "CANCELLED";
-  paymentMode: "CASH_ON_DELIVERY" | "ONLINE";
+  status: OrderStatus;
+  paymentMode: PaymentMode;
   totalAmount: number;
   createdAt: string;
 }

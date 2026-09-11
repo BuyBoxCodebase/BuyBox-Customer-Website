@@ -37,15 +37,56 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Static routes
   const staticRoutes: MetadataRoute.Sitemap = [
+  const [categories, products] = await Promise.all([
+    getCategories(),
+    getProducts(),
+  ]);
+
+  // Static routes
+  const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
+      url: BASE_URL,
       lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 1.0,
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
       url: `${BASE_URL}/search`,
+      url: `${BASE_URL}/search`,
       lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+  ];
+
+  // Category routes
+  const categoryRoutes: MetadataRoute.Sitemap = categories.map(
+    (category: Category) => ({
+      url: `${BASE_URL}/category/${category.id}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })
+  );
+
+  // Subcategory routes
+  const subcategoryRoutes: MetadataRoute.Sitemap = categories.flatMap(
+    (category: Category) =>
+      (category.subCategories || []).map((sub: SubCategory) => ({
+        url: `${BASE_URL}/subcategory/${category.id}%2F${encodeURIComponent(sub.name)}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      }))
+  );
+
+  // Product routes
+  const productRoutes: MetadataRoute.Sitemap = products.map(
+    (product: Product) => ({
+      url: `${BASE_URL}/product/${product.id}`,
       changeFrequency: "weekly",
       priority: 0.5,
     },

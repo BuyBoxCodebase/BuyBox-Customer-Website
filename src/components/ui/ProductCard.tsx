@@ -1,29 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useCartContext } from "../../context/CartContext";
-import { useToast } from "@/hooks/toast/use-toast";
 import { Product } from "@/types/product";
-import { useEventTracking } from "@/hooks/analytics/useEventTracking";
-import Cookies from "js-cookie";
-import { useAuth } from "@/context/AuthContext";
+import { AddToCartButton } from "@/components/ui/AddToCartButton";
+import { TrackShown } from "@/components/analytics/TrackShown";
+import { trackEvent } from "@/lib/analytics/core";
+import { UserEventType } from "@/lib/analytics/constants";
 
 interface ProductCardProps {
   product: Product;
+  /**
+   * "grid" is the vertical tile: image on top, details under it. It is the
+   * default because most callers (the rails, the 6-up category grids) give the
+   * card a ~200px column, and the horizontal card needs roughly 500px before
+   * its image column and its text stop fighting for the same space.
+   * "list" is that horizontal card, for the full-width search and subcategory
+   * results.
+   */
+  layout?: "grid" | "list";
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const router = useRouter();
-  const { toast } = useToast();
-  const { addProductToCart } = useCartContext();
-  const [isAdding, setIsAdding] = useState<boolean>(false);
-  const { isAuthenticated } = useAuth();
-  const { trackAddtoCart } = useEventTracking();
 
   const quantity = product.inventory?.quantity ?? 0;
   const isOutOfStock = quantity === 0;
@@ -38,56 +38,12 @@ export function ProductCard({ product }: ProductCardProps) {
   ].filter(Boolean);
 
   // Fallback to placeholder if no images - LIMIT TO MAXIMUM 4 IMAGES
-  const images = allImages.length > 0 ? allImages.slice(0, 4) : ["/placeholder.png"];
+  const images = allImages.length > 0 ? allImages.slice(0, 4) : ["/placeholder.svg"];
 
   // Split the price into dollars and cents for formatting
   const [dollars, cents] = salePrice.toLocaleString().split(".");
 
   const deliveryText = "Free shipping on orders over $50";
-
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to add items to your cart.",
-        variant: "default",
-        action: (
-          <Button variant="orange" onClick={() => router.push("/user/login")}>
-            Log In
-          </Button>
-        ),
-      });
-      return;
-    }
-
-    setIsAdding(true);
-    try {
-      await addProductToCart([
-        {
-          productId: product.id,
-          quantity: 1,
-          variantId: product.defaultVariant?.id || null,
-        },
-      ]);
-      trackAddtoCart(product.id, 1, salePrice);
-
-      toast({
-        title: "Added to cart",
-        description: `${product.name} has been added to your cart.`,
-      });
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to add item to cart. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAdding(false);
-    }
-  };
 
   // Dynamic image grid layout based on number of images (MAX 4)
   const renderImageGrid = () => {
@@ -197,22 +153,33 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="block group mb-4">
-      <Card className="flex flex-col sm:flex-row bg-white hover:shadow-xl transition-all duration-300 h-full overflow-hidden border border-gray-200 shadow-md">
+    <TrackShown productId={product.id} categoryId={product.categoryId || undefined}>
+      <Link 
+        href={`/product/${product.id}`} 
+        className="block group h-full"
+        onClick={() => {
+          trackEvent({
+            type: UserEventType.PRODUCT_CLICK,
+            productId: product.id,
+            categoryId: product.categoryId || undefined
+          });
+        }}
+      >
+        <Card className="flex flex-col bg-white hover:shadow-xl transition-all duration-300 h-full overflow-hidden border border-gray-200 shadow-md">
         {/* Dynamic Image Grid - Enhanced styling */}
-        <div className="relative flex-shrink-0 h-80 sm:h-68 w-full sm:w-56 md:w-64 lg:w-72 p-3">
+        <div className="relative w-full aspect-[4/4] p-3">
           {renderImageGrid()}
         </div>
 
         {/* Product Details - Same as before */}
-        <div className="flex flex-col justify-between flex-1 p-4 sm:p-5">
+        <div className="flex flex-col justify-between flex-1 min-w-0 p-4 sm:p-5">
           <div className="flex-1">
             {/* Title & Description */}
             <div className="mb-4">
-              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
+              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight min-h-[2.5em]">
                 {product.name}
               </h1>
-              <h2 className="text-sm sm:text-sm text-gray-600 mt-2 line-clamp-3">
+              <h2 className="text-sm sm:text-sm text-gray-600 mt-2 line-clamp-3 min-h-[3.75rem]">
                 {product.description}
               </h2>
             </div>
@@ -241,32 +208,13 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {/* Add to Cart Button */}
-          <button
-            onClick={handleAddToCart}
-            disabled={isAdding || isOutOfStock}
-            className={`w-full sm:w-48 h-9 sm:h-10 px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 ${
-              isOutOfStock
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-yellow-400 text-black hover:bg-yellow-500 shadow-sm hover:shadow-md"
-            }`}
-          >
-            {isOutOfStock
-              ? "Out of Stock"
-              : isAdding
-              ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-3 w-3 sm:h-4 sm:w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Adding...
-                  </span>
-                )
-              : "Add to Cart"
-            }
-          </button>
+          <AddToCartButton 
+            product={product} 
+            className="w-full sm:w-48 h-9 sm:h-10 px-4 py-2 text-xs sm:text-sm font-medium rounded-full"
+          />
         </div>
       </Card>
     </Link>
+    </TrackShown>
   );
 }

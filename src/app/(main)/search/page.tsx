@@ -1,11 +1,16 @@
 "use client";
 
-import { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
 import useGetAllProducts from "@/hooks/products/useGetAllProducts";
 import { useSearchProducts } from "@/hooks/products/useSearchProducts";
 import { useSearchParams } from "next/navigation";
-import { ProductCard } from "@/components/ui/ProductCard";
+import { MasonryGrid } from "@/components/ui/MasonryGrid";
+import { MasonryProductCard } from "@/components/ui/MasonryProductCard";
+import { MasonrySkeleton } from "@/components/ui/MasonrySkeleton";
+import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPlaceholders";
+import { trackEvent } from "@/lib/analytics/core";
+import { UserEventType } from "@/lib/analytics/constants";
 import { Loader2 } from "lucide-react";
 import { usePageTracking } from "@/hooks/analytics";
 import { Product } from "@/types/product";
@@ -27,45 +32,21 @@ const itemVariants = {
   show: { opacity: 1, y: 0 },
 };
 
-// Loading Skeleton for a single product card
-function ProductCardSkeleton() {
-  return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      {/* Image skeleton */}
-      <div className="aspect-square bg-gray-200 animate-pulse relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"
-          style={{
-            transform: "translateX(-100%)",
-            animation: "shimmer 2s infinite",
-          }}
-        />
-      </div>
-
-      {/* Content skeleton */}
-      <div className="p-4 space-y-3">
-        {/* Title skeleton */}
-        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
-
-        {/* Category skeleton */}
-        <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
-
-        {/* Price skeleton */}
-        <div className="h-5 bg-gray-200 rounded animate-pulse w-1/4" />
-
-        {/* Button skeleton */}
-        <div className="h-10 bg-gray-200 rounded animate-pulse w-full mt-4" />
-      </div>
-    </div>
-  );
-}
-
 function SearchResults() {
   usePageTracking();
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const { products, loading } = useGetAllProducts();
   const { searchResults } = useSearchProducts(products, query);
+
+  React.useEffect(() => {
+    if (query) {
+      trackEvent({
+        type: UserEventType.SEARCH,
+        metadata: { query }
+      });
+    }
+  }, [query]);
 
   // Sort search results by availability
   const sortedSearchResults = [...searchResults].sort((a, b) => {
@@ -92,8 +73,8 @@ function SearchResults() {
   }
 
   return (
-    <div className="pt-4">
-      <h1 className="text-2xl font-bold mb-4 pl-2">
+    <div className="pt-4 px-2 md:px-6">
+      <h1 className="text-2xl font-bold mb-4">
         Search Results for "{query}"
       </h1>
       {sortedSearchResults.length === 0 ? (
@@ -107,19 +88,23 @@ function SearchResults() {
         </div>
       ) : (
         <>
-          <p className="text-gray-600 mb-4 pl-2">
-            Found {sortedSearchResults.length} results for "{query}"
-          </p>
           <motion.div
-            className="grid grid-cols-1 gap-0"
             variants={containerVariants}
             initial="hidden"
             animate="show">
-            {sortedSearchResults.map((product) => (
-              <motion.div key={product.id} variants={itemVariants}>
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
+            <MasonryGrid
+              items={sortedSearchResults}
+              distributeLeftToRight={true}
+              renderItem={(product) => (
+                <motion.div key={product.id} variants={itemVariants} className="w-full">
+                  <MasonryProductCard product={product} hideBadge={true} showAddToCart={true} dynamicBackground={false} />
+                </motion.div>
+              )}
+              placeholders={[
+                <SearchPlaceholder key="p1" />,
+                <ExplorePlaceholder key="p2" />
+              ]}
+            />
           </motion.div>
         </>
       )}
@@ -137,15 +122,11 @@ function SearchPageLoading({ query }: { query: string }) {
 
       {/* Animated grid loading using framer-motion */}
       <motion.div
-        className="grid grid-cols-1 gap-0"
-        variants={containerVariants}
-        initial="hidden"
-        animate="show">
-        {[...Array(8)].map((_, index) => (
-          <motion.div key={index} variants={itemVariants}>
-            <ProductCardSkeleton />
-          </motion.div>
-        ))}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <MasonrySkeleton />
       </motion.div>
     </div>
   );

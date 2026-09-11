@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { usePageTracking } from "@/hooks/analytics";
 import Image from "next/image";
 import Link from "next/link";
+import { orderStatusLabels } from "@/types/order/get_order_details";
 
 function OrderConfirmationPage() {
   const params = useParams();
@@ -66,7 +67,7 @@ function OrderConfirmationPage() {
           <h1 className="text-2xl font-bold">Order Details</h1>
           <p className="text-gray-600 mt-1">Order #{orderId}</p>
           <div
-            className="mt-2 inline-block px-3 py-1 rounded-full text-sm font-medium capitalize"
+            className="mt-2 inline-block px-3 py-1 rounded-full text-sm font-medium"
             style={{
               backgroundColor:
                 orderDetails.status === "PENDING"
@@ -75,6 +76,8 @@ function OrderConfirmationPage() {
                   ? "#D1FAE5"
                   : orderDetails.status === "PROCESSING"
                   ? "#DBEAFE"
+                  : orderDetails.status === "OUT_OF_STOCK"
+                  ? "#FFEDD5"
                   : "#FEE2E2",
               color:
                 orderDetails.status === "PENDING"
@@ -83,9 +86,11 @@ function OrderConfirmationPage() {
                   ? "#065F46"
                   : orderDetails.status === "PROCESSING"
                   ? "#1E40AF"
+                  : orderDetails.status === "OUT_OF_STOCK"
+                  ? "#9A3412"
                   : "#B91C1C",
             }}>
-            {orderDetails.status?.toLowerCase()}
+            {orderStatusLabels[orderDetails.status] ?? orderDetails.status}
           </div>
           <p className="text-gray-500 mt-2 text-sm">{formattedDate}</p>
         </div>
@@ -237,16 +242,20 @@ function OrderConfirmationPage() {
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Status</span>
             <span
-              className={`capitalize font-medium ${
+              className={`font-medium ${
                 orderDetails.status === "COMPLETED"
                   ? "text-green-600"
                   : orderDetails.status === "PENDING"
                   ? "text-yellow-600"
                   : orderDetails.status === "PROCESSING"
                   ? "text-blue-600"
+                  : orderDetails.status === "OUT_OF_STOCK"
+                  ? "text-orange-600"
                   : "text-red-600"
               }`}>
-              {orderDetails.status ? orderDetails.status.toLowerCase() : ""}
+              {orderDetails.status
+                ? orderStatusLabels[orderDetails.status] ?? orderDetails.status
+                : ""}
             </span>
           </div>
         </motion.div>
