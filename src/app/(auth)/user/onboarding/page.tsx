@@ -21,25 +21,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/toast/use-toast";
 import { usePageTracking } from "@/hooks/analytics";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
-import { useAuth } from "@/context/AuthContext";
-
-const QUESTIONS = [
-  {
-    id: "goal",
-    question: "What's your primary shopping goal?",
-    options: ["Finding the best deals", "Discovering new trends", "Just browsing for essentials"],
-  },
-  {
-    id: "forWho",
-    question: "Who do you usually shop for?",
-    options: ["Just myself", "My family", "Buying gifts"],
-  },
-  {
-    id: "style",
-    question: "How do you prefer to shop?",
-    options: ["I know exactly what I want", "I like to explore and discover"],
-  },
-];
 
 const formSchema = z.object({
   fullName: z.string().min(2, {
@@ -59,11 +40,7 @@ function OnboardingPageContent() {
   usePageTracking();
   const { toast } = useToast();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [step, setStep] = useState<1 | 2>(1);
   const [saving, setSaving] = useState(false);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-
-  const { updateUser } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -82,7 +59,6 @@ function OnboardingPageContent() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setSaving(true);
     try {
-      // upload the avatar first — the backend stores profilePic as a URL string
       let profilePicUrl = "";
       if (values.profilePic) {
         const fd = new FormData();
@@ -106,7 +82,11 @@ function OnboardingPageContent() {
         { headers: authHeader() }
       );
 
-      setStep(2);
+      toast({
+        title: "You're all set",
+        description: "Welcome to BuyBoxie!",
+      });
+      router.push("/");
     } catch (error) {
       toast({
         title: "Error",
@@ -118,44 +98,10 @@ function OnboardingPageContent() {
     }
   }
 
-  const toggleAnswer = (questionId: string, answer: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
-  };
-
-  async function onSubmitInterests() {
-    if (Object.keys(answers).length < QUESTIONS.length) return;
-    setSaving(true);
-    
-    try {
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/profile/update-profile`,
-        { preferences: answers },
-        { headers: authHeader() }
-      );
-
-      updateUser({ preferences: answers });
-
-      toast({
-        title: "You're all set",
-        description: "We'll use these to personalise what you see.",
-      });
-      router.push("/");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Could not save your preferences. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  }
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setAvatarUrl(imageUrl);
+      setAvatarUrl(URL.createObjectURL(file));
       form.setValue("profilePic", file);
     }
   };
@@ -164,126 +110,77 @@ function OnboardingPageContent() {
     <div className='container mx-auto py-10'>
       <Card className='max-w-md mx-auto'>
         <CardHeader>
-          <CardTitle>
-            {step === 1 ? "Complete Your Profile" : "What are you into?"}
-          </CardTitle>
-          <p className='text-sm text-muted-foreground'>Step {step} of 2</p>
+          <CardTitle>Complete Your Profile</CardTitle>
         </CardHeader>
         <CardContent>
-          {step === 1 ? (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-                <div className='flex justify-center'>
-                  <Avatar className='w-32 h-32'>
-                    <AvatarImage src={avatarUrl || ""} alt='Profile picture' />
-                    <AvatarFallback>UP</AvatarFallback>
-                  </Avatar>
-                </div>
-                <div>
-                  <Input
-                    type='file'
-                    accept='image/*'
-                    onChange={handleFileChange}
-                    className='hidden'
-                    id='profilePic'
-                  />
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={() => document.getElementById("profilePic")?.click()}
-                  >
-                    Upload Profile Picture
-                  </Button>
-                </div>
-                <FormField
-                  control={form.control}
-                  name='fullName'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder='John Doe' {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name='phoneNumber'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder='+1234567890' {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name='username'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input placeholder='johndoe' {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type='submit' className='w-full' disabled={saving}>
-                  {saving ? "Saving..." : "Continue"}
-                </Button>
-              </form>
-            </Form>
-          ) : (
-            <div className='space-y-6'>
-              <p className='text-sm text-muted-foreground'>
-                Help us tailor your experience by answering a few quick questions.
-              </p>
-
-              <div className='space-y-6'>
-                {QUESTIONS.map((q) => (
-                  <div key={q.id} className='space-y-2'>
-                    <h3 className='font-medium text-sm'>{q.question}</h3>
-                    <div className='grid gap-2'>
-                      {q.options.map((opt) => {
-                        const isSelected = answers[q.id] === opt;
-                        return (
-                          <button
-                            key={opt}
-                            type='button'
-                            onClick={() => toggleAnswer(q.id, opt)}
-                            className={`rounded-lg border p-3 text-sm text-left transition-colors ${
-                              isSelected
-                                ? "border-primary bg-primary/10 font-medium"
-                                : "border-input hover:bg-accent"
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
+              <div className='flex justify-center'>
+                <Avatar className='w-32 h-32'>
+                  <AvatarImage src={avatarUrl || ""} alt='Profile picture' />
+                  <AvatarFallback>UP</AvatarFallback>
+                </Avatar>
               </div>
-
-              <div className='space-y-2 pt-4'>
+              <div>
+                <Input
+                  type='file'
+                  accept='image/*'
+                  onChange={handleFileChange}
+                  className='hidden'
+                  id='profilePic'
+                />
                 <Button
                   type='button'
-                  className='w-full'
-                  disabled={Object.keys(answers).length < QUESTIONS.length || saving}
-                  onClick={onSubmitInterests}
+                  variant='outline'
+                  onClick={() => document.getElementById("profilePic")?.click()}
                 >
-                  {saving ? "Saving..." : "Finish"}
+                  Upload Profile Picture
                 </Button>
               </div>
-            </div>
-          )}
+              <FormField
+                control={form.control}
+                name='fullName'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder='John Doe' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='phoneNumber'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder='+1234567890' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='username'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder='johndoe' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type='submit' className='w-full' disabled={saving}>
+                {saving ? "Saving..." : "Continue"}
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
