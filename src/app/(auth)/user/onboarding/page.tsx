@@ -21,10 +21,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/toast/use-toast";
 import { usePageTracking } from "@/hooks/analytics";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
-import useGetAllCategory from "@/hooks/category/useGetAllCategory";
-import useUpdateInterests from "@/hooks/customer/useUpdateInterests";
+import { useAuth } from "@/context/AuthContext";
 
-const MIN_INTERESTS = 3;
+const QUESTIONS = [
+  {
+    id: "goal",
+    question: "What's your primary shopping goal?",
+    options: ["Finding the best deals", "Discovering new trends", "Just browsing for essentials"],
+  },
+  {
+    id: "forWho",
+    question: "Who do you usually shop for?",
+    options: ["Just myself", "My family", "Buying gifts"],
+  },
+  {
+    id: "style",
+    question: "How do you prefer to shop?",
+    options: ["I know exactly what I want", "I like to explore and discover"],
+  },
+];
 
 const formSchema = z.object({
   fullName: z.string().min(2, {
@@ -46,10 +61,9 @@ function OnboardingPageContent() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [saving, setSaving] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const { categories, loading: categoriesLoading } = useGetAllCategory();
-  const { updateInterests } = useUpdateInterests();
+  const { updateUser } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -104,32 +118,37 @@ function OnboardingPageContent() {
     }
   }
 
-  const toggleInterest = (id: string) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  const toggleAnswer = (questionId: string, answer: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
   };
 
   async function onSubmitInterests() {
-    if (selected.length < MIN_INTERESTS) return;
+    if (Object.keys(answers).length < QUESTIONS.length) return;
     setSaving(true);
-    const result = await updateInterests(selected);
-    setSaving(false);
+    
+    try {
+      await axios.patch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/profile/update-profile`,
+        { preferences: answers },
+        { headers: authHeader() }
+      );
 
-    if (!result.success) {
+      updateUser({ preferences: answers });
+
+      toast({
+        title: "You're all set",
+        description: "We'll use these to personalise what you see.",
+      });
+      router.push("/");
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Could not save your interests. Please try again.",
+        description: "Could not save your preferences. Please try again.",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setSaving(false);
     }
-
-    toast({
-      title: "You're all set",
-      description: "We'll use these to personalise what you see.",
-    });
-    router.push("/");
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -223,47 +242,41 @@ function OnboardingPageContent() {
           ) : (
             <div className='space-y-6'>
               <p className='text-sm text-muted-foreground'>
-                Pick at least {MIN_INTERESTS} so we can show you the right
-                products from the start.
+                Help us tailor your experience by answering a few quick questions.
               </p>
 
-              {categoriesLoading ? (
-                <p className='text-sm text-muted-foreground'>
-                  Loading categories...
-                </p>
-              ) : (
-                <div className='grid grid-cols-2 gap-3'>
-                  {categories.map((category) => {
-                    const isSelected = selected.includes(category.id);
-                    return (
-                      <button
-                        key={category.id}
-                        type='button'
-                        onClick={() => toggleInterest(category.id)}
-                        aria-pressed={isSelected}
-                        className={`rounded-lg border p-3 text-sm text-left transition-colors ${
-                          isSelected
-                            ? "border-primary bg-primary/10 font-medium"
-                            : "border-input hover:bg-accent"
-                        }`}
-                      >
-                        {category.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              <div className='space-y-6'>
+                {QUESTIONS.map((q) => (
+                  <div key={q.id} className='space-y-2'>
+                    <h3 className='font-medium text-sm'>{q.question}</h3>
+                    <div className='grid gap-2'>
+                      {q.options.map((opt) => {
+                        const isSelected = answers[q.id] === opt;
+                        return (
+                          <button
+                            key={opt}
+                            type='button'
+                            onClick={() => toggleAnswer(q.id, opt)}
+                            className={`rounded-lg border p-3 text-sm text-left transition-colors ${
+                              isSelected
+                                ? "border-primary bg-primary/10 font-medium"
+                                : "border-input hover:bg-accent"
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-              <div className='space-y-2'>
-                <p className='text-xs text-muted-foreground'>
-                  {selected.length} selected
-                  {selected.length < MIN_INTERESTS &&
-                    ` — pick ${MIN_INTERESTS - selected.length} more`}
-                </p>
+              <div className='space-y-2 pt-4'>
                 <Button
                   type='button'
                   className='w-full'
-                  disabled={selected.length < MIN_INTERESTS || saving}
+                  disabled={Object.keys(answers).length < QUESTIONS.length || saving}
                   onClick={onSubmitInterests}
                 >
                   {saving ? "Saving..." : "Finish"}

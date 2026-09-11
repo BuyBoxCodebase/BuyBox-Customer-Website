@@ -7,7 +7,7 @@ export default function useForYouProducts(limit: number = 50) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
@@ -24,8 +24,10 @@ export default function useForYouProducts(limit: number = 50) {
           return;
         }
 
+        const customerId = user?.id ?? "";
+        
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/recommendation/for-you?limit=${limit}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/popular?limit=${limit}${customerId ? `&customerId=${customerId}` : ''}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
