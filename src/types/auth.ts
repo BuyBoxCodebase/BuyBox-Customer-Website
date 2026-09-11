@@ -4,8 +4,6 @@ export interface User {
   email: string;
   username?: string;
   profilePic?: string;
-  isCompleted: boolean;
-  preferences?: any;
 }
 
 export interface AuthState {
