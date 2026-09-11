@@ -11,12 +11,12 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
             <motion.div whileHover={{ y: -3, scale: 1.1 }}>
               <Link href="/" className="font-semibold text-lg text-gray-800">
-                BuyBox
+                Treides
               </Link>
             </motion.div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1 text-sm text-gray-600">
-                <p>© 2026 BuyBox </p>
+                <p>© 2026 Treides </p>
                 {/* <Link href='/'>@buybox</Link> */}
               </div>
               <div className="text-sm flex">

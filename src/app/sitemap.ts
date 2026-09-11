@@ -4,16 +4,24 @@ import axios from "axios";
 import { Product } from "@/types/product";
 import { Category, SubCategory } from "@/types/category";
 
-const BASE_URL = "https://www.buyboxie.com";
+const BASE_URL = "https://www.treides.com";
+
+const getBackendUrl = (): string | undefined => process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
 
 async function getProducts(): Promise<Product[]> {
+  const backendUrl = getBackendUrl();
+
+  if (!backendUrl) {
+    console.warn("NEXT_PUBLIC_BACKEND_URL is not set. Skipping product fetch for sitemap.");
+    return [];
+  }
+
   try {
-    const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/get-all-product/`,
+    const res = await axios.get(`${backendUrl}/product/get-all-product/`, {
       // Endpoint returns ~1.3MB and consistently takes ~15s; keep generous
       // headroom so a slow-but-healthy backend still yields a full sitemap.
-      { timeout: 45_000 }
-    );
+      timeout: 45_000,
+    });
     return Object.values(res.data).flat() as Product[];
   } catch (e) {
     console.error("Sitemap: failed to fetch products", e);

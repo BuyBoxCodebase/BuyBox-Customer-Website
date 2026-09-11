@@ -20,7 +20,9 @@ export const getCategories = async (): Promise<Category[]> => {
     const data = await response.json();
     return Array.isArray(data) ? data : [];
   } catch (err) {
-    console.error("Error fetching categories:", err);
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("Sitemap: failed to fetch categories; using empty category list.", err);
+    }
     return [];
   }
 };
