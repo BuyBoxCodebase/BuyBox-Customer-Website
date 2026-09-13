@@ -17,7 +17,7 @@ export function middleware(request: NextRequest) {
   // all listed in sitemap.xml, so walling them off made every indexed URL
   // redirect to /user/login. Cart, checkout and orders stay behind the wall,
   // and add-to-cart still prompts guests to log in.
-  const publicBrowsePaths = ["/product", "/category", "/subcategory"]
+  const publicBrowsePaths = ["/product", "/category", "/subcategory", "/search", "/cart"]
   if(
     pathname === "/" ||
     publicBrowsePaths.some((p) => pathname.startsWith(p)) ||

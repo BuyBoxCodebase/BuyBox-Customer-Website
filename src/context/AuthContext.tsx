@@ -18,7 +18,7 @@ import {
 } from "@/types/auth";
 import Cookies from "js-cookie";
 import { headers } from "next/headers";
-import router from "next/router";
+import useCartStore from "@/zustand/cartStore";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -81,6 +81,11 @@ const removeAuthToken = () => {
   Cookies.remove("refreshToken", { path: "/" });
   
   delete axios.defaults.headers.common["Authorization"];
+
+  // Completely wipe the cart store to prevent guest state pollution
+  const cartStore = useCartStore.getState();
+  cartStore.deleteCart();
+  cartStore.setCartId(null);
 };
 
 const refreshAccessToken = async (): Promise<string | null> => {
@@ -221,6 +226,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               sameSite: "strict",
             });
           }
+
+
         } catch (error) {
           // If request fails with 401, try to refresh
           const axiosError = error as AxiosError;
@@ -274,7 +281,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         showWelcomeModal: true,
       }));
 
-      router.push("/");
+
+      const redirectUrl = new URLSearchParams(window.location.search).get("redirect");
+      router.push(redirectUrl || "/");
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       setState((prev) => ({
@@ -373,6 +382,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading: false,
         showWelcomeModal: false,
       }));
+
+
+      const redirectUrl = new URLSearchParams(window.location.search).get("redirect");
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      }
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       setState((prev) => ({
