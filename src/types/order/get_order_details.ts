@@ -4,7 +4,8 @@ export type OrderStatus =
   | "PROCESSING"
   | "COMPLETED"
   | "CANCELED"
-  | "OUT_OF_STOCK";
+  | "OUT_OF_STOCK"
+  | "READY_FOR_PICKUP";
 
 export type PaymentMode =
   | "CASH_ON_DELIVERY"
@@ -21,6 +22,7 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
   COMPLETED: "Completed",
   CANCELED: "Cancelled",
   OUT_OF_STOCK: "Out of Stock",
+  READY_FOR_PICKUP: "Ready for Pickup",
 };
 
 interface Category {
@@ -86,4 +88,15 @@ export interface OrderDetails {
   products: OrderProduct[];
   deliveryAgent: DeliveryAgent | null;
   deliveryTime?: string;
+  fulfillmentType?: string;
+  pickupLocationId?: string;
+  pickupDate?: string;
+  pickupFee?: number;
+  pickupLocation?: {
+    name: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    } | string; // Assuming it could be JSON parsed or raw
+  };
 }

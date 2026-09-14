@@ -8,6 +8,10 @@ export interface CreateOrderRequest {
   cartId: string;
   paymentMode: PaymentMode;
   deliveryTime?: string;
+  fulfillmentType?: string;
+  pickupLocationId?: string;
+  pickupDate?: string;
+  pickupFee?: number;
 }
 
 // Types for the order product in response
