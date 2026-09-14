@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, FormEvent, Suspense } from "react";
+import { useState, FormEvent, Suspense, useEffect } from "react";
 import {
   ArrowLeft,
   Check,
-  ChevronRight,
   MapPin,
   ShoppingBag,
   Clock,
+  Navigation,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,38 +15,23 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCartContext } from "../../../context/CartContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/toast/use-toast";
 import useCreateOrder from "@/hooks/order/useCreateOrder";
 import useCartStore from "@/zustand/cartStore";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEventTracking, usePageTracking } from "@/hooks/analytics";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import type { PaymentMode as BackendPaymentMode } from "@/types/order/get_order_details";
+import axios from "axios";
 
-type LocationMode = "none" | "manual" | "current";
-// "ONLINE" is a UI-only placeholder for the online-payment checkbox, which is
-// still disabled. It is not a backend PaymentMode, so it is rejected before submit.
 type PaymentMode = BackendPaymentMode | "ONLINE";
-type DeliveryTime = "24hr" /* | "5hr" | "3hr" */;
 
 type FormErrors = {
   email: string;
   phoneNumber: string;
-  address: string;
-  city: string;
-  state: string;
   paymentMode: string;
-  location: string;
-  deliveryTime: string;
-};
-
-const DELIVERY_COSTS: Record<DeliveryTime, number> = {
-  "24hr": 5,
-  /* "5hr": 3,
-  "3hr": 5 */
 };
 
 // Animation variants
@@ -76,53 +61,47 @@ function CheckoutPageContent() {
   const { trackOrder } = useEventTracking();
   const { toast } = useToast();
   const { cart, cartId } = useCartContext();
-  const { createOrder, error, loading, orderData } = useCreateOrder();
+  const { createOrder, loading } = useCreateOrder();
   const { deleteCart } = useCartStore();
 
   const [formErrors, setFormErrors] = useState<FormErrors>({
     email: "",
     phoneNumber: "",
-    address: "",
-    city: "",
-    state: "",
     paymentMode: "",
-    location: "",
-    deliveryTime: "",
   });
 
-  // Form state
   const [formData, setFormData] = useState({
     email: "",
     phoneNumber: "",
-    address: "",
-    city: "",
-    state: "",
-    paymentMode: "" as PaymentMode,
-    deliveryTime: "24hr" as DeliveryTime,
+    paymentMode: "CASH_ON_DELIVERY" as PaymentMode,
   });
 
-  const [locationMode, setLocationMode] = useState<LocationMode>("none");
-  const [currentLocation, setCurrentLocation] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [pickupData, setPickupData] = useState<{ pickupDate: string; availableFrom: string; availableUntil: string; timezone: string } | null>(null);
 
-  // Calculate pricing
+  useEffect(() => {
+    // Fetch pickup date on mount
+    const fetchPickupDate = async () => {
+      try {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/checkout/calculate-pickup-date`, {
+          orderTimestamp: new Date().toISOString()
+        });
+        setPickupData(response.data);
+      } catch (error) {
+        console.error("Error calculating pickup date:", error);
+      }
+    };
+    fetchPickupDate();
+  }, []);
+
+  const pickupFee = cart.length > 0 ? 4 : 0;
   const subtotal = cart.reduce((acc, item) => acc + item.totalPrice, 0);
-  const shippingCost =
-    cart.length > 0 ? DELIVERY_COSTS[formData.deliveryTime] : 0;
-  const total = subtotal + shippingCost;
+  const total = subtotal + pickupFee;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [id]: value,
-    }));
-  };
-
-  const handleDeliveryTimeChange = (value: DeliveryTime) => {
-    setFormData((prev) => ({
-      ...prev,
-      deliveryTime: value,
     }));
   };
 
@@ -150,36 +129,8 @@ function CheckoutPageContent() {
       isValid = false;
     }
 
-    if (locationMode === "manual") {
-      if (!formData.address) {
-        errors.address = "Address is required";
-        isValid = false;
-      }
-      if (!formData.city) {
-        errors.city = "City is required";
-        isValid = false;
-      }
-      if (!formData.state) {
-        errors.state = "State is required";
-        isValid = false;
-      }
-    } else if (locationMode === "current") {
-      if (!currentLocation) {
-        errors.location = "Location is required";
-        isValid = false;
-      }
-    } else {
-      errors.location = "Please select a delivery location";
-      isValid = false;
-    }
-
     if (!formData.paymentMode) {
       errors.paymentMode = "Please select a payment mode";
-      isValid = false;
-    }
-
-    if (!formData.deliveryTime) {
-      errors.deliveryTime = "Please select a delivery time";
       isValid = false;
     }
 
@@ -210,11 +161,6 @@ function CheckoutPageContent() {
       return;
     }
 
-    const completeAddress =
-      locationMode === "current"
-        ? currentLocation
-        : `${formData.address}, ${formData.city}, ${formData.state}`;
-
     const paymentMode = formData.paymentMode;
     if (paymentMode === "ONLINE") {
       setFormErrors((prev) => ({
@@ -224,17 +170,29 @@ function CheckoutPageContent() {
       return;
     }
 
+    if (!pickupData) {
+        toast({
+            title: "Error",
+            description: "Pickup details are not ready yet.",
+            variant: "destructive",
+            className: "top-[4rem]",
+        });
+        return;
+    }
+
     try {
-      // console.log(cart);
       const orderData = {
         email: formData.email,
         phoneNumber: formData.phoneNumber,
-        address: completeAddress,
+        address: "Eastgate Mall, Harare, Zimbabwe", // Default for pickup
         cartId: cartId!,
         paymentMode,
-        deliveryTime: formData.deliveryTime,
+        fulfillmentType: "PICKUP",
+        pickupLocationId: "6aa812cfdfe683e883ae0965", // Eastgate Mall DB ID
+        pickupDate: pickupData.pickupDate,
+        pickupFee: 4,
       };
-      // console.log(orderData);
+      
       const response = await createOrder(orderData);
       trackOrder(response.id, total, "USD", formData.phoneNumber);
 
@@ -253,28 +211,6 @@ function CheckoutPageContent() {
         variant: "destructive",
         className: "top-[4rem]",
       });
-    }
-  };
-
-  const handleCurrentLocation = async () => {
-    setIsLoading(true);
-    try {
-      if ("geolocation" in navigator) {
-        const position = await new Promise<GeolocationPosition>(
-          (resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
-          }
-        );
-        const location = `${position.coords.latitude}, ${position.coords.longitude}`;
-        setCurrentLocation(location);
-        setLocationMode("current");
-      } else {
-        alert("Geolocation is not supported by your browser");
-      }
-    } catch (error) {
-      alert("Error getting location");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -313,10 +249,12 @@ function CheckoutPageContent() {
                 </motion.h1>
 
                 <motion.form
-                  className="space-y-6"
+                  className="space-y-8"
                   variants={staggerContainer}
                   initial="hidden"
                   animate="visible">
+                  
+                  {/* Contact Info */}
                   <motion.div
                     className="grid md:grid-cols-2 gap-4"
                     variants={slideUp}>
@@ -365,243 +303,45 @@ function CheckoutPageContent() {
                     </div>
                   </motion.div>
 
-                  {/* Delivery Time Selection */}
-                  <motion.div className="space-y-2" variants={slideUp}>
+                  {/* Pickup Details Card */}
+                  <motion.div className="space-y-4" variants={slideUp}>
                     <h3 className="font-medium flex items-center gap-2">
-                      <motion.div
-                        whileHover={{ rotate: 360 }}
-                        transition={{ duration: 0.6 }}>
-                        <Clock className="w-4 h-4" />
-                      </motion.div>
-                      Delivery Time
+                      <MapPin className="w-5 h-5 text-gray-800" />
+                      Pickup Details
                     </h3>
-                    <RadioGroup
-                      value={formData.deliveryTime}
-                      onValueChange={(value) =>
-                        handleDeliveryTimeChange(value as DeliveryTime)
-                      }
-                      className="grid grid-cols-1 gap-4">
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 10,
-                        }}>
-                        <RadioGroupItem
-                          value="24hr"
-                          id="24hr"
-                          className="peer sr-only"
-                          checked
-                        />
-                        <Label
-                          htmlFor="24hr"
-                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-gray-800 [&:has([data-state=checked])]:border-gray-800 cursor-pointer">
-                          <span className="font-semibold">24 Hours</span>
-                          <span className="text-sm text-muted-foreground">
-                            $3.00
-                          </span>
-                        </Label>
-                      </motion.div>
-                      {/* 
-                      <div>
-                        <RadioGroupItem
-                          value="5hr"
-                          id="5hr"
-                          className="peer sr-only"
-                        />
-                        <Label
-                          htmlFor="5hr"
-                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-orange-500 [&:has([data-state=checked])]:border-orange-500 cursor-pointer">
-                          <span className="font-semibold">5 Hours</span>
-                          <span className="text-sm text-muted-foreground">$3.00</span>
-                        </Label>
-                      </div>
-                      <div>
-                        <RadioGroupItem
-                          value="3hr"
-                          id="3hr"
-                          className="peer sr-only"
-                        />
-                        <Label
-                          htmlFor="3hr"
-                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-orange-500 [&:has([data-state=checked])]:border-orange-500 cursor-pointer">
-                          <span className="font-semibold">3 Hours</span>
-                          <span className="text-sm text-muted-foreground">$5.00</span>
-                        </Label>
-                      </div>
-                      */}
-                    </RadioGroup>
-                  </motion.div>
-
-                  <AnimatePresence mode="wait">
-                    {locationMode === "manual" ? (
-                      <motion.div
-                        key="manual"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}>
-                        <div className="space-y-4">
-                          <div className="grid md:grid-cols-2 gap-4">
-                            <div className="md:col-span-2">
-                              <Label htmlFor="address">Address</Label>
-                              <Input
-                                id="address"
-                                type="text"
-                                required
-                                value={formData.address}
-                                onChange={handleInputChange}
-                                className={
-                                  formErrors.address ? "border-red-500" : ""
-                                }
-                              />
-                              {formErrors.address && (
-                                <motion.p
-                                  className="text-sm text-red-500 mt-1"
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}>
-                                  {formErrors.address}
-                                </motion.p>
-                              )}
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-semibold text-lg">Eastgate Mall</h4>
+                          <p className="text-gray-600 text-sm mt-1">Coordinates: -17.831819, 31.053124</p>
+                          
+                          <div className="mt-4 space-y-2">
+                            <div className="flex items-center text-sm text-gray-700">
+                                <Clock className="w-4 h-4 mr-2" />
+                                <span><strong>Operating Hours:</strong> 9am - 4pm daily (Closed Sundays)</span>
                             </div>
-
-                            <div>
-                              <Label htmlFor="city">City</Label>
-                              <Input
-                                id="city"
-                                type="text"
-                                required
-                                value={formData.city}
-                                onChange={handleInputChange}
-                                className={
-                                  formErrors.city ? "border-red-500" : ""
-                                }
-                              />
-                              {formErrors.city && (
-                                <motion.p
-                                  className="text-sm text-red-500 mt-1"
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}>
-                                  {formErrors.city}
-                                </motion.p>
-                              )}
-                            </div>
-
-                            <div>
-                              <Label htmlFor="state">State</Label>
-                              <Input
-                                id="state"
-                                type="text"
-                                required
-                                value={formData.state}
-                                onChange={handleInputChange}
-                                className={
-                                  formErrors.state ? "border-red-500" : ""
-                                }
-                              />
-                              {formErrors.state && (
-                                <motion.p
-                                  className="text-sm text-red-500 mt-1"
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}>
-                                  {formErrors.state}
-                                </motion.p>
-                              )}
+                            <div className="flex items-center text-sm text-gray-700">
+                                <Check className="w-4 h-4 mr-2 text-green-600" />
+                                <span>
+                                    <strong>Pickup Date:</strong> {pickupData ? new Date(pickupData.pickupDate).toLocaleDateString() : 'Calculating...'}
+                                </span>
                             </div>
                           </div>
                         </div>
+                        <a 
+                            href="https://maps.google.com/?q=-17.831819,31.053124" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
+                        >
+                          <Navigation className="w-4 h-4 mr-2" />
+                          Directions
+                        </a>
+                      </div>
+                    </div>
+                  </motion.div>
 
-                        <motion.div
-                          className="mt-4"
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.98 }}>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full justify-between"
-                            onClick={() => setLocationMode("none")}>
-                            <span className="flex items-center">
-                              <MapPin className="w-4 h-4 mr-2 text-gray-800" />
-                              Choose current location
-                            </span>
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
-                      </motion.div>
-                    ) : locationMode === "current" ? (
-                      <motion.div
-                        key="current"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}>
-                        <div>
-                          <Label htmlFor="location">Delivery location</Label>
-                          <Input
-                            id="location"
-                            value={currentLocation}
-                            disabled
-                            className="bg-gray-100"
-                            placeholder="autofilled"
-                          />
-                          <motion.div
-                            whileHover={{ x: 2 }}
-                            transition={{ type: "spring", stiffness: 400 }}>
-                            <Button
-                              type="button"
-                              variant="link"
-                              className="mt-2 p-0 h-auto font-normal text-gray-800"
-                              onClick={() => setLocationMode("manual")}>
-                              Enter address manually
-                            </Button>
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="none"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-2">
-                        <motion.div
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.98 }}>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full justify-between"
-                            onClick={handleCurrentLocation}
-                            disabled={isLoading}>
-                            <span className="flex items-center">
-                              <MapPin className="w-4 h-4 mr-2 text-gray-800" />
-                              Choose current location
-                            </span>
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
-
-                        <motion.div
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.98 }}>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full justify-between"
-                            onClick={() => setLocationMode("manual")}>
-                            <span className="flex items-center">
-                              <MapPin className="w-4 h-4 mr-2 text-gray-800" />
-                              Enter address manually
-                            </span>
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
+                  {/* Payment */}
                   <motion.div className="space-y-2" variants={slideUp}>
                     <h3 className="font-medium">Payment mode</h3>
                     <div className="space-y-2">
@@ -735,8 +475,8 @@ function CheckoutPageContent() {
                     <motion.div
                       className="flex justify-between text-sm text-gray-600"
                       variants={fadeIn}>
-                      <span>Shipping cost</span>
-                      <span>${shippingCost.toFixed(2)}</span>
+                      <span>Pickup Fee</span>
+                      <span>${pickupFee.toFixed(2)}</span>
                     </motion.div>
                     <motion.div
                       className="flex justify-between font-medium text-lg border-t pt-2"
