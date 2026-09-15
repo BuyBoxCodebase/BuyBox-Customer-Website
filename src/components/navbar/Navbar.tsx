@@ -35,7 +35,7 @@ export default function Navbar() {
               whileHover={{ y: -3, scale: 1.1 }}
               href="/"
               className="text-gray-800 text-2xl font-semibold hidden lg:flex">
-              BuyBox
+              Treides
             </motion.a>
             <div className="hidden lg:flex flex-1 max-w-xl items-center">
               <SearchBar />

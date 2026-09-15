@@ -1,6 +1,6 @@
 import { Product } from "@/types/product";
-import axios from "axios";
 import { useEffect, useState } from "react";
+import { getPopularProductsAction } from "@/actions/products/getPopularProducts";
 
 export interface PopularProductSnapshot {
   id: string;
@@ -21,21 +21,8 @@ export default function usePopularProducts(categoryId?: string | null, customerI
     const fetchPopularProducts = async () => {
       setLoading(true);
       try {
-        let url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/popular?limit=${limit}`;
-        if (categoryId) {
-          url += `&categoryId=${categoryId}`;
-        }
-        if (customerId) {
-          url += `&customerId=${customerId}`;
-        }
-
-        const response = await axios.get(url);
-
-        if (Array.isArray(response.data)) {
-          setPopularProducts(response.data);
-        } else {
-          setPopularProducts([]);
-        }
+        const data = await getPopularProductsAction(categoryId, customerId, limit);
+        setPopularProducts(data);
       } catch (err) {
         console.error("Error fetching popular products:", err);
         setError(true);

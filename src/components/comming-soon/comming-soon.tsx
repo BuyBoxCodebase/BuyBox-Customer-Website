@@ -35,7 +35,7 @@ export default function ComingSoon() {
           }}
           className="mb-8">
           <div className="mx-auto h-24 w-24 rounded-full bg-gray-800 flex items-center justify-center">
-            <span className="text-black text-2xl font-bold">BuyBox</span>
+            <span className="text-black text-2xl font-bold">Treides</span>
           </div>
         </motion.div>
 

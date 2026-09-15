@@ -8,6 +8,8 @@ import {
   ShoppingBag,
   Clock,
   Navigation,
+  Truck,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,12 +17,13 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCartContext } from "../../../context/CartContext";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/toast/use-toast";
 import useCreateOrder from "@/hooks/order/useCreateOrder";
 import useCartStore from "@/zustand/cartStore";
-import { motion } from "framer-motion";
 import { useEventTracking, usePageTracking } from "@/hooks/analytics";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import type { PaymentMode as BackendPaymentMode } from "@/types/order/get_order_details";
@@ -74,7 +77,15 @@ function CheckoutPageContent() {
     email: "",
     phoneNumber: "",
     paymentMode: "CASH_ON_DELIVERY" as PaymentMode,
+    address: "",
+    city: "",
+    state: "",
   });
+
+  const [fulfillmentType, setFulfillmentType] = useState<"PICKUP" | "DELIVERY">("PICKUP");
+  const [locationMode, setLocationMode] = useState<"none" | "manual" | "current">("none");
+  const [currentLocation, setCurrentLocation] = useState("");
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
 
   const [pickupData, setPickupData] = useState<{ pickupDate: string; availableFrom: string; availableUntil: string; timezone: string } | null>(null);
 
@@ -105,6 +116,28 @@ function CheckoutPageContent() {
     }));
   };
 
+  const handleCurrentLocation = async () => {
+    setIsLocationLoading(true);
+    try {
+      if ("geolocation" in navigator) {
+        const position = await new Promise<GeolocationPosition>(
+          (resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+          }
+        );
+        const location = `${position.coords.latitude}, ${position.coords.longitude}`;
+        setCurrentLocation(location);
+        setLocationMode("current");
+      } else {
+        alert("Geolocation is not supported by your browser");
+      }
+    } catch (error) {
+      alert("Error getting location");
+    } finally {
+      setIsLocationLoading(false);
+    }
+  };
+
   const handlePaymentModeChange = (mode: PaymentMode) => {
     setFormData((prev) => ({
       ...prev,
@@ -127,6 +160,31 @@ function CheckoutPageContent() {
     if (!formData.phoneNumber) {
       errors.phoneNumber = "Phone number is required";
       isValid = false;
+    }
+
+    if (fulfillmentType === "DELIVERY") {
+      if (locationMode === "manual") {
+        if (!formData.address) {
+          (errors as any).address = "Address is required";
+          isValid = false;
+        }
+        if (!formData.city) {
+          (errors as any).city = "City is required";
+          isValid = false;
+        }
+        if (!formData.state) {
+          (errors as any).state = "State is required";
+          isValid = false;
+        }
+      } else if (locationMode === "current") {
+        if (!currentLocation) {
+          (errors as any).location = "Location is required";
+          isValid = false;
+        }
+      } else {
+        (errors as any).location = "Please select a delivery location";
+        isValid = false;
+      }
     }
 
     if (!formData.paymentMode) {
@@ -181,14 +239,18 @@ function CheckoutPageContent() {
     }
 
     try {
+      const completeAddress = fulfillmentType === "DELIVERY"
+        ? (locationMode === "current" ? currentLocation : `${formData.address}, ${formData.city}, ${formData.state}`)
+        : "Eastgate Mall, Harare, Zimbabwe";
+
       const orderData = {
         email: formData.email,
         phoneNumber: formData.phoneNumber,
-        address: "Eastgate Mall, Harare, Zimbabwe", // Default for pickup
+        address: completeAddress,
         cartId: cartId!,
         paymentMode,
-        fulfillmentType: "PICKUP",
-        pickupLocationId: "6aa812cfdfe683e883ae0965", // Eastgate Mall DB ID
+        fulfillmentType,
+        pickupLocationId: fulfillmentType === "PICKUP" ? "6aa812cfdfe683e883ae0965" : undefined,
         pickupDate: pickupData.pickupDate,
         pickupFee: 4,
       };
@@ -303,43 +365,146 @@ function CheckoutPageContent() {
                     </div>
                   </motion.div>
 
-                  {/* Pickup Details Card */}
+                  {/* Fulfillment Method */}
                   <motion.div className="space-y-4" variants={slideUp}>
                     <h3 className="font-medium flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-gray-800" />
-                      Pickup Details
+                      <Truck className="w-5 h-5 text-gray-800" />
+                      Fulfillment Method
                     </h3>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-semibold text-lg">Eastgate Mall</h4>
-                          <p className="text-gray-600 text-sm mt-1">Coordinates: -17.831819, 31.053124</p>
+                    <RadioGroup
+                      value={fulfillmentType}
+                      onValueChange={(val: any) => setFulfillmentType(val)}
+                      className="grid grid-cols-2 gap-4">
+                      <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                        <RadioGroupItem value="PICKUP" id="PICKUP" className="peer sr-only" />
+                        <Label
+                          htmlFor="PICKUP"
+                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-gray-800 [&:has([data-state=checked])]:border-gray-800 cursor-pointer h-full">
+                          <span className="font-semibold text-center">Pickup in Harare</span>
+                          <span className="text-sm text-muted-foreground mt-1 text-center">Eastgate Mall</span>
+                        </Label>
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                        <RadioGroupItem value="DELIVERY" id="DELIVERY" className="peer sr-only" />
+                        <Label
+                          htmlFor="DELIVERY"
+                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-gray-800 [&:has([data-state=checked])]:border-gray-800 cursor-pointer h-full">
+                          <span className="font-semibold text-center">Delivery</span>
+                          <span className="text-sm text-muted-foreground mt-1 text-center">Outside Harare</span>
+                        </Label>
+                      </motion.div>
+                    </RadioGroup>
+                  </motion.div>
+
+                  <AnimatePresence mode="wait">
+                    {fulfillmentType === "PICKUP" ? (
+                      <motion.div key="pickup" className="space-y-4" variants={slideUp} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-semibold text-lg">Eastgate Mall</h4>
+                              <p className="text-gray-600 text-sm mt-1">Coordinates: -17.831819, 31.053124</p>
+                              
+                              <div className="mt-4 space-y-2">
+                                <div className="flex items-center text-sm text-gray-700">
+                                    <Clock className="w-4 h-4 mr-2" />
+                                    <span><strong>Operating Hours:</strong> 9am - 4pm daily (Closed Sundays)</span>
+                                </div>
+                                <div className="flex items-center text-sm text-gray-700">
+                                    <Check className="w-4 h-4 mr-2 text-green-600" />
+                                    <span>
+                                        <strong>Pickup Date:</strong> {pickupData ? new Date(pickupData.pickupDate).toLocaleDateString() : 'Calculating...'}
+                                    </span>
+                                </div>
+                              </div>
+                            </div>
+                            <a 
+                                href="https://maps.google.com/?q=-17.831819,31.053124" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
+                            >
+                              <Navigation className="w-4 h-4 mr-2" />
+                              Directions
+                            </a>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div key="delivery" className="space-y-4" variants={slideUp} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                          <h4 className="font-semibold text-lg mb-4">Delivery Address</h4>
                           
-                          <div className="mt-4 space-y-2">
+                          {locationMode === "none" && (
+                            <div className="flex flex-col sm:flex-row gap-4 mt-2">
+                              <Button type="button" onClick={handleCurrentLocation} className="flex-1" disabled={isLocationLoading}>
+                                {isLocationLoading ? "Getting location..." : (
+                                  <>
+                                    <MapPin className="w-4 h-4 mr-2" />
+                                    Live Location Ping
+                                  </>
+                                )}
+                              </Button>
+                              <Button type="button" variant="outline" onClick={() => setLocationMode("manual")} className="flex-1">
+                                Enter Address Manually
+                              </Button>
+                            </div>
+                          )}
+
+                          {locationMode === "manual" && (
+                            <div className="space-y-4">
+                              <div className="grid md:grid-cols-2 gap-4">
+                                <div className="md:col-span-2">
+                                  <Label htmlFor="address">Address</Label>
+                                  <Input id="address" type="text" value={formData.address} onChange={handleInputChange} className={(formErrors as any).address ? "border-red-500" : ""} />
+                                  {(formErrors as any).address && <p className="text-sm text-red-500 mt-1">{(formErrors as any).address}</p>}
+                                </div>
+                                <div>
+                                  <Label htmlFor="city">City</Label>
+                                  <Input id="city" type="text" value={formData.city} onChange={handleInputChange} className={(formErrors as any).city ? "border-red-500" : ""} />
+                                  {(formErrors as any).city && <p className="text-sm text-red-500 mt-1">{(formErrors as any).city}</p>}
+                                </div>
+                                <div>
+                                  <Label htmlFor="state">State</Label>
+                                  <Input id="state" type="text" value={formData.state} onChange={handleInputChange} className={(formErrors as any).state ? "border-red-500" : ""} />
+                                  {(formErrors as any).state && <p className="text-sm text-red-500 mt-1">{(formErrors as any).state}</p>}
+                                </div>
+                              </div>
+                              <Button type="button" variant="ghost" size="sm" onClick={() => setLocationMode("none")}>
+                                <ChevronRight className="w-4 h-4 mr-1 rotate-180" /> Back to options
+                              </Button>
+                            </div>
+                          )}
+
+                          {locationMode === "current" && (
+                            <div className="space-y-4">
+                              <div>
+                                <Label htmlFor="location">Live Location Ping</Label>
+                                <Input id="location" type="text" readOnly value={currentLocation} className="bg-gray-100" />
+                                {(formErrors as any).location && <p className="text-sm text-red-500 mt-1">{(formErrors as any).location}</p>}
+                              </div>
+                              <Button type="button" variant="ghost" size="sm" onClick={() => setLocationMode("none")}>
+                                <ChevronRight className="w-4 h-4 mr-1 rotate-180" /> Use a different address
+                              </Button>
+                            </div>
+                          )}
+
+                          <div className="mt-6 pt-4 border-t space-y-2">
                             <div className="flex items-center text-sm text-gray-700">
                                 <Clock className="w-4 h-4 mr-2" />
-                                <span><strong>Operating Hours:</strong> 9am - 4pm daily (Closed Sundays)</span>
+                                <span><strong>Delivery Days:</strong> Tuesday, Thursday, Saturday</span>
                             </div>
                             <div className="flex items-center text-sm text-gray-700">
                                 <Check className="w-4 h-4 mr-2 text-green-600" />
                                 <span>
-                                    <strong>Pickup Date:</strong> {pickupData ? new Date(pickupData.pickupDate).toLocaleDateString() : 'Calculating...'}
+                                    <strong>Est. Delivery Date:</strong> {pickupData ? new Date(pickupData.pickupDate).toLocaleDateString() : 'Calculating...'}
                                 </span>
                             </div>
                           </div>
                         </div>
-                        <a 
-                            href="https://maps.google.com/?q=-17.831819,31.053124" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
-                        >
-                          <Navigation className="w-4 h-4 mr-2" />
-                          Directions
-                        </a>
-                      </div>
-                    </div>
-                  </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   {/* Payment */}
                   <motion.div className="space-y-2" variants={slideUp}>
@@ -475,7 +640,7 @@ function CheckoutPageContent() {
                     <motion.div
                       className="flex justify-between text-sm text-gray-600"
                       variants={fadeIn}>
-                      <span>Pickup Fee</span>
+                      <span>{fulfillmentType === "PICKUP" ? "Pickup Fee" : "Delivery Fee"}</span>
                       <span>${pickupFee.toFixed(2)}</span>
                     </motion.div>
                     <motion.div

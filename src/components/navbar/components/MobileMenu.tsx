@@ -16,7 +16,7 @@ export const MobileMenu = ({ isLoggedIn, onLogout }: MobileMenuProps) => {
   return (
     <div className="lg:hidden py-4 border-t">
       {/* <div className="flex items-center gap-2 mb-4">
-        <Input type="search" placeholder="Search BuyBox..." className="w-full pl-4 pr-10" />
+        <Input type="search" placeholder="Search Treides..." className="w-full pl-4 pr-10" />
         <Button variant="default" size="icon" className="shrink-0">
           <Search className="h-4 w-4" />
         </Button>

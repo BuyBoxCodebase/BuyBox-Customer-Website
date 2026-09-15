@@ -275,7 +275,7 @@ function OrderConfirmationPage() {
                 {orderDetails.fulfillmentType === "PICKUP" ? "Pickup Fee" : "Shipping"}
               </span>
               <span className="font-medium">
-                {orderDetails.fulfillmentType === "PICKUP" && orderDetails.pickupFee
+                {orderDetails.pickupFee
                   ? `$${orderDetails.pickupFee.toFixed(2)}`
                   : "$0.00"}
               </span>
