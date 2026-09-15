@@ -1,13 +1,13 @@
-// BuyBox Privacy Policy Page
+// Treides Privacy Policy Page
 export default function PrivacyPolicyPage() {
   return (
     <main className="container mx-auto max-w-3xl bg-white p-7 rounded-lg shadow-lg my-8">
-      <h1 className="text-2xl font-bold mb-2">BuyBox — Privacy Policy</h1>
+      <h1 className="text-2xl font-bold mb-2">Treides — Privacy Policy</h1>
       <div className="text-gray-600 text-sm mb-4">Effective Date: <strong>22 September 2025</strong> · Last Updated: <strong>22 September 2025</strong></div>
-      <p>At <strong>BuyBox</strong> (“we”, “our”, “us”), your privacy is important. This Privacy Policy explains how we collect, use, store, and protect your personal data in compliance with the <strong>Zimbabwe Cyber & Data Protection Act (Chapter 12:07)</strong>, <strong>POTRAZ regulations</strong>, and global standards such as the <strong>EU GDPR</strong> and <strong>California CCPA</strong>.</p>
+      <p>At <strong>Treides</strong> (“we”, “our”, “us”), your privacy is important. This Privacy Policy explains how we collect, use, store, and protect your personal data in compliance with the <strong>Zimbabwe Cyber & Data Protection Act (Chapter 12:07)</strong>, <strong>POTRAZ regulations</strong>, and global standards such as the <strong>EU GDPR</strong> and <strong>California CCPA</strong>.</p>
       <h2 className="mt-6 text-lg font-semibold text-blue-900">1. Data Controller</h2>
       <ul className="list-disc ml-6">
-        <li><strong>BuyBox</strong> is the controller of your personal data.</li>
+        <li><strong>Treides</strong> is the controller of your personal data.</li>
         <li><strong>Office:</strong> [Physical address to be added]</li>
         <li><strong>Data Protection Contact:</strong> [To be appointed — interim contact via WhatsApp below]</li>
       </ul>
@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
       </ul>
       <h2 className="mt-6 text-lg font-semibold text-blue-900">3. How We Use Your Data</h2>
       <ul className="list-disc ml-6">
-        <li>Provide and improve the BuyBox marketplace</li>
+        <li>Provide and improve the Treides marketplace</li>
         <li>Process orders and facilitate delivery</li>
         <li>Communicate with you about your account or orders</li>
         <li>Provide customer support and resolve disputes</li>
@@ -86,11 +86,11 @@ export default function PrivacyPolicyPage() {
       <p>We may update this Privacy Policy to reflect changes in law, regulation, or our services. Updated versions will be posted here, with the date shown above.</p>
       <h2 className="mt-6 text-lg font-semibold text-blue-900">13. Contact Us</h2>
       <div className="bg-green-50 border-l-4 border-green-500 rounded p-3 my-3">
-        <p>For privacy-related questions, data requests, or complaints, contact BuyBox Customer Support via WhatsApp:</p>
+        <p>For privacy-related questions, data requests, or complaints, contact Treides Customer Support via WhatsApp:</p>
         <p><strong>WhatsApp:</strong> <a href="https://wa.me/263717651799" target="_blank" rel="noopener">+263 71 765 1799</a></p>
       </div>
       <footer className="mt-6 text-xs text-gray-500">
-        <p>© BuyBox. All rights reserved.</p>
+        <p>© Treides. All rights reserved.</p>
         <p>Customer Terms of Use: <a href="/user/terms" className="underline text-blue-700">/terms</a></p>
       </footer>
     </main>

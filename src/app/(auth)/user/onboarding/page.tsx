@@ -84,7 +84,7 @@ function OnboardingPageContent() {
 
       toast({
         title: "You're all set",
-        description: "Welcome to BuyBoxie!",
+        description: "Welcome to Treides!",
       });
       router.push("/");
     } catch (error) {

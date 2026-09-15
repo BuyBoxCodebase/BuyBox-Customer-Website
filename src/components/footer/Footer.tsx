@@ -17,7 +17,7 @@ export default function Footer() {
             <div className="flex flex-col">
               <div className="flex items-center gap-1 text-sm text-gray-600">
                 <p>© 2026 Treides </p>
-                {/* <Link href='/'>@buybox</Link> */}
+                {/* <Link href='/'>@treides</Link> */}
               </div>
               <div className="text-sm flex">
                 <motion.a
@@ -34,7 +34,7 @@ export default function Footer() {
           <div className="flex items-center space-x-4">
             <motion.a
               whileHover={{ y: -3, scale: 1.1 }}
-              href="https://www.instagram.com/buybox.com_official?igsh=NzlzamdhZnQyamtl&utm_source=qr"
+              href="https://www.instagram.com/treides.com_official?igsh=NzlzamdhZnQyamtl&utm_source=qr"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full bg-gray-100 p-2 text-gray-600 transition-colors hover:bg-black-100 hover:text-gray-800">

@@ -12,7 +12,7 @@ export default function TestimonialSectionWithCarousel() {
       role: "Regular Customer",
       image: "/placeholder.svg?height=80&width=80",
       rating: 5,
-      text: "BuyBox has completely transformed my shopping experience. Their fast delivery and quality products keep me coming back every time!",
+      text: "Treides has completely transformed my shopping experience. Their fast delivery and quality products keep me coming back every time!",
     },
     {
       id: 2,
@@ -20,7 +20,7 @@ export default function TestimonialSectionWithCarousel() {
       role: "Student",
       image: "/placeholder.svg?height=80&width=80",
       rating: 5,
-      text: "As a student, I rely on BuyBox for all my school essentials. Their prices are unbeatable and the service is exceptional.",
+      text: "As a student, I rely on Treides for all my school essentials. Their prices are unbeatable and the service is exceptional.",
     },
     {
       id: 3,
@@ -28,7 +28,7 @@ export default function TestimonialSectionWithCarousel() {
       role: "Parent",
       image: "/placeholder.svg?height=80&width=80",
       rating: 4,
-      text: "BuyBox makes shopping for my family so convenient. The variety of products and easy ordering process saves me so much time.",
+      text: "Treides makes shopping for my family so convenient. The variety of products and easy ordering process saves me so much time.",
     },
     {
       id: 4,
@@ -36,7 +36,7 @@ export default function TestimonialSectionWithCarousel() {
       role: "Office Manager",
       image: "/placeholder.svg?height=80&width=80",
       rating: 5,
-      text: "Our office relies on BuyBox for all our supplies. Their bulk ordering options and reliable delivery have made our procurement process seamless.",
+      text: "Our office relies on Treides for all our supplies. Their bulk ordering options and reliable delivery have made our procurement process seamless.",
     },
     {
       id: 5,
@@ -44,7 +44,7 @@ export default function TestimonialSectionWithCarousel() {
       role: "Homemaker",
       image: "/placeholder.svg?height=80&width=80",
       rating: 5,
-      text: "The pantry staples section on BuyBox is a lifesaver! Great quality products at reasonable prices with doorstep delivery.",
+      text: "The pantry staples section on Treides is a lifesaver! Great quality products at reasonable prices with doorstep delivery.",
     },
   ];
 
@@ -76,7 +76,7 @@ export default function TestimonialSectionWithCarousel() {
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Don't just take our word for it - hear from our satisfied customers
-            about their BuyBox experience.
+            about their Treides experience.
           </p>
         </div>
 
