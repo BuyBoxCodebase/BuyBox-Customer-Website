@@ -37,6 +37,7 @@ interface TrackEventPayload {
   type: UserEventType;
   productId?: string;
   categoryId?: string;
+  subCategoryId?: string;
   metadata?: any;
 }
 

@@ -102,6 +102,8 @@ export default function ProductDetails({
     trackEvent({
       type: UserEventType.SHARE,
       productId: product.id,
+      categoryId: product.categoryId || undefined,
+      subCategoryId: product.subCategoryId || undefined,
     });
     if (navigator.share) {
       navigator

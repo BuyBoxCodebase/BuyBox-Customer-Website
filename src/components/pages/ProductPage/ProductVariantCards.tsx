@@ -31,6 +31,7 @@ export default function ProductVariantCards({
         type: UserEventType.SIZE_SELECTED,
         productId: product.id,
         categoryId: product.categoryId || undefined,
+        subCategoryId: product.subCategoryId || undefined,
         metadata: { size: optionValues }
       });
       router.push(`/product/${variant.id}`);

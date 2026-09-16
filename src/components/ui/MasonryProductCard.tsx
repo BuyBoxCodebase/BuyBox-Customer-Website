@@ -84,7 +84,7 @@ export function MasonryProductCard({
     : "text-red-500";
 
   return (
-    <TrackShown productId={product.id} categoryId={product.categoryId || undefined}>
+    <TrackShown productId={product.id} categoryId={product.categoryId || undefined} subCategoryId={product.subCategoryId || undefined}>
       <Link 
         href={`/product/${product.id}`} 
         className={`relative flex flex-col h-full group break-inside-avoid rounded-xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-700 ${
@@ -97,7 +97,8 @@ export function MasonryProductCard({
           trackEvent({
             type: UserEventType.PRODUCT_CLICK,
             productId: product.id,
-            categoryId: product.categoryId || undefined
+            categoryId: product.categoryId || undefined,
+            subCategoryId: product.subCategoryId || undefined
           });
         }}
       >
