@@ -35,10 +35,17 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="./wall.jpg"
-          alt="Clean Shopping Background"
+          src="/wall.jpg"
+          alt="Clean Shopping Background Desktop"
           fill
-          className="object-cover"
+          className="object-cover hidden md:block"
+          priority
+        />
+        <Image
+          src="/wall-mobile.jpg"
+          alt="Clean Shopping Background Mobile"
+          fill
+          className="object-cover md:hidden"
           priority
         />
       </div>
