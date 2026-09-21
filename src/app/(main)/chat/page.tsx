@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLinoStore } from "@/store/useLinoStore";
 import { sendLinoMessage } from "@/lib/lino";
@@ -8,7 +8,7 @@ import ReactMarkdown from "react-markdown";
 import { LinoProductCarousel } from "@/components/lino/LinoProductCarousel";
 import { Send } from "lucide-react";
 
-export default function ChatPage() {
+function ChatContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q");
   const { messages, isLoading, addMessage, setLoading, sessionId } = useLinoStore();
@@ -130,5 +130,13 @@ export default function ChatPage() {
       </div>
 
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="h-screen w-full flex items-center justify-center text-gray-500">Loading...</div>}>
+      <ChatContent />
+    </Suspense>
   );
 }
