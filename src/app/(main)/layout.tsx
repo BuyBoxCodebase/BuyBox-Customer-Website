@@ -2,7 +2,7 @@
 import "./../globals.css";
 import { Inter } from "next/font/google";
 import type React from "react";
-import Footer from "@/components/footer/Footer";
+import ConditionalFooter from "@/components/footer/ConditionalFooter";
 import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from "@/context/CartContext";
 import Navbar from "@/components/navbar/Navbar";
@@ -27,10 +27,10 @@ export default function RootLayout({
 }) {
   return (
     <>
-      <div className={`${inter.className} bg-gray-50 min-h-screen flex flex-col`}>
+      <div className={`${inter.className} bg-[#f5f4f0] min-h-screen flex flex-col`}>
         <Navbar />
-        <main className="flex-grow pt-14 lg:pt-20">{children}</main>
-        <Footer />
+        <main className="flex-grow pt-14 lg:pt-16">{children}</main>
+        <ConditionalFooter />
       </div>
     </>
   );

@@ -37,11 +37,11 @@ export default function Navbar() {
               className="text-gray-800 text-2xl font-semibold hidden lg:flex">
               Treides
             </motion.a>
-            <div className="hidden lg:flex flex-1 max-w-xl items-center">
+            {/* <div className="hidden lg:flex flex-1 max-w-xl items-center">
               <SearchBar />
-            </div>
+            </div> */}
 
-            <div className="hidden lg:flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-4 ml-auto">
               <CartIcon />
               {isAuthenticated ? (
                 <UserDropdown user={user as User} onLogout={logout} />
@@ -58,9 +58,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile Nav Items */}
             <div className="flex lg:hidden flex-1 items-center gap-2 min-w-0">
-              {/* Back button container with animation */}
               <div
                 className="overflow-hidden flex-shrink-0 transition-all duration-300 ease-in-out"
                 style={{ width: showBackButton ? "40px" : "0px" }}>
@@ -76,34 +74,15 @@ export default function Navbar() {
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               </div>
-
-              {/* Search bar container with animation */}
-              <div
+              
+              {/* <div
                 className="flex-1 min-w-0 transition-all duration-300 ease-in-out"
                 style={{ marginLeft: showBackButton ? "0px" : "-40px" }}>
-                {showBackButton ? (
-                  <SearchBar />
-                ) : (
-                  <SearchBar className="pl-8" />
-                )}
-              </div>
+                  <SearchBar className={`${showBackButton ? "" : "pl-8"}`} />
+              </div> */}
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 ml-auto">
                 <CartIcon />
-
-                {/* Mobile menu toggle button - uncommented */}
-                {/* <button
-                  className="p-2 hover:bg-gray-100 rounded-full flex-shrink-0"
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                >
-                  {isMenuOpen ? (
-                    <X className="w-5 h-5" />
-                  ) : (
-                    <Menu className="w-5 h-5" />
-                  )}
-                </button> */}
-
-                {/* Show user icon or sign in only on small mobile screens */}
                 <div className="sm:hidden">
                   {isAuthenticated ? (
                     <Link
@@ -126,10 +105,6 @@ export default function Navbar() {
               </div>
             </div>
           </div>
-
-          {/* {isMenuOpen && (
-            <MobileMenu isLoggedIn={isAuthenticated} onLogout={logout} />
-          )} */}
         </div>
       </nav>
     </>
