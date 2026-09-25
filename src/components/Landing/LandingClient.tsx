@@ -27,16 +27,16 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-white sys-dark:bg-[#0a0a0a] transition-colors duration-300">
       {/* Main Content */}
-      <main className="relative z-10 flex-grow flex flex-col items-center justify-center px-4 w-full">
+      <main className="relative z-10 flex-grow flex flex-col items-center justify-center px-4 w-full gap-10 md:gap-14">
         {/* Logo */}
-        <div className="text-center mb-8 md:mb-12">
+        <div className="text-center">
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-medium text-black sys-dark:text-white tracking-tight">
             Treides
           </h1>
         </div>
 
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="w-full max-w-xl relative mb-16 mx-auto">
+        <form onSubmit={handleSearch} className="w-full max-w-[459px] relative mx-auto">
           <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-gray-500 sys-dark:text-gray-400">
             <Search className="w-5 h-5 md:w-6 md:h-6" />
           </div>
@@ -56,25 +56,25 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
         </form>
 
         {/* Categories */}
-        <div className="flex flex-row flex-wrap justify-center gap-6 md:gap-10 max-w-5xl pb-8">
+        <div className="flex flex-row flex-wrap justify-center gap-6 min-[450px]:gap-8 md:gap-10 max-w-5xl">
           {displayCategories.map((cat) => (
             <Link
               key={cat.name}
               href={cat.path}
               className="flex flex-col items-center gap-2 md:gap-3 group"
             >
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border border-gray-300 sys-dark:border-white/30 p-1 flex-shrink-0 transition-all group-hover:border-gray-400 sys-dark:group-hover:border-white/60">
+              <div className="w-16 h-16 min-[450px]:w-20 min-[450px]:h-20 rounded-full border border-gray-300 sys-dark:border-white/30 p-1 flex-shrink-0 transition-all group-hover:border-gray-400 sys-dark:group-hover:border-white/60">
                 {cat.image ? (
                   <div className="w-full h-full rounded-full overflow-hidden relative">
                     <Image src={cat.image} alt={cat.name} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
                   </div>
                 ) : (
                   <div className="w-full h-full rounded-full bg-gray-50 sys-dark:bg-white/5 flex items-center justify-center">
-                    <span className="text-gray-400 sys-dark:text-gray-500 text-[10px] md:text-xs">No img</span>
+                    <span className="text-gray-400 sys-dark:text-gray-500 text-[10px] min-[450px]:text-xs">No img</span>
                   </div>
                 )}
               </div>
-              <span className="text-xs md:text-sm text-black sys-dark:text-white whitespace-nowrap">{cat.name}</span>
+              <span className="text-xs min-[450px]:text-sm text-black sys-dark:text-white whitespace-nowrap">{cat.name}</span>
             </Link>
           ))}
         </div>
