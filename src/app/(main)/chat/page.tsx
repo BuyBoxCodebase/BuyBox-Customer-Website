@@ -3,27 +3,63 @@
 import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLinoStore } from "@/store/useLinoStore";
-import { sendLinoMessage } from "@/lib/lino";
+import { sendLinoMessage, fetchLinoHistory } from "@/lib/lino";
 import ReactMarkdown from "react-markdown";
 import { LinoProductCarousel } from "@/components/lino/LinoProductCarousel";
 import { Send } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
 
 function ChatContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q");
-  const { messages, isLoading, addMessage, setLoading, sessionId } = useLinoStore();
+  const { messages, isLoading, addMessage, setLoading, sessionId, setSessionId, setMessages } = useLinoStore();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  // Track if we have already initialized the chat from the URL query
-  const [initialized, setInitialized] = useState(false);
+  // Track if we have fetched the history from backend
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
+  // Track the last processed query to ensure we only send it once when arriving from the home page
+  const processedQueryRef = useRef<string | null>(null);
+
+  // 1. Initialize session and fetch history
   useEffect(() => {
-    if (initialQuery && !initialized && messages.length === 0) {
-      setInitialized(true);
-      handleSend(initialQuery);
+    const initializeSession = async () => {
+      let currentSessionId = localStorage.getItem("lino-session-id");
+      if (!currentSessionId) {
+        currentSessionId = uuidv4();
+        localStorage.setItem("lino-session-id", currentSessionId);
+      }
+      setSessionId(currentSessionId);
+
+      // Fetch history from backend
+      const history = await fetchLinoHistory(currentSessionId);
+      if (history && history.messages) {
+        const mappedMessages = history.messages.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          products: msg.metadata?.products || [],
+        }));
+        setMessages(mappedMessages);
+      }
+      setHistoryLoaded(true);
+    };
+
+    initializeSession();
+  }, [setSessionId, setMessages]);
+
+  // 2. Handle initial query from URL
+  useEffect(() => {
+    if (historyLoaded && initialQuery && processedQueryRef.current !== initialQuery) {
+      processedQueryRef.current = initialQuery;
+      // Only send if the last message isn't already this exact query
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg?.content !== initialQuery) {
+        handleSend(initialQuery);
+      }
     }
-  }, [initialQuery, initialized, messages.length]);
+  }, [initialQuery, historyLoaded, messages]);
 
   useEffect(() => {
     // Scroll to bottom on new messages

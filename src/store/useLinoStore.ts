@@ -18,13 +18,15 @@ interface LinoStore {
   closeLino: () => void;
   addMessage: (message: Omit<LinoMessage, 'id'>) => void;
   updateLastMessage: (updates: Partial<LinoMessage>) => void;
+  setMessages: (messages: LinoMessage[]) => void;
+  setSessionId: (id: string) => void;
   setLoading: (loading: boolean) => void;
   clearHistory: () => void;
 }
 
 export const useLinoStore = create<LinoStore>((set) => ({
   isOpen: false,
-  sessionId: uuidv4(), // Generate a unique session ID for context memory
+  sessionId: '', // Initialized by the client component
   messages: [],
   isLoading: false,
 
@@ -39,6 +41,14 @@ export const useLinoStore = create<LinoStore>((set) => ({
     newMessages[newMessages.length - 1] = { ...newMessages[newMessages.length - 1], ...updates };
     return { messages: newMessages };
   }),
+  setMessages: (messages) => set({ messages }),
+  setSessionId: (sessionId) => set({ sessionId }),
   setLoading: (isLoading) => set({ isLoading }),
-  clearHistory: () => set({ messages: [], sessionId: uuidv4() }), // New session on clear
+  clearHistory: () => {
+    const newSessionId = uuidv4();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lino-session-id', newSessionId);
+    }
+    set({ messages: [], sessionId: newSessionId });
+  },
 }));

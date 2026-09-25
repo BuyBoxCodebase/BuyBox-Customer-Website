@@ -16,3 +16,13 @@ export const sendLinoMessage = async (sessionId: string, message: string) => {
     throw new Error("Lino is currently unavailable. Please try again later.");
   }
 };
+
+export const fetchLinoHistory = async (sessionId: string) => {
+  try {
+    const response = await axios.get(`${BACKEND_URL}/lino/history/${sessionId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching Lino history:", error);
+    return null;
+  }
+};
