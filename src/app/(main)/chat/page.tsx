@@ -15,6 +15,14 @@ function ChatContent() {
   const { messages, isLoading, addMessage, setLoading, sessionId, setSessionId, setMessages } = useLinoStore();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const adjustHeight = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+  };
   
   // Track if we have fetched the history from backend
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -145,20 +153,32 @@ function ChatContent() {
       <div className="relative flex-shrink-0 mt-0 mb-0 pt-2 pb-2">
         <form 
           onSubmit={(e) => { e.preventDefault(); handleSend(input); }}
-          className="relative flex items-center"
+          className="relative flex items-end"
         >
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
+            rows={1}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => { setInput(e.target.value); adjustHeight(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (input.trim() && !isLoading) {
+                  handleSend(input);
+                  if (textareaRef.current) {
+                    textareaRef.current.style.height = "auto";
+                  }
+                }
+              }
+            }}
             placeholder="Tell me what you have in mind..."
-            className="w-full pl-6 pr-14 py-3.5 bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-300 text-[15px] font-medium placeholder:text-gray-400"
+            className="w-full pl-3 pr-14 py-3.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-300 text-[15px] font-medium placeholder:text-gray-400 resize-none overflow-y-auto max-h-[180px] leading-relaxed"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-900 text-white p-2.5 rounded-full hover:bg-black disabled:opacity-50 transition-colors"
+            className="absolute right-2 bottom-2 bg-gray-900 text-white p-2.5 rounded-full hover:bg-black disabled:opacity-50 transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>

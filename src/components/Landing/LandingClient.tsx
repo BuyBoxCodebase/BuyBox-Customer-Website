@@ -1,19 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, ArrowRight } from "lucide-react";
+import { Search, ArrowRight, User as UserIcon } from "lucide-react";
+import { CartIcon } from "../navbar/components/CartIcon";
+import { UserDropdown } from "../navbar/components/UserDropdown";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "../ui/button";
 
 export default function LandingClient({ subcategories }: { subcategories: any[] }) {
   const [query, setQuery] = useState("");
   const router = useRouter();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
       router.push(`/chat?q=${encodeURIComponent(query.trim())}`);
+    }
+  };
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const adjustHeight = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSearch(e as any);
     }
   };
 
@@ -26,6 +47,34 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-white sys-dark:bg-[#0a0a0a] transition-colors duration-300">
+      {/* Top Right Actions */}
+      <div className="absolute top-4 right-4 md:top-6 md:right-8 flex items-center gap-2 md:gap-4 z-50 text-black sys-dark:text-white">
+        <CartIcon />
+        <div className="hidden sm:block">
+          {isAuthenticated ? (
+            <UserDropdown user={user as any} onLogout={logout} />
+          ) : (
+            <Link href="/user/login">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                <span className="text-sm font-medium">Sign in</span>
+                <UserIcon className="w-5 h-5" />
+              </Button>
+            </Link>
+          )}
+        </div>
+        <div className="sm:hidden">
+          {isAuthenticated ? (
+            <Link href={`/user/profile`} className="text-sm font-medium hover:text-gray-800 flex items-center justify-center p-2 text-black sys-dark:text-white">
+              <UserIcon className="w-6 h-6" />
+            </Link>
+          ) : (
+            <Link href="/user/login" className="flex items-center justify-center p-2 text-black sys-dark:text-white">
+              <UserIcon className="w-6 h-6" />
+            </Link>
+          )}
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="relative z-10 flex-grow flex flex-col items-center justify-center px-4 w-full gap-10 md:gap-14">
         {/* Logo */}
@@ -37,19 +86,24 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
 
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="w-full max-w-[459px] relative mx-auto">
-          <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-gray-500 sys-dark:text-gray-400">
+          {/* <div className="absolute left-4 md:left-6 top-4 text-gray-500 sys-dark:text-gray-400">
             <Search className="w-5 h-5 md:w-6 md:h-6" />
-          </div>
-          <input
-            type="text"
+          </div> */}
+          <textarea
+            ref={textareaRef}
+            rows={1}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              adjustHeight();
+            }}
+            onKeyDown={handleKeyDown}
             placeholder="What shoes are you looking for?"
-            className="w-full pl-12 md:pl-16 pr-14 md:pr-16 py-3.5 md:py-4 rounded-full border border-gray-300 sys-dark:border-[#333] bg-transparent text-base md:text-lg focus:outline-none focus:border-gray-500 sys-dark:focus:border-gray-500 placeholder:text-gray-500 sys-dark:placeholder:text-gray-400 text-black sys-dark:text-white"
+            className="w-full pl-2 md:pl-4 pr-14 md:pr-16 py-3.5 md:py-4 rounded-xl border border-gray-300 sys-dark:border-[#333] bg-transparent text-base md:text-lg focus:outline-none focus:border-gray-500 sys-dark:focus:border-gray-500 placeholder:text-gray-500 sys-dark:placeholder:text-gray-400 text-black sys-dark:text-white resize-none overflow-y-auto max-h-[180px] leading-normal"
           />
           <button
             type="submit"
-            className="absolute right-2 md:right-2.5 top-1/2 -translate-y-1/2 bg-black sys-dark:bg-white text-white sys-dark:text-black p-2 md:p-2.5 rounded-full hover:opacity-80 transition-opacity"
+            className="absolute right-2 md:right-2.5 bottom-3.5 bg-black sys-dark:bg-white text-white sys-dark:text-black p-2 md:p-2.5 rounded-full hover:opacity-80 transition-opacity"
           >
             <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
           </button>
