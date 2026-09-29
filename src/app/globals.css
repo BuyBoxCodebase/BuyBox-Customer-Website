@@ -72,14 +72,14 @@
     background: transparent; /* Hidden track */
   }
   ::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: hsl(var(--border));
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--border);
+    background: hsl(var(--muted-foreground));
   }
   ::-webkit-scrollbar-thumb:active {
-    background: var(--border);
+    background: hsl(var(--muted-foreground));
   }
 }
 

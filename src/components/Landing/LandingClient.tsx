@@ -4,21 +4,27 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, ArrowRight, User as UserIcon } from "lucide-react";
+import { ArrowRight, User as UserIcon, MessageSquare } from "lucide-react";
 import { CartIcon } from "../navbar/components/CartIcon";
 import { UserDropdown } from "../navbar/components/UserDropdown";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "../ui/button";
+import { useLinoStore } from "@/store/useLinoStore";
+import ChatSidePanel from "@/components/lino/ChatSidePanel";
 
 export default function LandingClient({ subcategories }: { subcategories: any[] }) {
   const [query, setQuery] = useState("");
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
+  const { startNewChat } = useLinoStore();
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/chat?q=${encodeURIComponent(query.trim())}`);
+      const newSessionId = startNewChat(); // generates fresh UUID, clears store
+      sessionStorage.setItem(`lino-pending-${newSessionId}`, query.trim());
+      router.push(`/chat/${newSessionId}`);
     }
   };
 
@@ -47,6 +53,21 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-white sys-dark:bg-[#0a0a0a] transition-colors duration-300">
+
+      {/* Chat History Side Panel */}
+      <ChatSidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} />
+
+      {/* Top Left — Chat History toggle */}
+      <div className="absolute top-4 left-4 md:top-6 md:left-8 z-30">
+        <button
+          onClick={() => setIsPanelOpen(true)}
+          className="relative p-2 hover:bg-gray-100 sys-dark:hover:bg-white/10 rounded-full hover:text-gray-800 sys-dark:hover:text-white text-black sys-dark:text-white transition-colors"
+          aria-label="Open chat history"
+        >
+          <MessageSquare className="w-6 h-6 inline-block" />&nbsp;<span>My Chats</span>
+        </button>
+      </div>
+
       {/* Top Right Actions */}
       <div className="absolute top-4 right-4 md:top-6 md:right-8 flex items-center gap-2 md:gap-4 z-50 text-black sys-dark:text-white">
         <CartIcon />
