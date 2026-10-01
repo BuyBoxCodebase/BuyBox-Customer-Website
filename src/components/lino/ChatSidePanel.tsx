@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { MessageSquare, Plus, Clock, ChevronRight, LogIn, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLinoStore } from "@/store/useLinoStore";
-import { fetchUserChats } from "@/lib/lino";
+import { fetchUserChats, fetchLinoHistory } from "@/lib/lino";
 import Link from "next/link";
 
 interface ChatSidePanelProps {
@@ -26,9 +25,8 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 export default function ChatSidePanel({ isOpen, onClose }: ChatSidePanelProps) {
-  const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const { userChats, setUserChats, startNewChat } = useLinoStore();
+  const { userChats, setUserChats, startNewChat, setSessionId, setMessages } = useLinoStore();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -48,14 +46,22 @@ export default function ChatSidePanel({ isOpen, onClose }: ChatSidePanelProps) {
   }, [isOpen, isAuthenticated, setUserChats]);
 
   const handleNewChat = () => {
-    const newId = startNewChat();
-    router.push(`/chat/${newId}`);
+    startNewChat();
     onClose();
   };
 
-  const handleOpenChat = (sessionId: string) => {
-    router.push(`/chat/${sessionId}`);
+  const handleOpenChat = async (sessionId: string) => {
     onClose();
+    setSessionId(sessionId);
+    const history = await fetchLinoHistory(sessionId);
+    setMessages(
+      (history?.messages ?? []).map((msg: any) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        products: msg.metadata?.products || [],
+      })),
+    );
   };
 
   return (
