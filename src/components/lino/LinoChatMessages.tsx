@@ -14,7 +14,7 @@ export function LinoChatMessages({ messages, isLoading }: { messages: LinoMessag
               <div className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.content}</div>
             </div>
           ) : (
-            <div className="max-w-full min-w-0 rounded-2xl rounded-tl-sm px-4 py-3 border border-gray-200 sys-dark:border-white/15 bg-gray-50 sys-dark:bg-white/5 text-black sys-dark:text-white">
+            <div className="w-full min-w-0 text-black sys-dark:text-white">
               <div className="text-[15px] leading-relaxed break-words [&_p+p]:mt-2 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 [&_ul]:my-2 [&_ol]:my-2 [&_strong]:font-semibold">
                 <ReactMarkdown
                   components={{
