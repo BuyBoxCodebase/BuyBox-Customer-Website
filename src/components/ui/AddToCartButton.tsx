@@ -76,7 +76,7 @@ export function AddToCartButton({ product, className = "", iconOnly = false }: A
       className={`transition-all duration-200 ${
         isOutOfStock
           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-          : "bg-yellow-400 text-black hover:bg-yellow-500 shadow-sm hover:shadow-md"
+          : "bg-black text-white hover:bg-black/85 shadow-sm hover:shadow-md"
       } ${className}`}
     >
       {isOutOfStock

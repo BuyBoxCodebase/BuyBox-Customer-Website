@@ -115,7 +115,7 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
           className="relative p-2 hover:bg-gray-100 sys-dark:hover:bg-white/10 rounded-full hover:text-gray-800 sys-dark:hover:text-white text-black sys-dark:text-white transition-colors"
           aria-label="Open chat history"
         >
-          <MessageSquare className="w-6 h-6 inline-block" />&nbsp;<span>My Chats</span>
+          <MessageSquare className="w-6 h-6" />
         </button>
       </div>
 
