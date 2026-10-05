@@ -2,17 +2,10 @@ import axios from 'axios';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
-export const sendLinoMessage = async (
-  sessionId: string,
-  message: string,
-  userId?: string,
-) => {
+// Logged-in users are identified by the token the axios interceptor in AuthContext adds; guests send none.
+export const sendLinoMessage = async (sessionId: string, message: string) => {
   try {
-    const response = await axios.post(`${BACKEND_URL}/lino/chat`, {
-      sessionId,
-      message,
-      userId, // undefined for guests, string for logged-in users
-    });
+    const response = await axios.post(`${BACKEND_URL}/lino/chat`, { sessionId, message });
     return response.data; // { reply: string, products: any[] }
   } catch (error) {
     console.error('Error communicating with Lino:', error);

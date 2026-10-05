@@ -42,7 +42,7 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
     setLoading(true);
 
     try {
-      const response = await sendLinoMessage(sessionId, text, isAuthenticated && user ? user.id : undefined);
+      const response = await sendLinoMessage(sessionId, text);
       addMessage({ role: "assistant", content: response.reply, products: response.products });
     } catch {
       addMessage({ role: "assistant", content: "Sorry, I'm having trouble connecting right now." });
