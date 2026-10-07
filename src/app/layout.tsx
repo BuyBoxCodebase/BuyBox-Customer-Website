@@ -9,6 +9,7 @@ import Navbar from "@/components/navbar/Navbar";
 import { AuthProvider } from "@/context/AuthContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
+import ActivityTracker from "@/components/analytics/ActivityTracker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -50,6 +51,7 @@ export default function RootLayout({
             <main className="flex-grow">{children}</main>
           </CartProvider>
         </AuthProvider>
+        <ActivityTracker />
         <SpeedInsights />
         <Analytics />
       </body>

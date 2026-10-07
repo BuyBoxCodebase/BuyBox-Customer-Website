@@ -1,6 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { UserEventType } from './constants';
+import { trackActivity, type ActivityEventType } from '@/lib/activity/tracker';
+import { parseDevice, parsePlatform } from './userAgent';
 
 const SESSION_KEY = 'buybox_session_id';
 
@@ -18,21 +20,6 @@ export function getSessionId(): string {
   return sessionId;
 }
 
-function parseDevice(userAgent: string): string {
-  if (/mobile/i.test(userAgent)) return 'Mobile';
-  if (/tablet/i.test(userAgent)) return 'Tablet';
-  return 'Desktop';
-}
-
-function parsePlatform(userAgent: string): string {
-  if (/windows/i.test(userAgent)) return 'Windows';
-  if (/mac/i.test(userAgent)) return 'MacOS';
-  if (/linux/i.test(userAgent)) return 'Linux';
-  if (/android/i.test(userAgent)) return 'Android';
-  if (/iphone|ipad|ipod/i.test(userAgent)) return 'iOS';
-  return 'Unknown';
-}
-
 interface TrackEventPayload {
   type: UserEventType;
   productId?: string;
@@ -41,8 +28,19 @@ interface TrackEventPayload {
   metadata?: any;
 }
 
+const TIMELINE_EVENTS: Partial<Record<UserEventType, ActivityEventType>> = {
+  [UserEventType.SEARCH]: 'SEARCH',
+  [UserEventType.CART_ADD]: 'ADD_TO_CART',
+  [UserEventType.CHECKOUT_STARTED]: 'CHECKOUT_STARTED',
+};
+
 export async function trackEvent(payload: TrackEventPayload): Promise<void> {
   if (typeof window === 'undefined') return;
+
+  const timelineType = TIMELINE_EVENTS[payload.type];
+  if (timelineType) {
+    trackActivity(timelineType, { productId: payload.productId, metadata: payload.metadata });
+  }
 
   const sessionId = getSessionId();
   const userAgent = navigator.userAgent;

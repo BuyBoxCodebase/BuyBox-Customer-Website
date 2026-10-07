@@ -19,6 +19,7 @@ import {
 import Cookies from "js-cookie";
 import { headers } from "next/headers";
 import useCartStore from "@/zustand/cartStore";
+import { identifyVisitor, resetVisitorOnLogout } from "@/lib/activity/tracker";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -188,6 +189,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
+  // Record a LOGIN once we know who the customer is (no anonymous history is linked).
+  const userId = state.user?.id;
+  useEffect(() => {
+    if (userId) identifyVisitor(userId);
+  }, [userId]);
+
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -339,6 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async (): Promise<boolean> => {
+    resetVisitorOnLogout();
     try {
       setState((prev) => ({ ...prev, loading: true }));
       await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/auth/logout`);

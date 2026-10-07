@@ -156,6 +156,8 @@ export function ProductCard({ product }: ProductCardProps) {
     <TrackShown productId={product.id} categoryId={product.categoryId || undefined} subCategoryId={product.subCategoryId || undefined}>
       <Link 
         href={`/product/${product.id}`} 
+        data-track={product.name}
+        data-track-product-id={product.id}
         className="block group h-full"
         onClick={() => {
           trackEvent({
