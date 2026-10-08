@@ -33,6 +33,7 @@ export const SearchBar = ({
     >
       <div className="relative flex items-center w-full">
         <input
+          name="search"
           placeholder="Find your vibe..."
           type="search"
           enterKeyHint="search"

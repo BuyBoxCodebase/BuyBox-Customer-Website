@@ -63,6 +63,7 @@ export default function Navbar() {
                 className="overflow-hidden flex-shrink-0 transition-all duration-300 ease-in-out"
                 style={{ width: showBackButton ? "40px" : "0px" }}>
                 <button
+                  aria-label="Go back"
                   onClick={() => router.back()}
                   className="p-2 hover:bg-gray-100 rounded-full transition-all duration-300 ease-in-out"
                   style={{

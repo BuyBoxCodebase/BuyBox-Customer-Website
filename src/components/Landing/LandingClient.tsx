@@ -81,6 +81,7 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
       }`}
     >
       <textarea
+        name="query"
         ref={textareaRef}
         rows={1}
         value={query}
@@ -93,6 +94,7 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
         className="w-full pl-2 md:pl-4 pr-14 md:pr-16 py-3.5 md:py-4 rounded-xl border border-gray-300 sys-dark:border-[#333] bg-white sys-dark:bg-[#0a0a0a] text-base md:text-lg focus:outline-none focus:border-gray-500 sys-dark:focus:border-gray-500 placeholder:text-gray-500 sys-dark:placeholder:text-gray-400 text-black sys-dark:text-white resize-none overflow-y-auto max-h-[180px] leading-normal"
       />
       <button
+        aria-label="Send"
         type="submit"
         disabled={!query.trim() || isLoading}
         className="absolute right-2 md:right-2.5 bottom-3.5 bg-black sys-dark:bg-white text-white sys-dark:text-black p-2 md:p-2.5 rounded-full hover:opacity-80 disabled:opacity-40 transition-opacity"

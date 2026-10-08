@@ -71,6 +71,7 @@ export function AddToCartButton({ product, className = "", iconOnly = false }: A
 
   return (
     <button
+      aria-label={iconOnly ? (isOutOfStock ? "Out of stock" : "Add to cart") : undefined}
       onClick={handleAddToCart}
       disabled={isAdding || isOutOfStock}
       className={`transition-all duration-200 ${

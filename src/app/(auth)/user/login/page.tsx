@@ -72,6 +72,7 @@ function LoginPageContent() {
             <Input
               type={showPassword ? "text" : "password"}
               name="password"
+              data-track-ignore
               value={formData.password}
               onChange={handleInputChange}
               placeholder="Password"
@@ -79,6 +80,7 @@ function LoginPageContent() {
               className="pl-10 rounded-full"
             />
             <Button
+              aria-label="Toggle password visibility"
               type="button"
               variant="ghost"
               size="sm"

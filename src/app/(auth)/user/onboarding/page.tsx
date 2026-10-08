@@ -123,6 +123,7 @@ function OnboardingPageContent() {
               </div>
               <div>
                 <Input
+                  name="profilePic"
                   type='file'
                   accept='image/*'
                   onChange={handleFileChange}

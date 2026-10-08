@@ -323,6 +323,7 @@ function CheckoutPageContent() {
                     <div>
                       <Label htmlFor="email">Email Address</Label>
                       <Input
+                        name="email"
                         id="email"
                         type="email"
                         required
@@ -344,6 +345,7 @@ function CheckoutPageContent() {
                     <div>
                       <Label htmlFor="phoneNumber">Phone number</Label>
                       <Input
+                        name="phoneNumber"
                         id="phoneNumber"
                         type="tel"
                         required
@@ -372,11 +374,12 @@ function CheckoutPageContent() {
                       Fulfillment Method
                     </h3>
                     <RadioGroup
+                      name="fulfillmentType"
                       value={fulfillmentType}
                       onValueChange={(val: any) => setFulfillmentType(val)}
                       className="grid grid-cols-2 gap-4">
                       <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
-                        <RadioGroupItem value="PICKUP" id="PICKUP" className="peer sr-only" />
+                        <RadioGroupItem aria-label="Pickup" value="PICKUP" id="PICKUP" className="peer sr-only" />
                         <Label
                           htmlFor="PICKUP"
                           className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-gray-800 [&:has([data-state=checked])]:border-gray-800 cursor-pointer h-full">
@@ -385,7 +388,7 @@ function CheckoutPageContent() {
                         </Label>
                       </motion.div>
                       <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
-                        <RadioGroupItem value="DELIVERY" id="DELIVERY" className="peer sr-only" />
+                        <RadioGroupItem aria-label="Delivery" value="DELIVERY" id="DELIVERY" className="peer sr-only" />
                         <Label
                           htmlFor="DELIVERY"
                           className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-gray-800 [&:has([data-state=checked])]:border-gray-800 cursor-pointer h-full">
@@ -456,17 +459,17 @@ function CheckoutPageContent() {
                               <div className="grid md:grid-cols-2 gap-4">
                                 <div className="md:col-span-2">
                                   <Label htmlFor="address">Address</Label>
-                                  <Input id="address" type="text" value={formData.address} onChange={handleInputChange} className={(formErrors as any).address ? "border-red-500" : ""} />
+                                  <Input name="address" id="address" type="text" value={formData.address} onChange={handleInputChange} className={(formErrors as any).address ? "border-red-500" : ""} />
                                   {(formErrors as any).address && <p className="text-sm text-red-500 mt-1">{(formErrors as any).address}</p>}
                                 </div>
                                 <div>
                                   <Label htmlFor="city">City</Label>
-                                  <Input id="city" type="text" value={formData.city} onChange={handleInputChange} className={(formErrors as any).city ? "border-red-500" : ""} />
+                                  <Input name="city" id="city" type="text" value={formData.city} onChange={handleInputChange} className={(formErrors as any).city ? "border-red-500" : ""} />
                                   {(formErrors as any).city && <p className="text-sm text-red-500 mt-1">{(formErrors as any).city}</p>}
                                 </div>
                                 <div>
                                   <Label htmlFor="state">State</Label>
-                                  <Input id="state" type="text" value={formData.state} onChange={handleInputChange} className={(formErrors as any).state ? "border-red-500" : ""} />
+                                  <Input name="state" id="state" type="text" value={formData.state} onChange={handleInputChange} className={(formErrors as any).state ? "border-red-500" : ""} />
                                   {(formErrors as any).state && <p className="text-sm text-red-500 mt-1">{(formErrors as any).state}</p>}
                                 </div>
                               </div>
@@ -480,7 +483,7 @@ function CheckoutPageContent() {
                             <div className="space-y-4">
                               <div>
                                 <Label htmlFor="location">Live Location Ping</Label>
-                                <Input id="location" type="text" readOnly value={currentLocation} className="bg-gray-100" />
+                                <Input name="location" id="location" type="text" readOnly value={currentLocation} className="bg-gray-100" />
                                 {(formErrors as any).location && <p className="text-sm text-red-500 mt-1">{(formErrors as any).location}</p>}
                               </div>
                               <Button type="button" variant="ghost" size="sm" onClick={() => setLocationMode("none")}>
@@ -515,6 +518,7 @@ function CheckoutPageContent() {
                         whileHover={{ x: 2 }}
                         transition={{ type: "spring", stiffness: 400 }}>
                         <Checkbox
+                          aria-label="Cash on Delivery"
                           id="CASH_ON_DELIVERY"
                           checked={formData.paymentMode === "CASH_ON_DELIVERY"}
                           onCheckedChange={() =>
@@ -530,6 +534,7 @@ function CheckoutPageContent() {
                         whileHover={{ x: 2 }}
                         transition={{ type: "spring", stiffness: 400 }}>
                         <Checkbox
+                          aria-label="Online Payment"
                           id="ONLINE"
                           checked={formData.paymentMode === "ONLINE"}
                           onCheckedChange={() =>

@@ -18,7 +18,7 @@ export const UserDropdown = ({ user, onLogout }: UserDropdownProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="p-2 hover:bg-gray-100 sys-dark:hover:bg-white/10 rounded-full">
+        <button aria-label="Account menu" className="p-2 hover:bg-gray-100 sys-dark:hover:bg-white/10 rounded-full">
           <User className="w-6 h-6" />
         </button>
       </DropdownMenuTrigger>

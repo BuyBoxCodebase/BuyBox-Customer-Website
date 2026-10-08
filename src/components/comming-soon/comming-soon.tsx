@@ -63,6 +63,7 @@ export default function ComingSoon() {
           className="mb-8 w-full max-w-md">
           {/* <form onSubmit={handleSubmit} className="flex w-full max-w-md flex-col gap-2 sm:flex-row">
             <Input
+              name="email"
               type="email"
               placeholder="Enter your email"
               value={email}

@@ -4,6 +4,7 @@ import { parseDevice, parsePlatform } from "@/lib/analytics/userAgent";
 export type ActivityEventType =
   | "PAGE_VIEW"
   | "CLICK"
+  | "INPUT"
   | "SEARCH"
   | "ADD_TO_CART"
   | "CHECKOUT_STARTED"
@@ -37,6 +38,9 @@ const FLUSH_AT = 20;
 
 const ACTION_SELECTOR = 'button, a[href], [role="button"], [data-track]';
 const SENSITIVE_PARAM = /token|code|otp|password|secret|email|phone/i;
+const SKIPPED_INPUT_TYPES = new Set(["password", "hidden", "file", "submit", "button", "reset", "image"]);
+const CARD_FIELD = /card.?(num|no|holder|name)|cc.?(num|no|name|exp|csc)|cvv|cvc|csc|security.?code|expir|exp.?(date|month|year)/i;
+const MAX_INPUT_VALUE = 500;
 
 let queue: QueuedEvent[] = [];
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -257,6 +261,66 @@ export function handleDocumentClick(event: MouseEvent) {
   }
 
   trackActivity("CLICK", { label: label ?? el.tagName.toLowerCase(), productId, metadata });
+}
+
+function looksLikeCardNumber(value: string): boolean {
+  const digits = value.replace(/[\s-]/g, "");
+  if (!/^\d{13,19}$/.test(digits)) return false;
+  let sum = 0;
+  for (let i = 0; i < digits.length; i++) {
+    let d = Number(digits[digits.length - 1 - i]);
+    if (i % 2 === 1) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+  }
+  return sum % 10 === 0;
+}
+
+function isCardField(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): boolean {
+  if (el.getAttribute("autocomplete")?.trim().toLowerCase().startsWith("cc-")) return true;
+  const hints = [el.name, el.id, el.getAttribute("placeholder"), el.getAttribute("aria-label")];
+  return hints.some((hint) => hint && CARD_FIELD.test(hint));
+}
+
+function fieldLabel(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): string | undefined {
+  return (
+    cleanText(el.getAttribute("data-track")) ??
+    cleanText(el.labels?.[0]?.innerText) ??
+    cleanText(el.getAttribute("aria-label")) ??
+    cleanText(el.getAttribute("placeholder")) ??
+    cleanText(el.name) ??
+    cleanText(el.id)
+  );
+}
+
+export function handleDocumentChange(event: Event) {
+  const el = event.target;
+  if (
+    !(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) ||
+    el.closest("[data-track-ignore]")
+  ) {
+    return;
+  }
+  if (el instanceof HTMLInputElement && SKIPPED_INPUT_TYPES.has(el.type)) return;
+  if (isCardField(el)) return;
+
+  let value: string;
+  if (el instanceof HTMLInputElement && (el.type === "checkbox" || el.type === "radio")) {
+    value = el.checked ? el.value || "on" : "off";
+  } else if (el instanceof HTMLSelectElement) {
+    value = Array.from(el.selectedOptions, (option) => option.text.trim()).join(", ");
+  } else {
+    value = el.value;
+  }
+  if (looksLikeCardNumber(value)) return;
+
+  const fieldType = el instanceof HTMLInputElement ? el.type : el.tagName.toLowerCase();
+  trackActivity("INPUT", {
+    label: fieldLabel(el) ?? fieldType,
+    metadata: { field: el.name || el.id || undefined, fieldType, value: value.slice(0, MAX_INPUT_VALUE) },
+  });
 }
 
 export function identifyVisitor(customerId: string) {

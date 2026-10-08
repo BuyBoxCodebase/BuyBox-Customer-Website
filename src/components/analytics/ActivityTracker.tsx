@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { currentPath, handleDocumentClick, heartbeat, trackActivity } from "@/lib/activity/tracker";
+import { currentPath, handleDocumentChange, handleDocumentClick, heartbeat, trackActivity } from "@/lib/activity/tracker";
 
 function PageViews() {
   const pathname = usePathname();
@@ -25,10 +25,12 @@ export default function ActivityTracker() {
       if (document.visibilityState === "hidden") heartbeat();
     };
     document.addEventListener("click", handleDocumentClick, true);
+    document.addEventListener("change", handleDocumentChange, true);
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("pagehide", heartbeat);
     return () => {
       document.removeEventListener("click", handleDocumentClick, true);
+      document.removeEventListener("change", handleDocumentChange, true);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("pagehide", heartbeat);
     };

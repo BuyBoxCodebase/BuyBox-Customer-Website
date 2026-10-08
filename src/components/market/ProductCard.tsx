@@ -19,7 +19,7 @@ export function ProductCard({ name, price, image }: ProductCardProps ) {
           <h3 className="font-medium text-sm">{name}</h3>
           <p className="text-sm text-gray-600">${price.toFixed(2)}</p>
         </div>
-        <Button size="icon" variant="ghost" className="h-8 w-8">
+        <Button aria-label="Add to cart" size="icon" variant="ghost" className="h-8 w-8">
           <ShoppingCart className="h-4 w-4" />
         </Button>
       </div>

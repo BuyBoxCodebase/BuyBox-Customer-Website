@@ -121,6 +121,7 @@ export default function CartTable() {
                 <td className="py-5">
                   <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-md">
                     <Button
+                      aria-label="Decrease quantity"
                       variant="outline"
                       size="icon"
                       className="h-8 w-8"
@@ -135,6 +136,7 @@ export default function CartTable() {
                       {item.quantity}
                     </span>
                     <Button
+                      aria-label="Increase quantity"
                       variant="outline"
                       size="icon"
                       className="h-8 w-8"
@@ -156,6 +158,7 @@ export default function CartTable() {
                 </td>
                 <td className="py-5 text-right">
                   <Button
+                    aria-label="Remove from cart"
                     variant="ghost"
                     size="icon"
                     onClick={() =>
@@ -211,6 +214,7 @@ export default function CartTable() {
             <div className="flex items-center justify-between mt-3 pt-3 border-t">
               <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-md">
                 <Button
+                  aria-label="Decrease quantity"
                   variant="outline"
                   size="icon"
                   className="h-8 w-8"
@@ -225,6 +229,7 @@ export default function CartTable() {
                   {item.quantity}
                 </span>
                 <Button
+                  aria-label="Increase quantity"
                   variant="outline"
                   size="icon"
                   className="h-8 w-8"
@@ -242,6 +247,7 @@ export default function CartTable() {
               </div>
               <p className="font-medium">{formatPrice(item.totalPrice)}</p>
               <Button
+                aria-label="Remove from cart"
                 variant="ghost"
                 size="icon"
                 onClick={() => removeFromCart(item.productId, item.variantId)}

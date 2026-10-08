@@ -30,6 +30,7 @@ export default function QuantitySelector({
         <div className='flex items-center gap-2'>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
+              aria-label="Decrease quantity"
               variant='outline'
               size='icon'
               onClick={onDecrease}
@@ -51,6 +52,7 @@ export default function QuantitySelector({
           </AnimatePresence>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
+              aria-label="Increase quantity"
               variant='outline'
               size='icon'
               onClick={onIncrease}
