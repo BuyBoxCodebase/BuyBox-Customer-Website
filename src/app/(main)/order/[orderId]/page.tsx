@@ -52,6 +52,12 @@ function OrderConfirmationPage() {
     }
   );
 
+  // Orders placed before delivery pricing only stored a flat pickupFee
+  const hasFeeBreakdown = orderDetails.handlingFee != null;
+  const deliveryFeesTotal = hasFeeBreakdown
+    ? (orderDetails.transferFee ?? 0) + (orderDetails.handlingFee ?? 0) + (orderDetails.deliveryFee ?? 0)
+    : orderDetails.pickupFee || 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -267,19 +273,43 @@ function OrderConfirmationPage() {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Subtotal</span>
               <span className="font-medium">
-                ${(orderDetails.totalAmount - (orderDetails.pickupFee || 0)).toFixed(2)}
+                ${(orderDetails.totalAmount - deliveryFeesTotal).toFixed(2)}
               </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">
-                {orderDetails.fulfillmentType === "PICKUP" ? "Pickup Fee" : "Shipping"}
-              </span>
-              <span className="font-medium">
-                {orderDetails.pickupFee
-                  ? `$${orderDetails.pickupFee.toFixed(2)}`
-                  : "$0.00"}
-              </span>
-            </div>
+            {hasFeeBreakdown ? (
+              <>
+                {!!orderDetails.transferFee && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Inter-hub transfer</span>
+                    <span className="font-medium">${orderDetails.transferFee.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Handling</span>
+                  <span className="font-medium">${(orderDetails.handlingFee ?? 0).toFixed(2)}</span>
+                </div>
+                {orderDetails.fulfillmentType === "DELIVERY" && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">
+                      Home delivery
+                      {orderDetails.deliveryDistanceKm != null && ` (${orderDetails.deliveryDistanceKm.toFixed(1)} km)`}
+                    </span>
+                    <span className="font-medium">${(orderDetails.deliveryFee ?? 0).toFixed(2)}</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">
+                  {orderDetails.fulfillmentType === "PICKUP" ? "Pickup Fee" : "Shipping"}
+                </span>
+                <span className="font-medium">
+                  {orderDetails.pickupFee
+                    ? `$${orderDetails.pickupFee.toFixed(2)}`
+                    : "$0.00"}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between items-center border-t pt-3 mt-3">
               <span className="text-gray-800 font-medium">Total Amount</span>
               <span className="font-bold text-lg">

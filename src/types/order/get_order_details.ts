@@ -92,6 +92,11 @@ export interface OrderDetails {
   pickupLocationId?: string;
   pickupDate?: string;
   pickupFee?: number;
+  // Fee breakdown for orders placed after delivery pricing; older orders only have pickupFee
+  transferFee?: number | null;
+  handlingFee?: number | null;
+  deliveryFee?: number | null;
+  deliveryDistanceKm?: number | null;
   pickupLocation?: {
     name: string;
     coordinates: {

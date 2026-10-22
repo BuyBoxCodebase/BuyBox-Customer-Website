@@ -9,9 +9,10 @@ export interface CreateOrderRequest {
   paymentMode: PaymentMode;
   deliveryTime?: string;
   fulfillmentType?: string;
-  pickupLocationId?: string;
+  // The hub chosen for pickup or home delivery
+  pickupLocationId: string;
   pickupDate?: string;
-  pickupFee?: number;
+  deliveryCoordinates?: { latitude: number; longitude: number };
 }
 
 // Types for the order product in response
