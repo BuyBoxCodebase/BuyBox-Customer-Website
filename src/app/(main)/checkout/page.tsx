@@ -22,6 +22,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/toast/use-toast";
 import useCreateOrder from "@/hooks/order/useCreateOrder";
+import useGetOrderPreference from "@/hooks/order/useGetOrderPreference";
 import useCartStore from "@/zustand/cartStore";
 import { useEventTracking, usePageTracking } from "@/hooks/analytics";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
@@ -87,6 +88,29 @@ function CheckoutPageContent() {
   const [hubId, setHubId] = useState<string | null>(null);
   const [deliveryCoordinates, setDeliveryCoordinates] = useState<Coordinates | null>(null);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
+  // True while the coordinates are the ones saved from the last delivery order
+  const [usingSavedLocation, setUsingSavedLocation] = useState(false);
+
+  const { preference } = useGetOrderPreference();
+
+  useEffect(() => {
+    if (!preference) return;
+    // Only fill fields the customer hasn't started typing in
+    setFormData((prev) => ({
+      ...prev,
+      email: prev.email || preference.email,
+      phoneNumber: prev.phoneNumber || preference.phoneNumber,
+      paymentMode: preference.paymentMode,
+      address: prev.address || preference.address || "",
+      city: prev.city || preference.city || "",
+      state: prev.state || preference.state || "",
+    }));
+    // Runs once when the preference loads, before the customer could have shared a location
+    if (preference.deliveryCoordinates) {
+      setDeliveryCoordinates(preference.deliveryCoordinates);
+      setUsingSavedLocation(true);
+    }
+  }, [preference]);
 
   const { hubs, loading: hubsLoading, error: hubsError, retry: retryHubs } = useHubs();
   const { quote, loading: quoteLoading, error: quoteError } = useDeliveryQuote({
@@ -166,6 +190,7 @@ function CheckoutPageContent() {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         });
+        setUsingSavedLocation(false);
       } else {
         alert("Geolocation is not supported by your browser");
       }
@@ -301,6 +326,9 @@ function CheckoutPageContent() {
         pickupLocationId: selectedHub.id,
         pickupDate: pickupData.pickupDate,
         deliveryCoordinates: fulfillmentType === "DELIVERY" ? deliveryCoordinates! : undefined,
+        deliveryAddress: fulfillmentType === "DELIVERY"
+          ? { address: formData.address, city: formData.city, state: formData.state || undefined }
+          : undefined,
       };
 
       const response = await createOrder(orderData);
@@ -547,7 +575,7 @@ function CheckoutPageContent() {
                                 {deliveryCoordinates && (
                                   <span className="text-sm text-gray-600 flex items-center">
                                     <Check className="w-4 h-4 mr-1 text-green-600" />
-                                    Location shared ({deliveryCoordinates.latitude.toFixed(5)}, {deliveryCoordinates.longitude.toFixed(5)})
+                                    {usingSavedLocation ? "Using your saved location" : "Location shared"} ({deliveryCoordinates.latitude.toFixed(5)}, {deliveryCoordinates.longitude.toFixed(5)})
                                   </span>
                                 )}
                               </div>
@@ -725,25 +753,18 @@ function CheckoutPageContent() {
                     </motion.div>
                     {quote ? (
                       <>
-                        {quote.transferFee > 0 && (
-                          <div className="flex justify-between text-sm text-gray-600">
-                            <span>Inter-hub transfer</span>
-                            <span>${quote.transferFee.toFixed(2)}</span>
-                          </div>
-                        )}
                         <div className="flex justify-between text-sm text-gray-600">
                           <span>Handling ({quote.hubName})</span>
                           <span>${quote.handlingFee.toFixed(2)}</span>
                         </div>
-                        {fulfillmentType === "DELIVERY" && (
-                          <div className="flex justify-between text-sm text-gray-600">
-                            <span>
-                              Home delivery
-                              {quote.deliveryDistanceKm !== null && ` (${quote.deliveryDistanceKm.toFixed(1)} km)`}
-                            </span>
-                            <span>${quote.deliveryFee.toFixed(2)}</span>
-                          </div>
-                        )}
+                        {/* Inter-hub transfer is shown as part of delivery, it confused customers as its own line */}
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>
+                            Delivery fee
+                            {fulfillmentType === "DELIVERY" && quote.deliveryDistanceKm !== null && ` (${quote.deliveryDistanceKm.toFixed(1)} km)`}
+                          </span>
+                          <span>${(quote.transferFee + quote.deliveryFee).toFixed(2)}</span>
+                        </div>
                       </>
                     ) : quoteLoading ? (
                       <div className="space-y-2" aria-busy="true" aria-label="Calculating delivery fees">

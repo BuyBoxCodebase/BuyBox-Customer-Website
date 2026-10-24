@@ -278,25 +278,20 @@ function OrderConfirmationPage() {
             </div>
             {hasFeeBreakdown ? (
               <>
-                {!!orderDetails.transferFee && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Inter-hub transfer</span>
-                    <span className="font-medium">${orderDetails.transferFee.toFixed(2)}</span>
-                  </div>
-                )}
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Handling</span>
                   <span className="font-medium">${(orderDetails.handlingFee ?? 0).toFixed(2)}</span>
                 </div>
-                {orderDetails.fulfillmentType === "DELIVERY" && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">
-                      Home delivery
-                      {orderDetails.deliveryDistanceKm != null && ` (${orderDetails.deliveryDistanceKm.toFixed(1)} km)`}
-                    </span>
-                    <span className="font-medium">${(orderDetails.deliveryFee ?? 0).toFixed(2)}</span>
-                  </div>
-                )}
+                {/* Inter-hub transfer is shown as part of delivery, it confused customers as its own line */}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">
+                    Delivery fee
+                    {orderDetails.fulfillmentType === "DELIVERY" && orderDetails.deliveryDistanceKm != null && ` (${orderDetails.deliveryDistanceKm.toFixed(1)} km)`}
+                  </span>
+                  <span className="font-medium">
+                    ${((orderDetails.transferFee ?? 0) + (orderDetails.deliveryFee ?? 0)).toFixed(2)}
+                  </span>
+                </div>
               </>
             ) : (
               <div className="flex justify-between items-center">

@@ -8,7 +8,7 @@ import GoogleSignInButton from "@/components/auth/GoogleSignInButton"
 import { useAuth } from "../../../../context/AuthContext"
 import { usePageTracking } from "@/hooks/analytics"
 import { LoadingScreen } from "@/components/ui/LoadingScreen"
-import { Eye, EyeOff, Mail } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 
@@ -44,7 +44,8 @@ function LoginPageContent() {
 
   return (
     <AuthLayout title="Treides" subtitle="Life, beautifully uncomplicated">
-      <div className="space-y-8">
+      {/* Every control shares one height, width and shape so the column lines up */}
+      <div className="space-y-6">
         {/* Email/password login form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -53,21 +54,16 @@ function LoginPageContent() {
             </Alert>
           )}
 
-          {/* Email Input */}
-          <div className="relative">
-            <Input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="Mobile number or email address"
-              required
-              className="pl-10 rounded-full"
-            />
-            {/* <Mail className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" /> */}
-          </div>
+          <Input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            placeholder="Mobile number or email address"
+            required
+            className="h-12 rounded-full px-5 bg-white shadow-sm"
+          />
 
-          {/* Password Input */}
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
@@ -77,14 +73,14 @@ function LoginPageContent() {
               onChange={handleInputChange}
               placeholder="Password"
               required
-              className="pl-10 rounded-full"
+              className="h-12 rounded-full pl-5 pr-12 bg-white shadow-sm"
             />
             <Button
               aria-label="Toggle password visibility"
               type="button"
               variant="ghost"
               size="sm"
-              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+              className="absolute right-1 top-0 h-full px-3 hover:bg-transparent"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
@@ -95,7 +91,6 @@ function LoginPageContent() {
             </Button>
           </div>
 
-          {/* Log in button */}
           <Button
             type="submit"
             className="h-12 w-full rounded-full"
@@ -104,33 +99,32 @@ function LoginPageContent() {
           >
             {loading ? "Signing in..." : "Log In"}
           </Button>
-
-          {/* Create account link */}
-          <div className="text-center">
-            <Link href="/user/register" className="text-sm text-gray-600 hover:text-gray-800">
-              Create account!
-            </Link>
-          </div>
         </form>
 
-        {/* Continue with Google */}
-        <div className="flex flex-col items-center space-y-6">
-          <div className="w-full max-w-xs">
-            <GoogleSignInButton />
-          </div>
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-sm text-gray-500">or</span>
+          <div className="h-px flex-1 bg-gray-200" />
         </div>
+
+        <GoogleSignInButton className="h-12 bg-white" />
+
+        <p className="text-center text-sm text-gray-600">
+          New to Treides?{" "}
+          <Link href="/user/register" className="font-medium text-[#4E008E] hover:underline">
+            Create account
+          </Link>
+        </p>
       </div>
-      <div className="space-y-2 text-center text-sm mt-8">
-        <span className="text-gray-200 lg:text-gray-600">
-          <Link href="/user/terms" className="text-red-400 lg:text-red-500 hover:text-red-300 lg:hover:text-red-600">
-            Terms of use |
-          </Link>
-        </span>
-        <span>
-          <Link href="/user/privacy" className="text-blue-400 lg:text-blue-500 hover:text-blue-300 lg:hover:text-blue-600">
-            Privacy Policy
-          </Link>
-        </span>
+
+      <div className="flex justify-center gap-2 pt-6 text-sm text-gray-500">
+        <Link href="/user/terms" className="hover:text-gray-800 hover:underline">
+          Terms of use
+        </Link>
+        <span aria-hidden="true">|</span>
+        <Link href="/user/privacy" className="hover:text-gray-800 hover:underline">
+          Privacy Policy
+        </Link>
       </div>
     </AuthLayout>
   )

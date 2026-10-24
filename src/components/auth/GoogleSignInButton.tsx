@@ -3,7 +3,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useEventTracking } from "@/hooks/analytics";
-export default function GoogleSignInButton() {
+import { cn } from "@/lib/utils";
+export default function GoogleSignInButton({ className }: { className?: string }) {
   const { trackClick } = useEventTracking();
   const handleGoogleSignIn = async () => {
     window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/auth/google`;
@@ -13,7 +14,7 @@ export default function GoogleSignInButton() {
   return (
     <Button
       variant="outline"
-      className="w-full h-11 rounded-full"
+      className={cn("w-full h-11 rounded-full", className)}
       onClick={handleGoogleSignIn}>
       <div className="flex items-center justify-center gap-2 h-full">
         <svg
