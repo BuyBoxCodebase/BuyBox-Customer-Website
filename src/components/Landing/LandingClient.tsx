@@ -67,18 +67,21 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
   };
 
   // Map backend subcategories to display items with images
-  const displayCategories = subcategories.slice(0, 8).map(sub => ({
+  const displayCategories = subcategories.slice(0, 4).map(sub => ({
     name: sub.name,
     path: `/subcategory/${sub.categoryId}%2F${sub.name}`,
     image: sub.imageUrl
   }));
 
+  // Shared by the top bar and prompt box so they line up with the category grid
+  const heroWidth = `w-full mx-auto transition-[max-width] duration-500 ease-in-out ${
+    isChatting ? "max-w-3xl" : "max-w-[min(459px,calc(100dvh_-_320px))] md:max-w-3xl"
+  }`;
+
   const searchForm = (
     <form
       onSubmit={handleSend}
-      className={`w-full relative mx-auto transition-[max-width] duration-500 ease-in-out ${
-        isChatting ? "max-w-3xl" : "max-w-[459px]"
-      }`}
+      className={`relative ${heroWidth}`}
     >
       <textarea
         name="query"
@@ -105,56 +108,51 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
   );
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col bg-white sys-dark:bg-[#0a0a0a] transition-colors duration-300">
+    <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col  bg-[#f2f1ea] sys-dark:bg-[#0a0a0a] transition-colors duration-300">
 
       {/* Chat History Side Panel */}
       <ChatSidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} />
 
-      {/* Top Left — Chat History toggle */}
-      <div className="absolute top-4 left-4 md:top-6 md:left-8 z-30">
-        <button
-          onClick={() => setIsPanelOpen(true)}
-          className="relative p-2 hover:bg-gray-100 sys-dark:hover:bg-white/10 rounded-full hover:text-gray-800 sys-dark:hover:text-white text-black sys-dark:text-white transition-colors"
-          aria-label="Open chat history"
-        >
-          <MessageSquare className="w-6 h-6" />
-        </button>
+     
+      <div className="absolute top-4 md:top-6 inset-x-0 px-4 z-30">
+        <div className={`flex items-center justify-between ${heroWidth}`}>
+          <button
+            onClick={() => setIsPanelOpen(true)}
+            className="relative p-2 hover:bg-gray-100 sys-dark:hover:bg-white/10 rounded-full hover:text-gray-800 sys-dark:hover:text-white text-black sys-dark:text-white transition-colors"
+            aria-label="Open chat history"
+          >
+            <MessageSquare className="w-6 h-6" />
+          </button>
+
+          <div className="flex items-center gap-2 md:gap-4 text-black sys-dark:text-white">
+            <CartIcon />
+            <div className="hidden sm:block">
+              {isAuthenticated ? (
+                <UserDropdown user={user as any} onLogout={logout} />
+              ) : (
+                <Link href="/user/login">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                    <span className="text-sm font-medium">Sign in</span>
+                    <UserIcon className="w-5 h-5" />
+                  </Button>
+                </Link>
+              )}
+            </div>
+            <div className="sm:hidden">
+              {isAuthenticated ? (
+                <Link href={`/user/profile`} className="text-sm font-medium hover:text-gray-800 flex items-center justify-center p-2 text-black sys-dark:text-white">
+                  <UserIcon className="w-6 h-6" />
+                </Link>
+              ) : (
+                <Link href="/user/login" className="flex items-center justify-center p-2 text-black sys-dark:text-white">
+                  <UserIcon className="w-6 h-6" />
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Top Right Actions */}
-      <div className="absolute top-4 right-4 md:top-6 md:right-8 flex items-center gap-2 md:gap-4 z-50 text-black sys-dark:text-white">
-        <CartIcon />
-        <div className="hidden sm:block">
-          {isAuthenticated ? (
-            <UserDropdown user={user as any} onLogout={logout} />
-          ) : (
-            <Link href="/user/login">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                <span className="text-sm font-medium">Sign in</span>
-                <UserIcon className="w-5 h-5" />
-              </Button>
-            </Link>
-          )}
-        </div>
-        <div className="sm:hidden">
-          {isAuthenticated ? (
-            <Link href={`/user/profile`} className="text-sm font-medium hover:text-gray-800 flex items-center justify-center p-2 text-black sys-dark:text-white">
-              <UserIcon className="w-6 h-6" />
-            </Link>
-          ) : (
-            <Link href="/user/login" className="flex items-center justify-center p-2 text-black sys-dark:text-white">
-              <UserIcon className="w-6 h-6" />
-            </Link>
-          )}
-        </div>
-      </div>
-
-      {/*
-        One persistent layout so the hero → chat change can animate:
-        - the messages area doubles as the top spacer (always flex-grow 1)
-        - the bottom spacer shrinks 1 → 0, pushing the input to the bottom
-        - logo and categories collapse via grid-rows 1fr → 0fr and fade out
-      */}
       <main className="relative z-10 flex-grow flex flex-col w-full min-h-0 pt-16 md:pt-20">
         <div ref={scrollRef} className="flex-grow basis-0 min-h-0 overflow-y-auto px-4">
           {isChatting && (
@@ -172,7 +170,7 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
           aria-hidden={isChatting}
         >
           <div className="overflow-hidden">
-            <h1 className="pb-10 md:pb-14 text-center text-5xl sm:text-6xl md:text-7xl font-medium text-black sys-dark:text-white tracking-tight">
+            <h1 className="pb-6 md:pb-14 text-center text-5xl sm:text-6xl md:text-7xl font-medium text-black sys-dark:text-white tracking-tight">
               Treides
             </h1>
           </div>
@@ -195,33 +193,37 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
           aria-hidden={isChatting}
         >
           <div className="overflow-hidden">
-            <div className="pt-10 md:pt-14 px-4 flex flex-row flex-wrap justify-center gap-6 min-[450px]:gap-8 md:gap-10 max-w-5xl mx-auto">
-              {displayCategories.map((cat) => (
-                <Link
-                  key={cat.name}
-                  href={cat.path}
-                  tabIndex={isChatting ? -1 : undefined}
-                  className="flex flex-col items-center gap-2 md:gap-3 group"
-                >
-                  <div className="w-16 h-16 min-[450px]:w-20 min-[450px]:h-20 rounded-full border border-gray-300 sys-dark:border-white/30 p-1 flex-shrink-0 transition-all group-hover:border-gray-400 sys-dark:group-hover:border-white/60">
-                    {cat.image ? (
-                      <div className="w-full h-full rounded-full overflow-hidden relative">
-                        <Image src={cat.image} alt={cat.name} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
-                      </div>
-                    ) : (
-                      <div className="w-full h-full rounded-full bg-gray-50 sys-dark:bg-white/5 flex items-center justify-center">
-                        <span className="text-gray-400 sys-dark:text-gray-500 text-[10px] min-[450px]:text-xs">No img</span>
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-xs min-[450px]:text-sm text-black sys-dark:text-white whitespace-nowrap">{cat.name}</span>
-                </Link>
-              ))}
+            <div className="pt-6 md:pt-14 px-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full mx-auto max-w-[min(459px,calc(100dvh_-_320px))] md:max-w-3xl">
+                {displayCategories.map((cat) => (
+                  <Link
+                    key={cat.name}
+                    href={cat.path}
+                    tabIndex={isChatting ? -1 : undefined}
+                    className="flex flex-col gap-1.5 group min-w-0"
+                  >
+                    <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-50 sys-dark:bg-white/5">
+                      {cat.image ? (
+                        <Image
+                          src={cat.image}
+                          alt={cat.name}
+                          fill
+                          sizes="(min-width: 768px) 192px, 50vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-gray-400 sys-dark:text-gray-500 text-xs">No img</span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-sm md:text-base text-center text-black sys-dark:text-white truncate">{cat.name}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Bottom spacer — centres the hero, collapses when chatting */}
         <div
           className="basis-0 min-h-0 transition-[flex-grow] duration-500 ease-in-out"
           style={{ flexGrow: isChatting ? 0 : 1 }}
