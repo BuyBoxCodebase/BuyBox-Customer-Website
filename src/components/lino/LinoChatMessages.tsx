@@ -10,7 +10,7 @@ export function LinoChatMessages({ messages, isLoading }: { messages: LinoMessag
       {messages.map((msg) => (
         <div key={msg.id} className={`flex w-full animate-in fade-in slide-in-from-bottom-2 duration-300 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
           {msg.role === "user" ? (
-            <div className="max-w-[85%] md:max-w-[70%] rounded-2xl rounded-tr-sm px-4 py-3 bg-black text-white sys-dark:bg-white sys-dark:text-black">
+            <div className="max-w-[85%] md:max-w-[70%] rounded-2xl rounded-tr-sm px-4 py-3 bg-[#faf8f6] text-black sys-dark:bg-white sys-dark:text-black">
               <div className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.content}</div>
             </div>
           ) : (
