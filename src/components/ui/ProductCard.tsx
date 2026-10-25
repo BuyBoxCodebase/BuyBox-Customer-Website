@@ -153,15 +153,18 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <TrackShown productId={product.id} categoryId={product.categoryId || undefined}>
+    <TrackShown productId={product.id} categoryId={product.categoryId || undefined} subCategoryId={product.subCategoryId || undefined}>
       <Link 
         href={`/product/${product.id}`} 
+        data-track={product.name}
+        data-track-product-id={product.id}
         className="block group h-full"
         onClick={() => {
           trackEvent({
             type: UserEventType.PRODUCT_CLICK,
             productId: product.id,
-            categoryId: product.categoryId || undefined
+            categoryId: product.categoryId || undefined,
+            subCategoryId: product.subCategoryId || undefined
           });
         }}
       >

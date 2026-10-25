@@ -84,9 +84,11 @@ export function MasonryProductCard({
     : "text-red-500";
 
   return (
-    <TrackShown productId={product.id} categoryId={product.categoryId || undefined}>
+    <TrackShown productId={product.id} categoryId={product.categoryId || undefined} subCategoryId={product.subCategoryId || undefined}>
       <Link 
         href={`/product/${product.id}`} 
+        data-track={product.name}
+        data-track-product-id={product.id}
         className={`relative flex flex-col h-full group break-inside-avoid rounded-xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-700 ${
           dynamicBackground 
             ? (cardStyle.ready ? "opacity-100 translate-y-0 border-white/10" : "opacity-0 translate-y-4 border-transparent") 
@@ -97,7 +99,8 @@ export function MasonryProductCard({
           trackEvent({
             type: UserEventType.PRODUCT_CLICK,
             productId: product.id,
-            categoryId: product.categoryId || undefined
+            categoryId: product.categoryId || undefined,
+            subCategoryId: product.subCategoryId || undefined
           });
         }}
       >

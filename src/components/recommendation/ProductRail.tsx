@@ -1,10 +1,7 @@
 "use client";
-
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import axios from "axios";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { Product } from "@/types/product";
+
 import {
   Carousel,
   CarouselContent,
@@ -13,79 +10,24 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import usePopularProducts, { PopularProductSnapshot } from "@/hooks/products/usePopularProducts";
 
 interface ProductRailProps {
-  /** Section heading, e.g. "Trending now" */
   title: string;
-  /** Path on the backend, e.g. "/recommendation/trending?limit=12" */
-  endpoint: string;
-  /** Send the customer's bearer token — required for /for-you */
-  authenticated?: boolean;
-  /** Optional "See all" destination */
+  categoryId?: string;
   seeAllHref?: string;
-  /**
-   * Hide the whole rail below this many products. A two-card rail reads
-   * as broken, and several categories genuinely have that few in stock.
-   */
-  minItems?: number;
-  /**
-   * Fired once the rail knows whether it has anything to show. Lets a parent
-   * decide what to render in its place when this rail comes back empty.
-   */
-  onResult?: (visible: boolean) => void;
 }
 
 export default function ProductRail({
   title,
-  endpoint,
-  authenticated = false,
+  categoryId,
   seeAllHref,
-  minItems = 4,
-  onResult,
 }: ProductRailProps) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // kept in a ref so an inline arrow from the parent cannot re-trigger the fetch
-  const onResultRef = useRef(onResult);
-  onResultRef.current = onResult;
-
-  useEffect(() => {
-    let cancelled = false;
-    const report = (count: number) => onResultRef.current?.(count >= minItems);
-
-    (async () => {
-      try {
-        const token = authenticated ? localStorage.getItem("token") : null;
-        if (authenticated && !token) {
-          if (!cancelled) { setProducts([]); setLoading(false); report(0); }
-          return;
-        }
-
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}${endpoint}`,
-          token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
-        );
-
-        if (cancelled) return;
-        const list = Array.isArray(res.data?.products) ? res.data.products : [];
-        // _score / _reasons are debug fields from the scorer — never render them
-        setProducts(list.map(({ _score, _reasons, ...p }: any) => p));
-        report(list.length);
-      } catch {
-        // a rail is supplementary — if it fails, the page carries on without it
-        if (!cancelled) { setProducts([]); report(0); }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [endpoint, authenticated, minItems]);
+  const { popularProducts, loading } = usePopularProducts(categoryId);
 
   if (loading) return <RailSkeleton title={title} />;
-  if (products.length < minItems) return null;
 
+  if (popularProducts.length === 0) return null;
   return (
     <section className="mb-8">
       <Carousel
@@ -120,14 +62,15 @@ export default function ProductRail({
         </div>
 
         <CarouselContent className="-ml-2 md:-ml-4 px-2 lg:px-4 pb-2">
-          {products.map((product) => (
-            <CarouselItem
-              key={product.id}
-              className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
-            >
-              <ProductCard product={product} />
-            </CarouselItem>
-          ))}
+          {popularProducts.map((snap: PopularProductSnapshot) => snap.product &&  (
+              <CarouselItem
+                key={snap.id}
+                className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+              >
+                <ProductCard product={snap.product} />
+              </CarouselItem>
+            )
+          )}
         </CarouselContent>
       </Carousel>
     </section>

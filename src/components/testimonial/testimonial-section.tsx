@@ -7,7 +7,7 @@ export default function TestimonialSection() {
       name: "Ruva",
       text: "Thank you so much, it's such a relief not to worry about getting into town especially with this weather where it can just start raining at any time. I'm so grateful for your service.",
       productImage: "https://i.postimg.cc/WzRR6871/Whats-App-Image-2025-03-05-at-12-27-56-AM.jpg",
-      productAlt: "Customer with school supplies from BuyBox",
+      productAlt: "Customer with school supplies from Treides",
     },
     // Additional testimonials...
   ]
@@ -18,7 +18,7 @@ export default function TestimonialSection() {
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold text-foreground mb-2">What Our Customers Say</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Don't just take our word for it - hear from our satisfied customers about their BuyBox experience.
+            Don't just take our word for it - hear from our satisfied customers about their Treides experience.
           </p>
         </div>
 

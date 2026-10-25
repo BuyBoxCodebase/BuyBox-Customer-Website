@@ -13,7 +13,7 @@ export const CartIcon = () => {
   return (
     <Link href="/cart">
       <motion.div
-        className="relative p-2 hover:bg-gray-100 rounded-full hover:text-gray-800"
+        className="relative p-2 hover:bg-gray-100 sys-dark:hover:bg-white/10 rounded-full hover:text-gray-800 sys-dark:hover:text-white"
         whileHover={{ y: -3, scale: 1.1 }}
         transition={{ type: "spring", stiffness: 400, damping: 10 }}>
         <ShoppingCart className="w-6 h-6" />

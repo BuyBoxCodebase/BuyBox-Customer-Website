@@ -3,13 +3,15 @@
 import React from "react";
 import { Product } from "@/types/product";
 import usePopularProducts from "@/hooks/products/usePopularProducts";
+import { useAuth } from "@/context/AuthContext";
 import { MasonryProductCard } from "@/components/ui/MasonryProductCard";
 import { MasonryGrid } from "@/components/ui/MasonryGrid";
 import { MasonrySkeleton } from "@/components/ui/MasonrySkeleton";
 import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPlaceholders";
 
 export default function HomePagePopularProducts() {
-  const { popularProducts, loading } = usePopularProducts(null, null, 20);
+  const { user } = useAuth();
+  const { popularProducts, loading } = usePopularProducts(null, user?.id || null, 20);
 
   // Extract products from the popular product snapshots
   const trendingProducts = popularProducts.map(s => s.product).filter(Boolean) as Product[];

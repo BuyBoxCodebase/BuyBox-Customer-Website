@@ -33,20 +33,6 @@ export function AddToCartButton({ product, className = "", iconOnly = false }: A
     e.preventDefault();
     e.stopPropagation();
 
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to add items to your cart.",
-        variant: "default",
-        action: (
-          <Button variant="orange" onClick={() => router.push("/user/login")}>
-            Log In
-          </Button>
-        ),
-      });
-      return;
-    }
-
     setIsAdding(true);
     try {
       await addProductToCart([
@@ -54,6 +40,16 @@ export function AddToCartButton({ product, className = "", iconOnly = false }: A
           productId: product.id,
           quantity: 1,
           variantId: product.defaultVariant?.id || null,
+          cartProductDetails: {
+            id: product.id,
+            name: product.name,
+            price: salePrice,
+            description: product.description,
+            images: product.defaultVariant?.images || product.images || [],
+            category: product.category,
+            subCategory: product.subCategory,
+            options: product.defaultVariant?.options?.map(o => ({ name: "Option", value: o.optionValue.value })) || [],
+          }
         },
       ]);
       trackAddtoCart(product.id, 1, salePrice);
@@ -75,12 +71,13 @@ export function AddToCartButton({ product, className = "", iconOnly = false }: A
 
   return (
     <button
+      aria-label={iconOnly ? (isOutOfStock ? "Out of stock" : "Add to cart") : undefined}
       onClick={handleAddToCart}
       disabled={isAdding || isOutOfStock}
       className={`transition-all duration-200 ${
         isOutOfStock
           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-          : "bg-yellow-400 text-black hover:bg-yellow-500 shadow-sm hover:shadow-md"
+          : "bg-black text-white hover:bg-black/85 shadow-sm hover:shadow-md"
       } ${className}`}
     >
       {isOutOfStock

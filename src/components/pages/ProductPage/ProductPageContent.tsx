@@ -170,21 +170,7 @@ export default function ProductPageContent() {
   };
 
   const handleAddToCart = async () => {
-    if (!token) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to add items to your cart.",
-        variant: "default",
-        className: "top-[4rem]",
-        action: (
-          <Button variant="orange" onClick={() => router.push("/user/login")}>
-            Log In
-          </Button>
-        ),
-      });
-      return;
-    }
-    if (token && product) {
+    if (product) {
       setIsAddingToCart(true);
       try {
         let variantId;
@@ -199,9 +185,17 @@ export default function ProductPageContent() {
           productId: product.id,
           quantity,
           variantId: variantId || null,
+          cartProductDetails: {
+            id: product.id,
+            name: product.name,
+            price: displayPrice,
+            description: product.description,
+            images: selectedVariant?.images || product.defaultVariant?.images || product.images || [],
+            category: product.category,
+            subCategory: product.subCategory,
+            options: selectedVariant?.options?.map(o => ({ name: "Option", value: o.optionValue.value })) || product.defaultVariant?.options?.map(o => ({ name: "Option", value: o.optionValue.value })) || [],
+          }
         };
-        // console.log("Adding Cart Item:", cartItem);
-
         await addProductToCart([cartItem]);
         trackAddtoCart(product.id, quantity, displayPrice);
         toast({

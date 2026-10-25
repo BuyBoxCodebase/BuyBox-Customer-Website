@@ -7,10 +7,11 @@ import { UserEventType } from "@/lib/analytics/constants";
 interface TrackShownProps {
   productId: string;
   categoryId?: string;
+  subCategoryId?: string;
   children: React.ReactNode;
 }
 
-export function TrackShown({ productId, categoryId, children }: TrackShownProps) {
+export function TrackShown({ productId, categoryId, subCategoryId, children }: TrackShownProps) {
   const ref = useRef<HTMLDivElement>(null);
   const tracked = useRef(false);
 
@@ -25,6 +26,7 @@ export function TrackShown({ productId, categoryId, children }: TrackShownProps)
             type: UserEventType.SHOWN,
             productId,
             categoryId,
+            subCategoryId,
           });
           observer.disconnect();
         }
@@ -39,7 +41,7 @@ export function TrackShown({ productId, categoryId, children }: TrackShownProps)
     return () => {
       observer.disconnect();
     };
-  }, [productId, categoryId]);
+  }, [productId, categoryId, subCategoryId]);
 
   return <div ref={ref} className="h-full w-full">{children}</div>;
 }

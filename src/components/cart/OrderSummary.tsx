@@ -8,10 +8,14 @@ import { trackEvent } from "@/lib/analytics/core";
 import { UserEventType } from "@/lib/analytics/constants";
 import { Loader2, Trash2 } from "lucide-react";
 import useCartStore from "@/zustand/cartStore";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function OrderSummary() {
   const { cart, clearCart } = useCartContext();
   const { deleteCart } = useCartStore();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const [isClearing, setIsClearing] = useState(false);
 
   const handleClearCart = async () => {
@@ -48,25 +52,27 @@ export default function OrderSummary() {
       </div>
 
       <div className="space-y-2">
-        <Link
-          href="/checkout"
-          onClick={() => {
+        <Button
+          variant="default"
+          className="w-full"
+          disabled={cart.length === 0}
+          aria-label={
+            cart.length === 0 ? "Cart is empty" : "Proceed to checkout"
+          }
+          onClick={(e) => {
+            e.preventDefault();
             trackEvent({
               type: UserEventType.CHECKOUT_STARTED,
               metadata: { cartTotal: total, itemsCount: cart.length }
             });
-          }}
-          className={cart.length === 0 ? "pointer-events-none" : ""}>
-          <Button
-            variant="default"
-            className="w-full"
-            disabled={cart.length === 0}
-            aria-label={
-              cart.length === 0 ? "Cart is empty" : "Proceed to checkout"
-            }>
-            {cart.length === 0 ? "Cart is Empty" : "Proceed to Checkout"}
-          </Button>
-        </Link>
+            if (!isAuthenticated) {
+              router.push("/user/login?redirect=/checkout");
+            } else {
+              router.push("/checkout");
+            }
+          }}>
+          {cart.length === 0 ? "Cart is Empty" : "Proceed to Checkout"}
+        </Button>
         <Button
           variant="outline"
           className="w-full relative overflow-hidden transition-all duration-200 ease-in-out"

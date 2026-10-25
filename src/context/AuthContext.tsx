@@ -6,7 +6,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import {
   AuthContextType,
@@ -18,7 +18,8 @@ import {
 } from "@/types/auth";
 import Cookies from "js-cookie";
 import { headers } from "next/headers";
-import router from "next/router";
+import useCartStore from "@/zustand/cartStore";
+import { identifyVisitor, resetVisitorOnLogout } from "@/lib/activity/tracker";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -81,6 +82,11 @@ const removeAuthToken = () => {
   Cookies.remove("refreshToken", { path: "/" });
   
   delete axios.defaults.headers.common["Authorization"];
+
+  // Completely wipe the cart store to prevent guest state pollution
+  const cartStore = useCartStore.getState();
+  cartStore.deleteCart();
+  cartStore.setCartId(null);
 };
 
 const refreshAccessToken = async (): Promise<string | null> => {
@@ -116,6 +122,9 @@ const refreshAccessToken = async (): Promise<string | null> => {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(initialState);
   const router = useRouter();
+  const pathname = usePathname();
+
+
 
   // Set up axios interceptor for token refresh
   useEffect(() => {
@@ -180,6 +189,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
+  // Record a LOGIN once we know who the customer is (no anonymous history is linked).
+  const userId = state.user?.id;
+  useEffect(() => {
+    if (userId) identifyVisitor(userId);
+  }, [userId]);
+
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -218,6 +233,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               sameSite: "strict",
             });
           }
+
+
         } catch (error) {
           // If request fails with 401, try to refresh
           const axiosError = error as AxiosError;
@@ -271,7 +288,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         showWelcomeModal: true,
       }));
 
-      router.push("/");
+
+      const redirectUrl = new URLSearchParams(window.location.search).get("redirect");
+      router.push(redirectUrl || "/");
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       setState((prev) => ({
@@ -327,6 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async (): Promise<boolean> => {
+    resetVisitorOnLogout();
     try {
       setState((prev) => ({ ...prev, loading: true }));
       await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/auth/logout`);
@@ -370,6 +390,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading: false,
         showWelcomeModal: false,
       }));
+
+
+      const redirectUrl = new URLSearchParams(window.location.search).get("redirect");
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      }
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       setState((prev) => ({
@@ -390,6 +416,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, showWelcomeModal: false }));
   };
 
+  const updateUser = (updates: Partial<User>) => {
+    setState((prev) => ({
+      ...prev,
+      user: prev.user ? { ...prev.user, ...updates } : null,
+    }));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -400,6 +433,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearError,
         verify,
         hideWelcomeModal,
+        updateUser,
       }}>
       {children}
     </AuthContext.Provider>

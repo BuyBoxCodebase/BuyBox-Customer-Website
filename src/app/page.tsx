@@ -1,34 +1,24 @@
-import { Suspense } from "react";
-import Hero from "@/components/Landing/Hero";
-import HomeCategories from "@/components/Landing/HomeCategories";
-import HomePagePopularProducts from "@/components/Landing/HomePagePopularProducts";
-import Signin from "@/components/Landing/Signin";
-import Navbar from "@/components/navbar/Navbar";
-import Footer from "@/components/footer/Footer";
-import HomeClientWrapper from "@/components/Landing/HomeClientWrapper";
+import LandingClient from "@/components/Landing/LandingClient";
 import { getCategories } from "@/lib/get-category";
-import LandingPageSkeleton  from "@/components/Skeleton/LandingSkeleton";
-import HomeRecommendations from "@/components/recommendation/HomeRecommendations";
+import { Category } from "@/types/category";
 
-export default async function Home() {
+export default async function LandingPage() {
   const categories = await getCategories();
+  
+  // Extract all subcategories from the categories list
+  let allSubcategories: any[] = [];
+  if (categories && categories.length > 0) {
+    categories.forEach((cat: Category) => {
+      if (cat.subCategories && cat.subCategories.length > 0) {
+        allSubcategories = [...allSubcategories, ...cat.subCategories];
+      }
+    });
+  }
 
-  return (
-    <>
-      <Navbar />
-      <Hero />
-      <Signin />
-      <Suspense fallback={<div className="container mx-auto px-4 pt-8"><LandingPageSkeleton /></div>}>
-        <HomeCategories />
-      </Suspense>
-      
-      <HomePagePopularProducts />
-
-      <HomeRecommendations categories={categories} />
-      <Suspense fallback={null}>
-        <HomeClientWrapper />
-      </Suspense>
-      <Footer />
-    </>
+  // Remove duplicates if any based on id
+  const uniqueSubcategories = Array.from(
+    new Map(allSubcategories.map(item => [item.id, item])).values()
   );
+
+  return <LandingClient subcategories={uniqueSubcategories} />;
 }

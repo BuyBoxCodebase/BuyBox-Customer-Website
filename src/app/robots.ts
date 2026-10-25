@@ -4,7 +4,7 @@ import type { MetadataRoute } from 'next';
 
 // Must match BASE_URL in sitemap.ts — a mismatch makes crawlers treat the
 // sitemap's URLs as out of scope and ignore them.
-const BASE_URL = 'https://www.buyboxie.com';
+const BASE_URL = 'https://www.treidesie.com';
 
 export default function robots(): MetadataRoute.Robots {
   return {

@@ -127,6 +127,8 @@ function VerifyPageContent() {
           <div className='space-y-4'>
             <div className='flex justify-center'>
               <InputOTP
+                name="otp"
+                data-track-ignore
                 value={otp}
                 onChange={setOtp}
                 onComplete={handleComplete}

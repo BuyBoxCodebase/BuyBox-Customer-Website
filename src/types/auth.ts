@@ -4,7 +4,6 @@ export interface User {
   email: string;
   username?: string;
   profilePic?: string;
-  isCompleted: boolean;
 }
 
 export interface AuthState {
@@ -27,6 +26,7 @@ export interface AuthContextType extends AuthState {
   verify: (credentials: VerifyTokenCredentials) => Promise<void>;
   clearError: () => void;
   hideWelcomeModal: () => void;
+  updateUser: (updates: Partial<User>) => void;
 }
 
 export interface LoginCredentials {

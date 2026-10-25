@@ -10,6 +10,7 @@ import React, {
 import useCartStore from "@/zustand/cartStore";
 import { trackEvent } from "@/lib/analytics/core";
 import { UserEventType } from "@/lib/analytics/constants";
+import { useAuth } from "@/context/AuthContext";
 import useAddCart from "@/hooks/cart/useAddCart";
 import useClearCart from "@/hooks/cart/useClearCart";
 import useGetMyCart from "@/hooks/cart/useGetMyCart";
@@ -27,6 +28,7 @@ interface CartContextType {
       productId: string;
       quantity: number;
       variantId: string | null;
+      cartProductDetails?: Partial<CartProduct>;
     }>
   ) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -37,14 +39,12 @@ interface CartContextType {
     variantId: string | null
   ) => void;
   removeFromCart: (productId: string, variantId: string | null) => void;
-  isInitialized: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [localError, setLocalError] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   const {
     cart,
@@ -66,6 +66,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     error: clearError,
   } = useClearCart();
 
+  const { isAuthenticated } = useAuth();
+
   const {
     loading: getLoading,
     error: getError,
@@ -83,10 +85,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const handleFetchCart = async () => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        return;
+      }
       setLocalError(null);
-      const response = await apiFetchCart();
 
-      // Always clear the local cart first
+      // Merge guest cart if needed before fetching
+      const { cart: localCart, cartId } = useCartStore.getState();
+      if (localCart.length > 0 && !cartId) {
+        try {
+          const productsToMerge = localCart.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            variantId: item.variantId || null,
+          }));
+          await apiAddToCart(productsToMerge);
+        } catch (e) {
+          console.error("[CartContext] Failed to merge guest cart", e);
+        }
+      }
+
+      const response = await apiFetchCart();
+      // Always clear the local cart first when syncing from server
       deleteCart();
 
       if (response?.cartDetails) {
@@ -113,36 +134,49 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       useCartStore.getState().setCartId(null);
     }
   };
-
+  // Fetch cart when user logs in
   useEffect(() => {
-    const initializeCart = async () => {
-      await handleFetchCart();
-      setIsInitialized(true);
-    };
-
-    if (!isInitialized) {
-      initializeCart();
-    }
-  }, [isInitialized]);
-
-  // Monitor cart state for significant changes
-  useEffect(() => {
-    // If we're initialized but have no items, re-check with server
-    // This helps sync when cart operations might have happened in another tab/window
-    if (isInitialized && cart.length === 0) {
+    if (isAuthenticated) {
       handleFetchCart();
     }
-  }, [isInitialized, cart.length]);
+  }, [isAuthenticated]);
 
   const handleAddProducts = async (
     products: Array<{
       productId: string;
       quantity: number;
       variantId: string | null;
+      cartProductDetails?: Partial<CartProduct>;
     }>
   ) => {
     try {
       setLocalError(null);
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        // Guest mode
+        const cartProductsToAdd: CartProduct[] = products.map(p => {
+          const price = p.cartProductDetails?.price || 0;
+          return {
+            id: p.cartProductDetails?.id || p.productId,
+            productId: p.productId,
+            variantId: p.variantId,
+            quantity: p.quantity,
+            price: price,
+            totalPrice: price * p.quantity,
+            name: p.cartProductDetails?.name || "Product",
+            description: p.cartProductDetails?.description || "",
+            images: p.cartProductDetails?.images || [],
+            category: p.cartProductDetails?.category || { name: "" },
+            subCategory: p.cartProductDetails?.subCategory || null,
+            options: p.cartProductDetails?.options || [],
+          };
+        });
+        
+        useCartStore.getState().addToCart(cartProductsToAdd);
+        return;
+      }
+
       const response = await apiAddToCart(
         products.map((p) => ({
           productId: p.productId,
@@ -164,6 +198,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const handleClearCart = async () => {
     try {
       setLocalError(null);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        deleteCart();
+        return;
+      }
       const response = await apiClearCart();
       if (response === true) {
         deleteCart();
@@ -202,6 +241,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     // Call the API to update the quantity
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        // Guest mode: local state already updated temporarily, no API call needed
+        return;
+      }
       await handleUpdateProducts(productToUpdate);
       await handleFetchCart();
     } catch (err) {
@@ -240,6 +284,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     // Call the API to remove the item
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        // Guest mode: local state already updated, no API call needed
+        return;
+      }
       await handleUpdateProducts(productToRemove);
       await handleFetchCart();
     } catch (err) {
@@ -258,7 +307,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     fetchCart: handleFetchCart,
     updateQuantity: handleUpdateQuantity,
     removeFromCart: handleRemoveFromCart,
-    isInitialized,
   };
 
   return (
