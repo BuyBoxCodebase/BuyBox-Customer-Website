@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
+import { trackEvent } from "@/lib/analytics/core";
+import { UserEventType } from "@/lib/analytics/constants";
 
 // Updated currency formatter to support the new format
 const formatPriceWithSuperscriptCents = (price: number) => {
@@ -96,7 +98,13 @@ export default function ProductDetails({
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
+    trackEvent({
+      type: UserEventType.SHARE,
+      productId: product.id,
+      categoryId: product.categoryId || undefined,
+      subCategoryId: product.subCategoryId || undefined,
+    });
     if (navigator.share) {
       navigator
         .share({
@@ -172,6 +180,7 @@ export default function ProductDetails({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: 0.3 }}>
           <Button
+            aria-label="Share"
             variant="ghost"
             size="icon"
             onClick={handleShare}

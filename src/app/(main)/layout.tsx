@@ -13,8 +13,8 @@ import { Analytics } from "@vercel/analytics/react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "BuyBox - Happiness, Delivered",
-  description: "Shop the latest in fashion, beauty, and more",
+  title: "Treides - Shopping that comes to you",
+  description: "Life, beautifully uncomplicated",
   verification: {
     google: "7jNi_sOZvDz9zyHHP1tMi3DF7ZEI46AQp2XFyPnlVvY",
   },
@@ -27,11 +27,11 @@ export default function RootLayout({
 }) {
   return (
     <>
-<div className={`${inter.className} bg-gray-50 min-h-screen flex flex-col`}>
-            <Navbar />
-            <main className="flex-grow pt-14 lg:pt-20">{children}</main>
-            <Footer />
-</div>
+      <div className={`${inter.className} bg-[#f5f4f0] min-h-screen flex flex-col`}>
+        <Navbar />
+        <main className="flex-grow pt-14 lg:pt-16">{children}</main>
+        <Footer />
+      </div>
     </>
   );
 }

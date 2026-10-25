@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -39,6 +40,7 @@ function OnboardingPageContent() {
   usePageTracking();
   const { toast } = useToast();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,26 +51,41 @@ function OnboardingPageContent() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      // Here you would typically send this data to your backend
-      const response = await fetch("/api/user/onboarding", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
+  const authHeader = () => ({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  });
 
-      if (!response.ok) {
-        throw new Error("Failed to update profile");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setSaving(true);
+    try {
+      let profilePicUrl = "";
+      if (values.profilePic) {
+        const fd = new FormData();
+        fd.append("files", values.profilePic);
+        const upload = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/profile/upload/images`,
+          fd,
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        );
+        profilePicUrl = upload.data?.[0]?.url ?? "";
       }
 
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated.",
-      });
+      await axios.patch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/profile/update-profile`,
+        {
+          name: values.fullName,
+          username: values.username,
+          phoneNumber: values.phoneNumber,
+          profilePic: profilePicUrl,
+        },
+        { headers: authHeader() }
+      );
 
+      toast({
+        title: "You're all set",
+        description: "Welcome to Treides!",
+      });
       router.push("/");
     } catch (error) {
       toast({
@@ -76,14 +93,15 @@ function OnboardingPageContent() {
         description: "Failed to update profile. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setSaving(false);
     }
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setAvatarUrl(imageUrl);
+      setAvatarUrl(URL.createObjectURL(file));
       form.setValue("profilePic", file);
     }
   };
@@ -105,6 +123,7 @@ function OnboardingPageContent() {
               </div>
               <div>
                 <Input
+                  name="profilePic"
                   type='file'
                   accept='image/*'
                   onChange={handleFileChange}
@@ -158,8 +177,8 @@ function OnboardingPageContent() {
                   </FormItem>
                 )}
               />
-              <Button type='submit' className='w-full'>
-                Submit
+              <Button type='submit' className='w-full' disabled={saving}>
+                {saving ? "Saving..." : "Continue"}
               </Button>
             </form>
           </Form>

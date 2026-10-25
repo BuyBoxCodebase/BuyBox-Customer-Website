@@ -1,14 +1,28 @@
 import { Category } from "@/types/category";
-import axios from "axios";
 
-export const getCategories = async ():Promise<Category[]> => {
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL 
+export const getCategories = async (): Promise<Category[]> => {
   try {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/category/get`
+    const response = await fetch(
+      `${BASE_URL}/category/get`,
+      {
+        next: { 
+          tags: ['categories'],
+          revalidate: 10800 // 3 hours in seconds (fallback TTL)
+        },
+      }
     );
-    return response.data;
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch categories: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
   } catch (err) {
-    console.error("Error fetching categories:", err);
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("Sitemap: failed to fetch categories; using empty category list.", err);
+    }
     return [];
   }
 };

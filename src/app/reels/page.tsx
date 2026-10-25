@@ -286,6 +286,7 @@ const ForYouPage = () => {
                   {/* Buy button */}
                   <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
                     <Button
+                      aria-label="Add to cart"
                       onClick={(e) => handleBuyClick(e, video.productId, video)}
                       size="icon"
                       disabled={isAddingToCart}
@@ -305,6 +306,7 @@ const ForYouPage = () => {
                   {/* Mute button */}
                   <div className="absolute bottom-20 right-4 z-10">
                     <Button
+                      aria-label={muted ? "Unmute" : "Mute"}
                       onClick={toggleMute}
                       size="icon"
                       variant="ghost"

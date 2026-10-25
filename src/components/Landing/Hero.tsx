@@ -56,10 +56,10 @@ export default function Home() {
           {/* Left Section */}
           <div className="space-y-4 md:space-y-6 text-center lg:text-left">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 tracking-tight">
-              BuyBox
+              Treides
             </h1>
             <p className="text-xl md:text-2xl text-gray-800 max-w-md mx-auto lg:mx-0">
-              Discover Daily Deals, we've got you covered.
+              Life, beautifully uncomplicated.
             </p>
             {/* <Button className="bg-[#FF6B00] hover:bg-[#e65f00] text-black text-base md:text-lg px-6 md:px-8 py-4 md:py-6 w-full sm:w-auto">
               <Link href="/market">Explore</Link>

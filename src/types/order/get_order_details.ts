@@ -1,3 +1,30 @@
+// Mirrors the OrderStatus / PaymentMode enums in the backend's schema.prisma.
+export type OrderStatus =
+  | "PENDING"
+  | "PROCESSING"
+  | "COMPLETED"
+  | "CANCELED"
+  | "OUT_OF_STOCK"
+  | "READY_FOR_PICKUP";
+
+export type PaymentMode =
+  | "CASH_ON_DELIVERY"
+  | "CREDIT_CARD"
+  | "DEBIT_CARD"
+  | "UPI"
+  | "NETBANKING";
+
+// What the customer sees for each status. PROCESSING means the seller has
+// accepted the order.
+export const orderStatusLabels: Record<OrderStatus, string> = {
+  PENDING: "Pending",
+  PROCESSING: "Order Accepted",
+  COMPLETED: "Completed",
+  CANCELED: "Cancelled",
+  OUT_OF_STOCK: "Out of Stock",
+  READY_FOR_PICKUP: "Ready for Pickup",
+};
+
 interface Category {
   name: string;
 }
@@ -52,13 +79,29 @@ export interface OrderDetails {
   email: string;
   phoneNumber: string;
   address: string;
-  status: "PENDING" | "PROCESSING" | "COMPLETED" | "CANCELED";
+  status: OrderStatus;
   totalAmount: number;
-  paymentMode: "CASH_ON_DELIVERY" | "ONLINE";
+  paymentMode: PaymentMode;
   deliveryAgentId: string | null;
   createdAt: string;
   _count: Count;
   products: OrderProduct[];
   deliveryAgent: DeliveryAgent | null;
   deliveryTime?: string;
+  fulfillmentType?: string;
+  pickupLocationId?: string;
+  pickupDate?: string;
+  pickupFee?: number;
+  // Fee breakdown for orders placed after delivery pricing; older orders only have pickupFee
+  transferFee?: number | null;
+  handlingFee?: number | null;
+  deliveryFee?: number | null;
+  deliveryDistanceKm?: number | null;
+  pickupLocation?: {
+    name: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    } | string; // Assuming it could be JSON parsed or raw
+  };
 }

@@ -127,6 +127,8 @@ function VerifyPageContent() {
           <div className='space-y-4'>
             <div className='flex justify-center'>
               <InputOTP
+                name="otp"
+                data-track-ignore
                 value={otp}
                 onChange={setOtp}
                 onComplete={handleComplete}
@@ -180,7 +182,7 @@ function VerifyPageContent() {
               Didn't receive the code?{" "}
               <a
                 target='__blank'
-                href='mailto:buyboxsupp0rt@yahoo.com'
+                href='mailto:contact@treides.com'
                 className='text-blue-600 hover:underline'
               >
                 Contact Support

@@ -30,8 +30,7 @@ export default function AddToCartButton({
         }
       >
         <Button
-          variant="yellow"
-          className="w-full"
+          className="w-full bg-black text-white hover:bg-black/85"
           onClick={onAddToCart}
           disabled={isAddingToCart || inventoryQuantity === 0 || !optionsSelected}
         >

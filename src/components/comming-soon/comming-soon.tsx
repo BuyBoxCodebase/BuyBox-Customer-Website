@@ -35,7 +35,7 @@ export default function ComingSoon() {
           }}
           className="mb-8">
           <div className="mx-auto h-24 w-24 rounded-full bg-gray-800 flex items-center justify-center">
-            <span className="text-black text-2xl font-bold">BuyBox</span>
+            <span className="text-black text-2xl font-bold">Treides</span>
           </div>
         </motion.div>
 
@@ -63,6 +63,7 @@ export default function ComingSoon() {
           className="mb-8 w-full max-w-md">
           {/* <form onSubmit={handleSubmit} className="flex w-full max-w-md flex-col gap-2 sm:flex-row">
             <Input
+              name="email"
               type="email"
               placeholder="Enter your email"
               value={email}

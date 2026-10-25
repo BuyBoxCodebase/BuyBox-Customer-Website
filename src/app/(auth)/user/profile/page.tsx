@@ -93,6 +93,7 @@ function ProfilePageContent() {
               </div>
               <div className='flex space-x-2'>
                 <Input
+                  name="inviteLink"
                   value={inviteLink}
                   readOnly
                   className='text-sm'

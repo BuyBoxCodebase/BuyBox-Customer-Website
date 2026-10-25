@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { usePageTracking } from "@/hooks/analytics";
 import Image from "next/image";
 import Link from "next/link";
+import { orderStatusLabels } from "@/types/order/get_order_details";
 
 function OrderConfirmationPage() {
   const params = useParams();
@@ -51,6 +52,12 @@ function OrderConfirmationPage() {
     }
   );
 
+  // Orders placed before delivery pricing only stored a flat pickupFee
+  const hasFeeBreakdown = orderDetails.handlingFee != null;
+  const deliveryFeesTotal = hasFeeBreakdown
+    ? (orderDetails.transferFee ?? 0) + (orderDetails.handlingFee ?? 0) + (orderDetails.deliveryFee ?? 0)
+    : orderDetails.pickupFee || 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -66,7 +73,7 @@ function OrderConfirmationPage() {
           <h1 className="text-2xl font-bold">Order Details</h1>
           <p className="text-gray-600 mt-1">Order #{orderId}</p>
           <div
-            className="mt-2 inline-block px-3 py-1 rounded-full text-sm font-medium capitalize"
+            className="mt-2 inline-block px-3 py-1 rounded-full text-sm font-medium"
             style={{
               backgroundColor:
                 orderDetails.status === "PENDING"
@@ -75,6 +82,8 @@ function OrderConfirmationPage() {
                   ? "#D1FAE5"
                   : orderDetails.status === "PROCESSING"
                   ? "#DBEAFE"
+                  : orderDetails.status === "OUT_OF_STOCK"
+                  ? "#FFEDD5"
                   : "#FEE2E2",
               color:
                 orderDetails.status === "PENDING"
@@ -83,9 +92,11 @@ function OrderConfirmationPage() {
                   ? "#065F46"
                   : orderDetails.status === "PROCESSING"
                   ? "#1E40AF"
+                  : orderDetails.status === "OUT_OF_STOCK"
+                  ? "#9A3412"
                   : "#B91C1C",
             }}>
-            {orderDetails.status?.toLowerCase()}
+            {orderStatusLabels[orderDetails.status] ?? orderDetails.status}
           </div>
           <p className="text-gray-500 mt-2 text-sm">{formattedDate}</p>
         </div>
@@ -96,7 +107,11 @@ function OrderConfirmationPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="space-y-4">
-          <h2 className="text-xl font-semibold">Delivery Information</h2>
+          <h2 className="text-xl font-semibold">
+            {orderDetails.fulfillmentType === "PICKUP"
+              ? "Pickup Information"
+              : "Delivery Information"}
+          </h2>
           <div className="grid sm:grid-cols-2 gap-4 text-sm">
             <div className="space-y-1">
               <p className="text-gray-600">Email</p>
@@ -106,11 +121,68 @@ function OrderConfirmationPage() {
               <p className="text-gray-600">Phone</p>
               <p className="font-medium">{orderDetails.phoneNumber}</p>
             </div>
-            <div className="sm:col-span-2 space-y-1">
-              <p className="text-gray-600">Address</p>
-              <p className="font-medium">{orderDetails.address}</p>
-            </div>
-            <div className="sm:col-span-2 space-y-1">
+
+            {orderDetails.fulfillmentType === "PICKUP" ? (
+              <>
+                <div className="sm:col-span-2 space-y-1">
+                  <p className="text-gray-600">Pickup Location</p>
+                  <p className="font-medium">
+                    {orderDetails.pickupLocation?.name || "Eastgate Mall"}
+                  </p>
+                  <a
+                    href="https://maps.google.com/?q=-17.831819,31.053124"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline inline-block mt-1">
+                    Get Directions
+                  </a>
+                </div>
+                <div className="sm:col-span-2 space-y-1">
+                  <p className="text-gray-600">Operating Hours</p>
+                  <p className="font-medium">
+                    9am - 4pm daily (Closed Sundays)
+                  </p>
+                </div>
+                {orderDetails.pickupDate && (
+                  <div className="sm:col-span-2 space-y-1">
+                    <p className="text-gray-600">Estimated Pickup Date</p>
+                    <p className="font-medium">
+                      {new Date(orderDetails.pickupDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="sm:col-span-2 space-y-1">
+                  <p className="text-gray-600">Address</p>
+                  <p className="font-medium">{orderDetails.address}</p>
+                </div>
+                {orderDetails.deliveryAgent && (
+                  <div className="sm:col-span-2 space-y-1">
+                    <p className="text-gray-600">Delivery Agent</p>
+                    <p className="font-medium">
+                      {orderDetails.deliveryAgent.name}
+                    </p>
+                    {orderDetails.deliveryAgent.contactInfo && (
+                      <p className="text-sm text-gray-500">
+                        {orderDetails.deliveryAgent.contactInfo}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {orderDetails.deliveryTime && (
+                  <div className="sm:col-span-2 space-y-1">
+                    <p className="text-gray-600">Estimated Delivery Time</p>
+                    <p className="font-medium">
+                      {new Date(orderDetails.deliveryTime).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+
+            <div className="sm:col-span-2 space-y-1 mt-2 border-t pt-2">
               <p className="text-gray-600">Payment Method</p>
               <p className="font-medium">
                 {orderDetails.paymentMode === "CASH_ON_DELIVERY"
@@ -118,25 +190,6 @@ function OrderConfirmationPage() {
                   : "Online Payment"}
               </p>
             </div>
-            {orderDetails.deliveryAgent && (
-              <div className="sm:col-span-2 space-y-1">
-                <p className="text-gray-600">Delivery Agent</p>
-                <p className="font-medium">{orderDetails.deliveryAgent.name}</p>
-                {orderDetails.deliveryAgent.contactInfo && (
-                  <p className="text-sm text-gray-500">
-                    {orderDetails.deliveryAgent.contactInfo}
-                  </p>
-                )}
-              </div>
-            )}
-            {orderDetails.deliveryTime && (
-              <div className="sm:col-span-2 space-y-1">
-                <p className="text-gray-600">Estimated Delivery Time</p>
-                <p className="font-medium">
-                  {new Date(orderDetails.deliveryTime).toLocaleString()}
-                </p>
-              </div>
-            )}
           </div>
         </motion.div>
 
@@ -220,13 +273,38 @@ function OrderConfirmationPage() {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Subtotal</span>
               <span className="font-medium">
-                ${orderDetails.totalAmount.toFixed(2)}
+                ${(orderDetails.totalAmount - deliveryFeesTotal).toFixed(2)}
               </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Shipping</span>
-              <span className="font-medium">$0.00</span>
-            </div>
+            {hasFeeBreakdown ? (
+              <>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Handling</span>
+                  <span className="font-medium">${(orderDetails.handlingFee ?? 0).toFixed(2)}</span>
+                </div>
+                {/* Inter-hub transfer is shown as part of delivery, it confused customers as its own line */}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">
+                    Delivery fee
+                    {orderDetails.fulfillmentType === "DELIVERY" && orderDetails.deliveryDistanceKm != null && ` (${orderDetails.deliveryDistanceKm.toFixed(1)} km)`}
+                  </span>
+                  <span className="font-medium">
+                    ${((orderDetails.transferFee ?? 0) + (orderDetails.deliveryFee ?? 0)).toFixed(2)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">
+                  {orderDetails.fulfillmentType === "PICKUP" ? "Pickup Fee" : "Shipping"}
+                </span>
+                <span className="font-medium">
+                  {orderDetails.pickupFee
+                    ? `$${orderDetails.pickupFee.toFixed(2)}`
+                    : "$0.00"}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between items-center border-t pt-3 mt-3">
               <span className="text-gray-800 font-medium">Total Amount</span>
               <span className="font-bold text-lg">
@@ -237,16 +315,20 @@ function OrderConfirmationPage() {
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Status</span>
             <span
-              className={`capitalize font-medium ${
-                orderDetails.status === "COMPLETED"
+              className={`font-medium ${
+                orderDetails.status === "COMPLETED" || orderDetails.status === "READY_FOR_PICKUP"
                   ? "text-green-600"
                   : orderDetails.status === "PENDING"
                   ? "text-yellow-600"
                   : orderDetails.status === "PROCESSING"
                   ? "text-blue-600"
+                  : orderDetails.status === "OUT_OF_STOCK"
+                  ? "text-orange-600"
                   : "text-red-600"
               }`}>
-              {orderDetails.status ? orderDetails.status.toLowerCase() : ""}
+              {orderDetails.status
+                ? orderStatusLabels[orderDetails.status] ?? orderDetails.status
+                : ""}
             </span>
           </div>
         </motion.div>

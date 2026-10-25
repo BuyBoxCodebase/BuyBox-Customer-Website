@@ -1,6 +1,6 @@
 import { ProductsByCategory } from "@/types/product";
-import axios from "axios";
 import { useEffect, useState } from "react";
+import { getAllProductsAction } from "@/actions/products/getAllProducts";
 
 export default function useGetAllProducts(categoryId?: string | undefined) {
   // console.log(categoryId)
@@ -12,18 +12,8 @@ export default function useGetAllProducts(categoryId?: string | undefined) {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const url = categoryId
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/get-all-product/?category=${categoryId}`
-          : `${process.env.NEXT_PUBLIC_BACKEND_URL}/product/get-all-product/`;
-
-        const response = await axios.get(url);
-        //console.log(response.data)
-
-        if (typeof response.data === "object") {
-          setProducts(response.data);
-        } else {
-          setProducts({});
-        }
+        const data = await getAllProductsAction(categoryId);
+        setProducts(data);
       } catch (err) {
         console.error("Error fetching products:", err);
         setError(true);

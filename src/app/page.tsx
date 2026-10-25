@@ -1,55 +1,24 @@
-"use client";
+import LandingClient from "@/components/Landing/LandingClient";
+import { getCategories } from "@/lib/get-category";
+import { Category } from "@/types/category";
 
-import { Suspense } from "react";
-import { motion } from "framer-motion";
-import Hero from "@/components/Landing/Hero";
-import LandingPage from "@/components/Landing/LandingPage";
-import { usePageTracking } from "../hooks/analytics";
-import AdBanner from "@/components/ad/ad-banner";
-import Signin from "@/components/Landing/Signin";
-import WelcomeBackModal from "@/components/ui/WelcomeBackModal";
-import { useAuth } from "@/context/AuthContext";
-import Navbar from "@/components/navbar/Navbar";
-import Footer from "@/components/footer/Footer";
-// Animated fallback using Framer Motion
-const LoadingAnimation = () => (
-  <motion.div
-    className="flex items-center justify-center min-h-screen"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.5 }}>
-    <div className="text-2xl font-bold">Loading...</div>
-  </motion.div>
-);
+export default async function LandingPage() {
+  const categories = await getCategories();
+  
+  // Extract all subcategories from the categories list
+  let allSubcategories: any[] = [];
+  if (categories && categories.length > 0) {
+    categories.forEach((cat: Category) => {
+      if (cat.subCategories && cat.subCategories.length > 0) {
+        allSubcategories = [...allSubcategories, ...cat.subCategories];
+      }
+    });
+  }
 
-// A separate component that uses the hook and renders page content
-function PageContent() {
-  usePageTracking();
-  const { showWelcomeModal, hideWelcomeModal, user } = useAuth();
-
-  return (
-    <>
-      <Navbar />
-      <Hero />
-      <Signin />
-      {/* <AdBanner /> */}
-      <LandingPage />
-      <WelcomeBackModal 
-        isOpen={showWelcomeModal}
-        onClose={hideWelcomeModal}
-        userName={user?.name}
-      />
-      <Footer />
-    </>
+  // Remove duplicates if any based on id
+  const uniqueSubcategories = Array.from(
+    new Map(allSubcategories.map(item => [item.id, item])).values()
   );
-}
 
-// Home component wraps PageContent with Suspense
-export default function Home() {
-  return (
-    <Suspense fallback={<LoadingAnimation />}>
-      <PageContent />
-    </Suspense>
-  );
+  return <LandingClient subcategories={uniqueSubcategories} />;
 }

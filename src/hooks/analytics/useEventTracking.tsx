@@ -1,5 +1,7 @@
 // src/hooks/analytics/useEventTracking.tsx
 import { useAnalytics } from './useAnalytics';
+import { trackEvent as trackBackendEvent } from '@/lib/analytics/core';
+import { UserEventType } from '@/lib/analytics/constants';
 
 export const useEventTracking = () => {
   const { trackEvent } = useAnalytics();
@@ -26,11 +28,23 @@ export const useEventTracking = () => {
     });
   };
 
+  const trackProductView = (productId: string) => {
+    trackBackendEvent({
+      type: UserEventType.VIEW,
+      productId,
+    });
+  };
+
   const trackAddtoCart = (productId: string, quantity: number, price: number) => {
     trackEvent('add_to_cart', {
       product_id: productId,
       quantity,
       price
+    });
+    trackBackendEvent({
+      type: UserEventType.CART_ADD,
+      productId,
+      metadata: { quantity, price }
     });
   }
 
@@ -40,6 +54,10 @@ export const useEventTracking = () => {
       total,
       currency,
       phoneNumber
+    });
+    trackBackendEvent({
+      type: UserEventType.PURCHASE,
+      metadata: { orderId, total, currency, phoneNumber }
     });
   }
 
@@ -54,6 +72,7 @@ export const useEventTracking = () => {
     trackSearch,
     trackCustomEvent,
     trackAddtoCart,
-    trackOrder
+    trackOrder,
+    trackProductView
   };
 };

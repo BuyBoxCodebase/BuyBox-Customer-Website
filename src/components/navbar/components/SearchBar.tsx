@@ -27,13 +27,16 @@ export const SearchBar = ({
 
   return (
     <form 
-      onSubmit={handleSubmit} 
+      onSubmit={handleSubmit}
+      action="."
       className={`relative w-full ${className}`}
     >
       <div className="relative flex items-center w-full">
         <input
-          placeholder="Search Buybox"
+          name="search"
+          placeholder="Find your vibe..."
           type="search"
+          enterKeyHint="search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyPress}
