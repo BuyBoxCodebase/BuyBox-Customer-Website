@@ -139,7 +139,7 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
   );
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col  bg-[#f2f1ea] sys-dark:bg-[#0a0a0a] transition-colors duration-300">
+    <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col bg-background sys-dark:bg-[#0a0a0a] transition-colors duration-300">
 
       {/* Chat History Side Panel */}
       <ChatSidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} />
