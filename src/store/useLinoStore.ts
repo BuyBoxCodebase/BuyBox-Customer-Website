@@ -6,6 +6,7 @@ export interface LinoMessage {
   role: 'user' | 'assistant';
   content: string;
   products?: any[];
+  status?: string; // what Lino is doing while the reply streams in, e.g. "Searching catalog..."
 }
 
 export interface LinoChat {
@@ -22,7 +23,9 @@ interface LinoStore {
   isLoading: boolean;
   userChats: LinoChat[];
 
-  addMessage: (message: Omit<LinoMessage, 'id'>) => void;
+  /** Adds a message and returns its id */
+  addMessage: (message: Omit<LinoMessage, 'id'>) => string;
+  updateMessage: (id: string, update: (message: LinoMessage) => Partial<LinoMessage>) => void;
   setMessages: (messages: LinoMessage[]) => void;
   setSessionId: (id: string) => void;
   setLoading: (loading: boolean) => void;
@@ -38,9 +41,15 @@ export const useLinoStore = create<LinoStore>((set) => ({
   isLoading: false,
   userChats: [],
 
-  addMessage: (message) =>
+  addMessage: (message) => {
+    const id = uuidv4();
+    set((state) => ({ messages: [...state.messages, { ...message, id }] }));
+    return id;
+  },
+
+  updateMessage: (id, update) =>
     set((state) => ({
-      messages: [...state.messages, { ...message, id: uuidv4() }],
+      messages: state.messages.map((message) => (message.id === id ? { ...message, ...update(message) } : message)),
     })),
 
   setMessages: (messages) => set({ messages }),

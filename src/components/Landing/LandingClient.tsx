@@ -3,21 +3,24 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, User as UserIcon, MessageSquare } from "lucide-react";
 import { CartIcon } from "../navbar/components/CartIcon";
 import { UserDropdown } from "../navbar/components/UserDropdown";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "../ui/button";
 import { useLinoStore } from "@/store/useLinoStore";
-import { sendLinoMessage } from "@/lib/lino";
+import { streamLinoMessage } from "@/lib/lino";
+import { searchUrl } from "@/lib/search";
 import ChatSidePanel from "@/components/lino/ChatSidePanel";
 import { LinoChatMessages } from "@/components/lino/LinoChatMessages";
 
 export default function LandingClient({ subcategories }: { subcategories: any[] }) {
   const [query, setQuery] = useState("");
   const { user, isAuthenticated, logout } = useAuth();
-  const { messages, isLoading, sessionId, addMessage, setLoading } = useLinoStore();
+  const { messages, isLoading, sessionId, addMessage, updateMessage, setLoading } = useLinoStore();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const router = useRouter();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -30,27 +33,55 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
     }
   }, [messages, isLoading]);
 
-  const handleSend = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const text = query.trim();
+  const send = async (text: string) => {
     if (!text || isLoading) return;
 
-    setQuery("");
-    if (textareaRef.current) textareaRef.current.style.height = "auto";
-
     addMessage({ role: "user", content: text });
+    const replyId = addMessage({ role: "assistant", content: "" });
     setLoading(true);
 
     try {
-      const response = await sendLinoMessage(sessionId, text);
-      addMessage({ role: "assistant", content: response.reply, products: response.products });
+      await streamLinoMessage(sessionId, text, {
+        onStatus: (status) => updateMessage(replyId, () => ({ status })),
+        onProducts: (products) => updateMessage(replyId, () => ({ products })),
+        onText: (chunk) => updateMessage(replyId, (reply) => ({ content: reply.content + chunk, status: undefined })),
+      });
     } catch {
-      addMessage({ role: "assistant", content: "Sorry, I'm having trouble connecting right now." });
+      updateMessage(replyId, (reply) => ({
+        content: reply.content || "Sorry, I'm having trouble connecting right now.",
+      }));
     } finally {
+      updateMessage(replyId, () => ({ status: undefined }));
       setLoading(false);
       textareaRef.current?.focus();
     }
   };
+
+  const handleSend = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const text = query.trim();
+    if (!text || isLoading) return;
+
+    // The first message of a new conversation opens the search results; "Ask Lino" there
+    // brings the customer back here with the chat started (see the ?ask effect below).
+    if (messages.length === 0) {
+      router.push(searchUrl({ q: text }));
+      return;
+    }
+
+    setQuery("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+    send(text);
+  };
+
+  // "Ask Lino" on the search page links here as /?ask=<query>: start the conversation with it.
+  useEffect(() => {
+    const ask = new URLSearchParams(window.location.search).get("ask")?.trim();
+    if (!ask) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    send(ask);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const adjustHeight = () => {
     const textarea = textareaRef.current;

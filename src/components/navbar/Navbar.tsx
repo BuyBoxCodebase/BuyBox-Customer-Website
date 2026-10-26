@@ -37,9 +37,9 @@ export default function Navbar() {
               className="text-gray-800 text-2xl font-semibold hidden lg:flex">
               Treides
             </motion.a>
-            {/* <div className="hidden lg:flex flex-1 max-w-xl items-center">
+            <div className="hidden lg:flex flex-1 max-w-xl items-center">
               <SearchBar />
-            </div> */}
+            </div>
 
             <div className="hidden lg:flex items-center gap-4 ml-auto">
               <CartIcon />
@@ -76,11 +76,11 @@ export default function Navbar() {
                 </button>
               </div>
               
-              {/* <div
+              <div
                 className="flex-1 min-w-0 transition-all duration-300 ease-in-out"
                 style={{ marginLeft: showBackButton ? "0px" : "-40px" }}>
                   <SearchBar className={`${showBackButton ? "" : "pl-8"}`} />
-              </div> */}
+              </div>
 
               <div className="flex items-center gap-2 ml-auto">
                 <CartIcon />
