@@ -4,6 +4,8 @@ import { Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchSuggestions, searchUrl, SuggestResponse } from "@/lib/search";
+import { askLinoUrl } from "@/lib/lino";
+import { AskButton } from "@/components/lino/AskButton";
 
 interface SearchBarProps {
   className?: string;
@@ -11,8 +13,6 @@ interface SearchBarProps {
 
 const SUGGEST_DELAY_MS = 150;
 
-// One box for everything: "black nike size 9" and "comfortable shoes for standing all day" both go
-// to the same search. While typing, matching brands, categories and products are suggested.
 export const SearchBar = ({ className = "" }: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<SuggestResponse | null>(null);
@@ -58,6 +58,8 @@ export const SearchBar = ({ className = "" }: SearchBarProps) => {
     if (searchQuery.trim()) go(searchUrl({ q: searchQuery.trim() }));
   };
 
+  const handleAsk = () => go(askLinoUrl(searchQuery));
+
   const hasSuggestions =
     suggestions && (suggestions.brands.length + suggestions.categories.length + suggestions.products.length > 0);
 
@@ -77,11 +79,12 @@ export const SearchBar = ({ className = "" }: SearchBarProps) => {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-          className="w-full h-10 px-4 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent pl-10"
+          className="w-full h-10 px-4 rounded-md border border-gray-300 bg-white text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent pl-10 pr-20"
         />
         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
           <Search className="h-5 w-5 text-gray-800" />
         </div>
+        <AskButton onClick={handleAsk} className="absolute right-1 top-1/2 -translate-y-1/2 h-8" />
       </div>
 
       {open && hasSuggestions && (

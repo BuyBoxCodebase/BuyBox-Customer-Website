@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
+export const askLinoUrl = (query: string) => `/?ask=${encodeURIComponent(query.trim())}`;
+
 export interface LinoStreamHandlers {
   onStatus?: (message: string) => void;
   onProducts?: (products: any[]) => void;

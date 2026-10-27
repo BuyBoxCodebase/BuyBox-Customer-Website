@@ -1,5 +1,3 @@
-import { Suspense } from "react";
-import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import SubcategoryPageClient from "./SubcategoryPageClient";
 
 async function getProducts(categoryId: string, subCategoryName: string) {
@@ -48,13 +46,12 @@ export default async function SubcategoryPage({ params }: { params: Promise<{ su
         .replace(/\b\w/g, (char) => char.toUpperCase())
     : "";
 
+  // The loading UI while this renders comes from loading.tsx next to this file
   return (
-    <Suspense fallback={<LoadingScreen />}>
-      <SubcategoryPageClient 
-        data={data} 
-        formattedSubCategoryName={formattedSubCategoryName} 
-        categoryId={categoryId}
-      />
-    </Suspense>
+    <SubcategoryPageClient
+      data={data}
+      formattedSubCategoryName={formattedSubCategoryName}
+      categoryId={categoryId}
+    />
   );
 }

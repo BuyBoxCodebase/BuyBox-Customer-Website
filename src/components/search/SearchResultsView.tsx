@@ -10,6 +10,7 @@ import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPl
 import { trackEvent } from "@/lib/analytics/core";
 import { UserEventType } from "@/lib/analytics/constants";
 import { usePageTracking } from "@/hooks/analytics";
+import { askLinoUrl } from "@/lib/lino";
 import {
   describeFilter,
   FILTER_LABELS,
@@ -78,7 +79,7 @@ export default function SearchResultsView({
   const appliedFilters = (Object.entries(result.filters) as [FilterName, string | number][]).filter(
     ([, value]) => value !== undefined && value !== null,
   );
-  const askLinoHref = `/?ask=${encodeURIComponent(params.q || appliedFilters.map(([n, v]) => describeFilter(n, v)).join(" "))}`;
+  const askLinoHref = askLinoUrl(params.q || appliedFilters.map(([n, v]) => describeFilter(n, v)).join(" "));
 
   return (
     <div className="pt-4 px-2 md:px-6 pb-12">

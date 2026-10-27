@@ -2,18 +2,31 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, User as UserIcon, MessageSquare } from "lucide-react";
+import { ArrowRight, User as UserIcon, MessageSquare, Loader2 } from "lucide-react";
 import { CartIcon } from "../navbar/components/CartIcon";
 import { UserDropdown } from "../navbar/components/UserDropdown";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "../ui/button";
 import { useLinoStore } from "@/store/useLinoStore";
 import { streamLinoMessage } from "@/lib/lino";
+import { AskButton } from "@/components/lino/AskButton";
 import { searchUrl } from "@/lib/search";
 import ChatSidePanel from "@/components/lino/ChatSidePanel";
 import { LinoChatMessages } from "@/components/lino/LinoChatMessages";
+
+// Must render inside a <Link>: covers the tile with a spinner as soon as it's tapped,
+// so slow networks get feedback before the next page (or its loading.tsx) arrives.
+function TilePendingOverlay() {
+  const { pending } = useLinkStatus();
+  if (!pending) return null;
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+      <Loader2 className="h-6 w-6 animate-spin text-white" />
+    </div>
+  );
+}
 
 export default function LandingClient({ subcategories }: { subcategories: any[] }) {
   const [query, setQuery] = useState("");
@@ -74,12 +87,23 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
     send(text);
   };
 
-  // "Ask Lino" on the search page links here as /?ask=<query>: start the conversation with it.
-  useEffect(() => {
-    const ask = new URLSearchParams(window.location.search).get("ask")?.trim();
-    if (!ask) return;
+  const handleAsk = () => {
+    const text = query.trim();
+    if (!text) {
+      textareaRef.current?.focus();
+      return;
+    }
+    setQuery("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+    send(text);
+  };
+
+   useEffect(() => {
+    const ask = new URLSearchParams(window.location.search).get("ask");
+    if (ask === null) return;
     window.history.replaceState(null, "", window.location.pathname);
-    send(ask);
+    if (ask.trim()) send(ask.trim());
+    else textareaRef.current?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -125,8 +149,15 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
         }}
         onKeyDown={handleKeyDown}
         placeholder={isChatting ? "Tell me what you have in mind..." : "What shoes are you looking for?"}
-        className="w-full pl-2 md:pl-4 pr-14 md:pr-16 py-3.5 md:py-4 rounded-xl border border-gray-300 sys-dark:border-[#333] bg-white sys-dark:bg-[#0a0a0a] text-base md:text-lg focus:outline-none focus:border-gray-500 sys-dark:focus:border-gray-500 placeholder:text-gray-500 sys-dark:placeholder:text-gray-400 text-black sys-dark:text-white resize-none overflow-y-auto max-h-[180px] leading-normal"
+        className={`w-full pl-2 md:pl-4 ${isChatting ? "pr-14 md:pr-16" : "pr-36 md:pr-40"} py-3.5 md:py-4 rounded-xl border border-gray-300 sys-dark:border-[#333] bg-white sys-dark:bg-[#0a0a0a] text-base md:text-lg focus:outline-none focus:border-gray-500 sys-dark:focus:border-gray-500 placeholder:text-gray-500 sys-dark:placeholder:text-gray-400 text-black sys-dark:text-white resize-none overflow-y-auto max-h-[180px] leading-normal`}
       />
+      {!isChatting && (
+        <AskButton
+          onClick={handleAsk}
+          disabled={isLoading}
+          className="absolute right-14 md:right-16 bottom-3.5 h-9 md:h-11 md:px-4 md:text-base sys-dark:bg-white/10 sys-dark:text-white sys-dark:hover:bg-white/20"
+        />
+      )}
       <button
         aria-label="Send"
         type="submit"
@@ -247,6 +278,7 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
                           <span className="text-gray-400 sys-dark:text-gray-500 text-xs">No img</span>
                         </div>
                       )}
+                      <TilePendingOverlay />
                     </div>
                     <span className="text-sm md:text-base text-center text-black sys-dark:text-white truncate">{cat.name}</span>
                   </Link>
