@@ -14,7 +14,7 @@ export default function GoogleSignInButton({ className }: { className?: string }
   return (
     <Button
       variant="outline"
-      className={cn("w-full h-11 rounded-full", className)}
+      className={cn("w-full h-11 rounded-lg", className)}
       onClick={handleGoogleSignIn}>
       <div className="flex items-center justify-center gap-2 h-full">
         <svg

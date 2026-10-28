@@ -152,8 +152,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const hasStoredToken =
           !!localStorage.getItem("accessToken") || !!localStorage.getItem("token");
 
+        // Login/register/verify answer bad input with 401 ("Email already in use",
+        // "Invalid credentials") — that's not an expired session, so let the
+        // caller handle it instead of refreshing and bouncing to /user/login.
+        const isAuthEndpoint = originalRequest?.url?.includes("/customer/auth/");
+
         // If error is 401 and we haven't retried yet
-        if (error.response?.status === 401 && hasStoredToken && !originalRequest._retry) {
+        if (error.response?.status === 401 && hasStoredToken && !isAuthEndpoint && !originalRequest._retry) {
           originalRequest._retry = true;
 
           const newAccessToken = await refreshAccessToken();

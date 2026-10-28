@@ -61,7 +61,7 @@ function LoginPageContent() {
             onChange={handleInputChange}
             placeholder="Mobile number or email address"
             required
-            className="h-12 rounded-full px-5 bg-white shadow-sm"
+            className="h-12 rounded-lg px-4 bg-white shadow-sm"
           />
 
           <div className="relative">
@@ -73,7 +73,7 @@ function LoginPageContent() {
               onChange={handleInputChange}
               placeholder="Password"
               required
-              className="h-12 rounded-full pl-5 pr-12 bg-white shadow-sm"
+              className="h-12 rounded-lg pl-4 pr-12 bg-white shadow-sm"
             />
             <Button
               aria-label="Toggle password visibility"
@@ -91,10 +91,15 @@ function LoginPageContent() {
             </Button>
           </div>
 
+          <div className="flex justify-end">
+            <Link href="/user/forgot-password" className="text-sm text-black hover:underline">
+              Forgot password?
+            </Link>
+          </div>
+
           <Button
             type="submit"
-            className="h-12 w-full rounded-full"
-            style={{ backgroundColor: "#4E008E" }}
+            className="h-12 w-full rounded-lg bg-black text-white hover:bg-black/85"
             disabled={loading}
           >
             {loading ? "Signing in..." : "Log In"}
@@ -111,7 +116,7 @@ function LoginPageContent() {
 
         <p className="text-center text-sm text-gray-600">
           New to Treides?{" "}
-          <Link href="/user/register" className="font-medium text-[#4E008E] hover:underline">
+          <Link href="/user/register" className="font-medium text-black hover:underline">
             Create account
           </Link>
         </p>

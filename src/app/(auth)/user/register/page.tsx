@@ -1,64 +1,55 @@
 "use client";
 import React, { Suspense, useState } from "react";
 import Link from "next/link";
-import {
-  AtSign,
-  Eye,
-  EyeOff,
-  Mail,
-  User,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { AxiosError } from "axios";
+import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
 
 import AuthLayout from "@/components/auth/AuthLayout";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { usePageTracking } from "@/hooks/analytics";
+import { useToast } from "@/hooks/toast/use-toast";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
-
-
 
 interface RegisterForm {
   name: string;
   email: string;
   password: string;
+  confirmPassword: string;
   phoneNumber: string;
 }
 
-interface ValidationErrors {
-  name?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-  phoneNumber?: string;
-}
+type ValidationErrors = Partial<Record<keyof RegisterForm, string>>;
+
+const EMAIL_IN_USE = "Email already in use";
 
 const phoneRegex = /^\+263\d{9}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
+// Shared by every control so the column lines up (matches the login page)
+const fieldClass = "h-12 rounded-lg px-4 bg-white shadow-sm";
+
 function RegisterPageContent() {
-  const { register, loading, error, clearError } = useAuth();
+  const { register, loading, clearError } = useAuth();
+  const { toast } = useToast();
   usePageTracking();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<RegisterForm>({
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phoneNumber: "+263",
   });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const validateField = (name: string, value: string | number): string | undefined => {
-    // Convert the value to a string for validation
-    const strValue = String(value).trim();
+  const validateField = (name: string, value: string, data = formData): string | undefined => {
+    const strValue = value.trim();
 
     switch (name) {
       case "name":
@@ -74,8 +65,7 @@ function RegisterPageContent() {
           ? "Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character"
           : undefined;
       case "confirmPassword":
-        // Make sure to compare the string versions
-        return strValue !== String(formData.password)
+        return strValue !== data.password
           ? "Passwords do not match"
           : undefined;
       case "phoneNumber":
@@ -87,25 +77,21 @@ function RegisterPageContent() {
     }
   };
 
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const next = { ...formData, [name]: value };
+    setFormData(next);
 
     if (touched[name]) {
       setErrors((prev) => ({
         ...prev,
-        [name]: validateField(name, value),
+        [name]: validateField(name, value, next),
       }));
     }
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "phoneNumber" ? (value) : value,
-    }));
     setTouched((prev) => ({ ...prev, [name]: true }));
     setErrors((prev) => ({
       ...prev,
@@ -115,34 +101,40 @@ function RegisterPageContent() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    // Validate all fields
     const newErrors: ValidationErrors = {};
-    Object.keys(formData).forEach((key) => {
-      const error = validateField(key, formData[key as keyof RegisterForm]);
-      if (error) newErrors[key as keyof ValidationErrors] = error;
+    (Object.keys(formData) as (keyof RegisterForm)[]).forEach((key) => {
+      const error = validateField(key, formData[key]);
+      if (error) newErrors[key] = error;
     });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setIsSubmitting(false);
+      setTouched({ name: true, email: true, phoneNumber: true, password: true, confirmPassword: true });
       return;
     }
 
     try {
-      // Simulate API call
-      (formData.phoneNumber);
-      await register(formData);
-      // console.log("Form submitted successfully:", formData); 
-      // Reset form or redirect
+      const { confirmPassword, ...credentials } = formData;
+      await register(credentials);
     } catch (error) {
-      setErrors((prev) => ({
-        ...prev,
-        submit: "Failed to submit form. Please try again.",
-      }));
-    } finally {
-      setIsSubmitting(false);
+      const message =
+        (error as AxiosError<{ message: string }>).response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      if (message === EMAIL_IN_USE) {
+        setErrors((prev) => ({ ...prev, email: EMAIL_IN_USE }));
+        setTouched((prev) => ({ ...prev, email: true }));
+      }
+
+      toast({
+        title: message === EMAIL_IN_USE ? "This email already has an account" : "Couldn't create account",
+        description: message === EMAIL_IN_USE ? "Log in instead, or use a different email." : message,
+        variant: "destructive",
+      });
+
+      // The toast covers it; don't let the error linger into the login page's alert
+      clearError();
     }
   };
 
@@ -165,230 +157,202 @@ function RegisterPageContent() {
 
   const passwordStrength = getPasswordStrength(formData.password);
 
+  const statusIcon = (name: keyof RegisterForm) =>
+    touched[name] &&
+    (errors[name] ? (
+      <XCircle className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-red-500" />
+    ) : (
+      <CheckCircle className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-green-500" />
+    ));
+
+  const fieldError = (name: keyof RegisterForm) =>
+    errors[name] && touched[name] && (
+      <p className="text-red-500 text-sm px-1">{errors[name]}</p>
+    );
+
   return (
     <AuthLayout
       title="Treides"
       subtitle="Life, beautifully uncomplicated">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        {/* Name Input */}
-        <div className="space-y-1">
-          <div className="relative">
-            <Input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              placeholder="Name"
-              required
-              className="pl-10 rounded-full" />
-            {/* <User className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" /> */}
-            {touched.name &&
-              (errors.name ? (
-                <XCircle className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" />
-              ) : (
-                <CheckCircle className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500" />
-              ))}
-          </div>
-          {errors.name && touched.name && (
-            <p className="text-red-400 lg:text-red-500 text-sm">{errors.name}</p>
-          )}
-        </div>
-
-        {/* Email Input */}
-        <div className="space-y-1">
-          <div className="relative">
-            <Input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              placeholder="Email"
-              required
-              className="pl-10 rounded-full"
-            />
-            {/* <Mail className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" /> */}
-            {touched.email &&
-              (errors.email ? (
-                <XCircle className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" />
-              ) : (
-                <CheckCircle className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500" />
-              ))}
-          </div>
-          {errors.email && touched.email && (
-            <p className="text-red-400 lg:text-red-500 text-sm">{errors.email}</p>
-          )}
-        </div>
-
-        {/* Phone Number Input */}
-        <div className="space-y-1">
-          <div className="relative">
-            <Input
-              type="tel"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              placeholder="Phone Number (+263...)"
-              required
-              className="pl-10 rounded-full"            // className={`pl-10 ${errors.phoneNumber ? "border-red-500" : ""}`}
-            />
-            {/* <User className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" /> */}
-            {touched.phoneNumber &&
-              (errors.phoneNumber ? (
-                <XCircle className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" />
-              ) : (
-                <CheckCircle className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500" />
-              ))}
-          </div>
-          {errors.phoneNumber && touched.phoneNumber && (
-            <p className="text-red-400 lg:text-red-500 text-sm">{errors.phoneNumber}</p>
-          )}
-        </div>
-
-        {/* Password Input */}
-        <div className="space-y-1">
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              data-track-ignore
-              value={formData.password}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              placeholder="Password"
-              required
-              className="pl-10 rounded-full"
-            />
-            {/* <AtSign className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" /> */}
-            <Button
-              aria-label="Toggle password visibility"
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-              onClick={() => setShowPassword(!showPassword)}>
-              {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-600" />
-              ) : (
-                <Eye className="h-5 w-5 text-gray-600" />
-              )}
-            </Button>
-          </div>
-          {formData.password && (
-            <div className="space-y-1">
-              <div className="h-2 bg-white/30 lg:bg-gray-200 rounded">
-                <div
-                  className={`h-full rounded transition-all ${passwordStrength.strength <= 2
-                    ? "bg-red-500"
-                    : passwordStrength.strength === 3
-                      ? "bg-yellow-500"
-                      : passwordStrength.strength === 4
-                        ? "bg-green-500"
-                        : "bg-blue-500"
-                    }`}
-                  style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
-                />
-              </div>
-              <p className="text-sm text-gray-200 lg:text-gray-600">
-                Password strength: {passwordStrength.text}
-              </p>
+      <div className="space-y-6">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          {/* Name Input */}
+          <div className="space-y-1">
+            <div className="relative">
+              <Input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                placeholder="Name"
+                required
+                className={`${fieldClass} pr-12`}
+              />
+              {statusIcon("name")}
             </div>
-          )}
-          {errors.password && touched.password && (
-            <p className="text-red-400 lg:text-red-500 text-sm">{errors.password}</p>
-          )}
-        </div>
-
-        {/* Confirm Password Input */}
-        <div className="space-y-1">
-          <div className="relative">
-            <Input
-              type={showConfirmPassword ? "text" : "password"}
-              name="confirmPassword"
-              data-track-ignore
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              placeholder="Confirm Password"
-              required
-              className="pl-10 rounded-full"
-            />
-            {/* <AtSign className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" /> */}
-            <Button
-              aria-label="Toggle confirm password visibility"
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-              {showConfirmPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-600" />
-              ) : (
-                <Eye className="h-5 w-5 text-gray-600" />
-              )}
-            </Button>
-          </div>
-          {errors.confirmPassword && touched.confirmPassword && (
-            <p className="text-red-400 lg:text-red-500 text-sm">{errors.confirmPassword}</p>
-          )}
-        </div>
-
-        <Button
-          type="submit"
-           className="h-12 w-full rounded-full"
-            style={{ backgroundColor: "#4E008E" }}
-          disabled={loading}>
-          {loading ? "Creating account..." : "Sign Up"}
-        </Button>
-
-        <div className="text-center">
-            <Link href="/user/login" className="text-sm text-gray-600 hover:text-gray-800">
-              Login
-            </Link>
+            {fieldError("name")}
           </div>
 
-        {/* <div className="text-center">
-          <span className="text-black lg:text-black">Already have an account? </span>
-          <Link href="/user/login" className="text-red-400 lg:text-red-500 hover:text-red-300 lg:hover:text-red-600">
-            Login
-          </Link>
-        </div> */}
-
-        {/* <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
-
+          {/* Email Input */}
+          <div className="space-y-1">
+            <div className="relative">
+              <Input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                placeholder="Email"
+                required
+                className={`${fieldClass} pr-12`}
+              />
+              {statusIcon("email")}
+            </div>
+            {errors.email === EMAIL_IN_USE ? (
+              <p className="text-red-500 text-sm px-1">
+                An account with this email already exists.{" "}
+                <Link href="/user/login" className="font-medium text-black hover:underline">
+                  Log in instead
+                </Link>
+              </p>
+            ) : (
+              fieldError("email")
+            )}
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gray-50 text-gray-500">Or</span>
 
+          {/* Phone Number Input */}
+          <div className="space-y-1">
+            <div className="relative">
+              <Input
+                type="tel"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                placeholder="Phone Number (+263...)"
+                required
+                className={`${fieldClass} pr-12`}
+              />
+              {statusIcon("phoneNumber")}
+            </div>
+            {fieldError("phoneNumber")}
           </div>
-        </div> */}
-      </form>
 
-      <div className="flex flex-col items-center space-y-6">
-                <div className="w-full max-w-xs">
-                  <GoogleSignInButton />
+          {/* Password Input */}
+          <div className="space-y-1">
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                data-track-ignore
+                value={formData.password}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                placeholder="Password"
+                required
+                className={`${fieldClass} pr-12`}
+              />
+              <Button
+                aria-label="Toggle password visibility"
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-0 h-full px-3 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-500" />
+                )}
+              </Button>
+            </div>
+            {formData.password && (
+              <div className="space-y-1 px-1 pt-1">
+                <div className="h-1.5 bg-gray-200 rounded">
+                  <div
+                    className={`h-full rounded transition-all ${passwordStrength.strength <= 2
+                      ? "bg-red-500"
+                      : passwordStrength.strength === 3
+                        ? "bg-yellow-500"
+                        : passwordStrength.strength === 4
+                          ? "bg-green-500"
+                          : "bg-blue-500"
+                      }`}
+                    style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
+                  />
                 </div>
+                <p className="text-xs text-gray-600">
+                  Password strength: {passwordStrength.text}
+                </p>
               </div>
+            )}
+            {fieldError("password")}
+          </div>
 
-      <div className="space-y-2 text-center text-sm mt-8">
-        <span className="text-gray-200 lg:text-gray-600">
-          <Link href="/user/terms" className="text-red-400 lg:text-red-500 hover:text-red-300 lg:hover:text-red-600">
-            Terms of use |
+          {/* Confirm Password Input */}
+          <div className="space-y-1">
+            <div className="relative">
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                data-track-ignore
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                placeholder="Confirm Password"
+                required
+                className={`${fieldClass} pr-12`}
+              />
+              <Button
+                aria-label="Toggle confirm password visibility"
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-0 h-full px-3 hover:bg-transparent"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-500" />
+                )}
+              </Button>
+            </div>
+            {fieldError("confirmPassword")}
+          </div>
+
+          <Button
+            type="submit"
+            className="h-12 w-full rounded-lg bg-black text-white hover:bg-black/85"
+            disabled={loading}>
+            {loading ? "Creating account..." : "Sign Up"}
+          </Button>
+        </form>
+
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-sm text-gray-500">or</span>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
+
+        <GoogleSignInButton className="h-12 bg-white" />
+
+        <p className="text-center text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link href="/user/login" className="font-medium text-black hover:underline">
+            Log in
           </Link>
-        </span>
-        <span>
-          <Link href="/user/privacy" className="text-blue-400 lg:text-blue-500 hover:text-blue-300 lg:hover:text-blue-600">
-            Privacy Policy
-          </Link>
-        </span>
+        </p>
+      </div>
+
+      <div className="flex justify-center gap-2 pt-6 text-sm text-gray-500">
+        <Link href="/user/terms" className="hover:text-gray-800 hover:underline">
+          Terms of use
+        </Link>
+        <span aria-hidden="true">|</span>
+        <Link href="/user/privacy" className="hover:text-gray-800 hover:underline">
+          Privacy Policy
+        </Link>
       </div>
     </AuthLayout>
   );

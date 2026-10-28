@@ -23,6 +23,9 @@ export function middleware(request: NextRequest) {
     publicBrowsePaths.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/user/privacy") ||
     pathname.startsWith("/user/terms") ||
+    // Reset links are opened from email, sometimes while still logged in elsewhere
+    pathname.startsWith("/user/forgot-password") ||
+    pathname.startsWith("/user/reset-password") ||
     pathname.startsWith("/customer")
   ){
     return NextResponse.next()
