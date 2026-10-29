@@ -89,10 +89,7 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
 
   const handleAsk = () => {
     const text = query.trim();
-    if (!text) {
-      textareaRef.current?.focus();
-      return;
-    }
+    if (!text || isLoading) return;
     setQuery("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     send(text);
@@ -133,39 +130,42 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
     isChatting ? "max-w-3xl" : "max-w-[min(459px,calc(100dvh_-_320px))] md:max-w-3xl"
   }`;
 
+  const showAsk = !isChatting && query.trim().length > 0;
   const searchForm = (
     <form
       onSubmit={handleSend}
       className={`relative ${heroWidth}`}
     >
-      <textarea
-        name="query"
-        ref={textareaRef}
-        rows={1}
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          adjustHeight();
-        }}
-        onKeyDown={handleKeyDown}
-        placeholder={isChatting ? "Tell me what you have in mind..." : "What shoes are you looking for?"}
-        className={`w-full pl-2 md:pl-4 ${isChatting ? "pr-14 md:pr-16" : "pr-36 md:pr-40"} py-3.5 md:py-4 rounded-xl border border-gray-300 sys-dark:border-[#333] bg-white sys-dark:bg-[#0a0a0a] text-base md:text-lg focus:outline-none focus:border-gray-500 sys-dark:focus:border-gray-500 placeholder:text-gray-500 sys-dark:placeholder:text-gray-400 text-black sys-dark:text-white resize-none overflow-y-auto max-h-[180px] leading-normal`}
-      />
-      {!isChatting && (
-        <AskButton
-          onClick={handleAsk}
-          disabled={isLoading}
-          className="absolute right-14 md:right-16 bottom-3.5 h-9 md:h-11 md:px-4 md:text-base sys-dark:bg-white/10 sys-dark:text-white sys-dark:hover:bg-white/20"
+      <div className="flex items-end gap-1.5 md:gap-2 pl-2 md:pl-4 pr-2 md:pr-2.5 py-2 md:py-2.5 rounded-xl border border-gray-300 sys-dark:border-[#333] bg-white sys-dark:bg-[#0a0a0a] focus-within:border-gray-500 sys-dark:focus-within:border-gray-500">
+        <textarea
+          name="query"
+          ref={textareaRef}
+          rows={1}
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            adjustHeight();
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder={isChatting ? "Tell me what you have in mind..." : "What shoes are you looking for?"}
+          className="flex-1 min-w-0 py-1.5 md:py-2 bg-transparent text-base md:text-lg focus:outline-none placeholder:text-gray-500 sys-dark:placeholder:text-gray-400 text-black sys-dark:text-white resize-none overflow-y-auto max-h-[180px] leading-normal"
         />
-      )}
-      <button
-        aria-label="Send"
-        type="submit"
-        disabled={!query.trim() || isLoading}
-        className="absolute right-2 md:right-2.5 bottom-3.5 bg-black sys-dark:bg-white text-white sys-dark:text-black p-2 md:p-2.5 rounded-full hover:opacity-80 disabled:opacity-40 transition-opacity"
-      >
-        <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
-      </button>
+        {showAsk && (
+          <AskButton
+            onClick={handleAsk}
+            disabled={isLoading}
+            className="shrink-0 h-9 md:h-11 md:px-4 md:text-base sys-dark:bg-white/10 sys-dark:text-white sys-dark:hover:bg-white/20"
+          />
+        )}
+        <button
+          aria-label="Send"
+          type="submit"
+          disabled={!query.trim() || isLoading}
+          className="shrink-0 bg-black sys-dark:bg-white text-white sys-dark:text-black p-2 md:p-2.5 rounded-full hover:opacity-80 disabled:opacity-40 transition-opacity"
+        >
+          <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
+        </button>
+      </div>
     </form>
   );
 

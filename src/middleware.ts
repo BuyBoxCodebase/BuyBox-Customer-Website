@@ -58,9 +58,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Protect all other routes (sign-up wall)
+  // Protect all other routes (sign-up wall). Remember where they were going (e.g. an order link
+  // from WhatsApp) so login can send them back there.
   if (!token) {
-    return NextResponse.redirect(new URL("/user/login", request.url))
+    const loginUrl = new URL("/user/login", request.url)
+    if (pathname !== "/") loginUrl.searchParams.set("redirect", pathname + request.nextUrl.search)
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()

@@ -23,6 +23,14 @@ import { identifyVisitor, resetVisitorOnLogout } from "@/lib/activity/tracker";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Where to go after login, from ?redirect= (set by the middleware's login wall and the cart).
+// Only same-site paths: "https://..." or "//evil.com" would turn login into an open redirect.
+const getRedirectPath = (): string | null => {
+  const redirect = new URLSearchParams(window.location.search).get("redirect");
+  if (!redirect || !redirect.startsWith("/") || redirect.startsWith("//") || redirect.startsWith("/\\")) return null;
+  return redirect;
+};
+
 const initialState: AuthState = {
   user: null,
   loading: true,
@@ -294,7 +302,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }));
 
 
-      const redirectUrl = new URLSearchParams(window.location.search).get("redirect");
+      const redirectUrl = getRedirectPath();
       router.push(redirectUrl || "/");
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
@@ -397,7 +405,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }));
 
 
-      const redirectUrl = new URLSearchParams(window.location.search).get("redirect");
+      const redirectUrl = getRedirectPath();
       if (redirectUrl) {
         router.push(redirectUrl);
       }
