@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import Link, { useLinkStatus } from "next/link";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, User as UserIcon, MessageSquare, Loader2 } from "lucide-react";
+import { ArrowRight, User as UserIcon, MessageSquare } from "lucide-react";
 import { CartIcon } from "../navbar/components/CartIcon";
 import { UserDropdown } from "../navbar/components/UserDropdown";
 import { useAuth } from "@/context/AuthContext";
@@ -15,24 +14,17 @@ import { AskButton } from "@/components/lino/AskButton";
 import { searchUrl } from "@/lib/search";
 import ChatSidePanel from "@/components/lino/ChatSidePanel";
 import { LinoChatMessages } from "@/components/lino/LinoChatMessages";
-
-// Must render inside a <Link>: covers the tile with a spinner as soon as it's tapped,
-// so slow networks get feedback before the next page (or its loading.tsx) arrives.
-function TilePendingOverlay() {
-  const { pending } = useLinkStatus();
-  if (!pending) return null;
-  return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-      <Loader2 className="h-6 w-6 animate-spin text-white" />
-    </div>
-  );
-}
+import { SubcategoryCarousel } from "./SubcategoryCarousel";
+import { useTypewriter } from "@/hooks/useTypewriter";
+import { SEARCH_PROMPTS } from "@/constants/searchPrompts";
 
 export default function LandingClient({ subcategories }: { subcategories: any[] }) {
   const [query, setQuery] = useState("");
   const { user, isAuthenticated, logout } = useAuth();
   const { messages, isLoading, sessionId, addMessage, updateMessage, setLoading } = useLinoStore();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  // "Ask" tapped with an empty box: the next Enter goes to Lino instead of search.
+  const [askMode, setAskMode] = useState(false);
   const router = useRouter();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -75,9 +67,9 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
     const text = query.trim();
     if (!text || isLoading) return;
 
-    // The first message of a new conversation opens the search results; "Ask Lino" there
+    // Before a conversation starts, Enter is a normal search; "Ask Lino" on the results page
     // brings the customer back here with the chat started (see the ?ask effect below).
-    if (messages.length === 0) {
+    if (!isChatting && !askMode) {
       router.push(searchUrl({ q: text }));
       return;
     }
@@ -88,8 +80,13 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
   };
 
   const handleAsk = () => {
+    if (isLoading) return;
     const text = query.trim();
-    if (!text || isLoading) return;
+    if (!text) {
+      setAskMode(true);
+      textareaRef.current?.focus();
+      return;
+    }
     setQuery("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     send(text);
@@ -100,7 +97,10 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
     if (ask === null) return;
     window.history.replaceState(null, "", window.location.pathname);
     if (ask.trim()) send(ask.trim());
-    else textareaRef.current?.focus();
+    else {
+      setAskMode(true);
+      textareaRef.current?.focus();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -119,7 +119,7 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
   };
 
   // Map backend subcategories to display items with images
-  const displayCategories = subcategories.slice(0, 4).map(sub => ({
+  const displayCategories = subcategories.map(sub => ({
     name: sub.name,
     path: `/subcategory/${sub.categoryId}%2F${sub.name}`,
     image: sub.imageUrl
@@ -130,7 +130,12 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
     isChatting ? "max-w-3xl" : "max-w-[min(459px,calc(100dvh_-_320px))] md:max-w-3xl"
   }`;
 
-  const showAsk = !isChatting && query.trim().length > 0;
+  // Before chatting the box has one button, Ask (Enter / the keyboard's Search key searches).
+  // Once chatting, the box only sends, so Ask gives way to the send arrow.
+  const hasText = query.trim().length > 0;
+  // Example searches type themselves out in the empty search box (not in chat / Ask mode).
+  const animatePlaceholder = !isChatting && !askMode && query.length === 0;
+  const typedPrompt = useTypewriter(SEARCH_PROMPTS, animatePlaceholder);
   const searchForm = (
     <form
       onSubmit={handleSend}
@@ -147,30 +152,45 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
             adjustHeight();
           }}
           onKeyDown={handleKeyDown}
-          placeholder={isChatting ? "Tell me what you have in mind..." : "What shoes are you looking for?"}
+          enterKeyHint={isChatting || askMode ? "send" : "search"}
+          aria-label={isChatting || askMode ? "Message Treides" : "Search for shoes"}
+          placeholder={
+            isChatting || askMode
+              ? "Tell me what you have in mind..."
+              : animatePlaceholder
+                ? typedPrompt
+                : "What shoes are you looking for?"
+          }
           className="flex-1 min-w-0 py-1.5 md:py-2 bg-transparent text-base md:text-lg focus:outline-none placeholder:text-gray-500 sys-dark:placeholder:text-gray-400 text-black sys-dark:text-white resize-none overflow-y-auto max-h-[180px] leading-normal"
         />
-        {showAsk && (
+        {isChatting ? (
+          <button
+            aria-label="Send"
+            type="submit"
+            disabled={!hasText || isLoading}
+            className="shrink-0 bg-black sys-dark:bg-white text-white sys-dark:text-black p-2 md:p-2.5 rounded-full hover:opacity-80 disabled:opacity-40 transition-opacity"
+          >
+            <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
+        ) : (
           <AskButton
             onClick={handleAsk}
             disabled={isLoading}
-            className="shrink-0 h-9 md:h-11 md:px-4 md:text-base sys-dark:bg-white/10 sys-dark:text-white sys-dark:hover:bg-white/20"
+            // Faded until there's something to ask (or Ask has been picked), but still tappable.
+            className={`shrink-0 h-9 md:h-11 md:px-4 md:text-base sys-dark:bg-white/10 sys-dark:text-white sys-dark:hover:bg-white/20 ${
+              hasText || askMode ? "" : "opacity-60"
+            }`}
           />
         )}
-        <button
-          aria-label="Send"
-          type="submit"
-          disabled={!query.trim() || isLoading}
-          className="shrink-0 bg-black sys-dark:bg-white text-white sys-dark:text-black p-2 md:p-2.5 rounded-full hover:opacity-80 disabled:opacity-40 transition-opacity"
-        >
-          <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
-        </button>
       </div>
     </form>
   );
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col bg-background sys-dark:bg-[#0a0a0a] transition-colors duration-300">
+    <div
+      data-system-theme
+      className="relative w-full h-[100dvh] overflow-hidden flex flex-col bg-background sys-dark:bg-[#0a0a0a] transition-colors duration-300"
+    >
 
       {/* Chat History Side Panel */}
       <ChatSidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} />
@@ -255,34 +275,10 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
           aria-hidden={isChatting}
         >
           <div className="overflow-hidden">
-            <div className="pt-6 md:pt-14 px-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full mx-auto max-w-[min(459px,calc(100dvh_-_320px))] md:max-w-3xl">
-                {displayCategories.map((cat) => (
-                  <Link
-                    key={cat.name}
-                    href={cat.path}
-                    tabIndex={isChatting ? -1 : undefined}
-                    className="flex flex-col gap-1.5 group min-w-0"
-                  >
-                    <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-50 sys-dark:bg-white/5">
-                      {cat.image ? (
-                        <Image
-                          src={cat.image}
-                          alt={cat.name}
-                          fill
-                          sizes="(min-width: 768px) 192px, 50vw"
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-gray-400 sys-dark:text-gray-500 text-xs">No img</span>
-                        </div>
-                      )}
-                      <TilePendingOverlay />
-                    </div>
-                    <span className="text-sm md:text-base text-center text-black sys-dark:text-white truncate">{cat.name}</span>
-                  </Link>
-                ))}
+            {/* One row drifting sideways in a loop: circles below md, square tiles from md up. */}
+            <div className="pt-10 md:pt-14 px-4">
+              <div className="w-full mx-auto max-w-3xl">
+                <SubcategoryCarousel categories={displayCategories} hidden={isChatting} />
               </div>
             </div>
           </div>

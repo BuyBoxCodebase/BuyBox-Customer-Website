@@ -137,3 +137,13 @@
     transform: translateY(0);
   }
 }
+/* Pages that follow the device's dark mode (currently the home page) mark their root with
+   data-system-theme. In dark mode the page behind them goes dark too, so Safari's top and
+   bottom bars, which take their colour from it, and overscroll don't show white strips. */
+@media (prefers-color-scheme: dark) {
+  html:has([data-system-theme]),
+  html:has([data-system-theme]) body {
+    background-color: #0a0a0a;
+    color-scheme: dark;
+  }
+}

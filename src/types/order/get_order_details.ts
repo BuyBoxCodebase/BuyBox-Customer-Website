@@ -5,7 +5,9 @@ export type OrderStatus =
   | "COMPLETED"
   | "CANCELED"
   | "OUT_OF_STOCK"
-  | "READY_FOR_PICKUP";
+  | "READY_FOR_PICKUP"
+  | "DISPATCHED"
+  | "OUT_FOR_DELIVERY";
 
 export type PaymentMode =
   | "CASH_ON_DELIVERY"
@@ -23,6 +25,8 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
   CANCELED: "Cancelled",
   OUT_OF_STOCK: "Out of Stock",
   READY_FOR_PICKUP: "Ready for Pickup",
+  DISPATCHED: "Dispatched",
+  OUT_FOR_DELIVERY: "Out for Delivery",
 };
 
 interface Category {

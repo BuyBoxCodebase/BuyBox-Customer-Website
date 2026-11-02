@@ -80,7 +80,10 @@ function OrderConfirmationPage() {
                   ? "#FEF3C7"
                   : orderDetails.status === "COMPLETED"
                   ? "#D1FAE5"
-                  : orderDetails.status === "PROCESSING"
+                  : orderDetails.status === "PROCESSING" ||
+                    orderDetails.status === "READY_FOR_PICKUP" ||
+                    orderDetails.status === "DISPATCHED" ||
+                    orderDetails.status === "OUT_FOR_DELIVERY"
                   ? "#DBEAFE"
                   : orderDetails.status === "OUT_OF_STOCK"
                   ? "#FFEDD5"
@@ -90,7 +93,10 @@ function OrderConfirmationPage() {
                   ? "#92400E"
                   : orderDetails.status === "COMPLETED"
                   ? "#065F46"
-                  : orderDetails.status === "PROCESSING"
+                  : orderDetails.status === "PROCESSING" ||
+                    orderDetails.status === "READY_FOR_PICKUP" ||
+                    orderDetails.status === "DISPATCHED" ||
+                    orderDetails.status === "OUT_FOR_DELIVERY"
                   ? "#1E40AF"
                   : orderDetails.status === "OUT_OF_STOCK"
                   ? "#9A3412"
@@ -320,7 +326,9 @@ function OrderConfirmationPage() {
                   ? "text-green-600"
                   : orderDetails.status === "PENDING"
                   ? "text-yellow-600"
-                  : orderDetails.status === "PROCESSING"
+                  : orderDetails.status === "PROCESSING" ||
+                    orderDetails.status === "DISPATCHED" ||
+                    orderDetails.status === "OUT_FOR_DELIVERY"
                   ? "text-blue-600"
                   : orderDetails.status === "OUT_OF_STOCK"
                   ? "text-orange-600"

@@ -1,6 +1,15 @@
 import LandingClient from "@/components/Landing/LandingClient";
 import { getCategories } from "@/lib/get-category";
 import { Category } from "@/types/category";
+import type { Viewport } from "next";
+
+// Browser bar colour (Chrome on Android, older Safari) follows the page's light / dark background.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fcfcfc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+};
 
 export default async function LandingPage() {
   const categories = await getCategories();
