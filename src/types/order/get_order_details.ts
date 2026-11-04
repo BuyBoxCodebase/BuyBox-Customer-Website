@@ -14,7 +14,8 @@ export type PaymentMode =
   | "CREDIT_CARD"
   | "DEBIT_CARD"
   | "UPI"
-  | "NETBANKING";
+  | "NETBANKING"
+  | "ECOCASH";
 
 // What the customer sees for each status. PROCESSING means the seller has
 // accepted the order.

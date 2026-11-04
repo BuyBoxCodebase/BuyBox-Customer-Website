@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, Suspense, useEffect } from "react";
+import { useState, FormEvent, Suspense, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   Check,
@@ -29,13 +29,17 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import type { PaymentMode as BackendPaymentMode } from "@/types/order/get_order_details";
 import axios from "axios";
 import { Coordinates, useDeliveryQuote, useHubs } from "@/hooks/checkout/useDelivery";
+import useEcocashPayment, { ecocashErrorMessage } from "@/hooks/order/useEcocashPayment";
+import EcocashPaymentDialog from "@/components/checkout/EcocashPaymentDialog";
+import type { InitiateEcocashPaymentRequest } from "@/types/order/ecocash_payment";
 
-type PaymentMode = BackendPaymentMode | "ONLINE";
+type PaymentMode = BackendPaymentMode;
 
 type FormErrors = {
   email: string;
   phoneNumber: string;
   paymentMode: string;
+  ecocashNumber: string;
 };
 
 // Animation variants
@@ -67,21 +71,56 @@ function CheckoutPageContent() {
   const { cart, cartId } = useCartContext();
   const { createOrder, loading } = useCreateOrder();
   const { deleteCart } = useCartStore();
+  const ecocash = useEcocashPayment();
+  // Kept so "Try again" can resend the same checkout without re-validating the form
+  const lastEcocashRequest = useRef<InitiateEcocashPaymentRequest | null>(null);
 
   const [formErrors, setFormErrors] = useState<FormErrors>({
     email: "",
     phoneNumber: "",
     paymentMode: "",
+    ecocashNumber: "",
   });
 
   const [formData, setFormData] = useState({
     email: "",
     phoneNumber: "",
     paymentMode: "CASH_ON_DELIVERY" as PaymentMode,
+    ecocashNumber: "",
     address: "",
     city: "",
     state: "",
   });
+
+  // The backend creates the order once EcoCash confirms; then it's the same as a COD order
+  const ecocashPayment = ecocash.payment;
+  useEffect(() => {
+    if (ecocashPayment?.status !== "ORDER_CREATED" || !ecocashPayment.orderId) return;
+    trackOrder(ecocashPayment.orderId, ecocashPayment.amount, "USD", formData.phoneNumber);
+    toast({
+      title: "Order placed successfully!",
+      description: `Order ID: ${ecocashPayment.orderId}`,
+      className: "top-[4rem]",
+    });
+    deleteCart();
+    router.push(`/order/${ecocashPayment.orderId}`);
+    // Only when the payment reaches ORDER_CREATED
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ecocashPayment?.status, ecocashPayment?.orderId]);
+
+  const startEcocashPayment = async (request: InitiateEcocashPaymentRequest) => {
+    lastEcocashRequest.current = request;
+    try {
+      await ecocash.start(request);
+    } catch (error) {
+      toast({
+        title: "Couldn't start EcoCash payment",
+        description: ecocashErrorMessage(error, "Please try again later"),
+        variant: "destructive",
+        className: "top-[4rem]",
+      });
+    }
+  };
 
   const [fulfillmentType, setFulfillmentType] = useState<"PICKUP" | "DELIVERY">("PICKUP");
   // The hub the customer picks up from, or that delivers to them
@@ -101,6 +140,7 @@ function CheckoutPageContent() {
       email: prev.email || preference.email,
       phoneNumber: prev.phoneNumber || preference.phoneNumber,
       paymentMode: preference.paymentMode,
+      ecocashNumber: prev.ecocashNumber || (preference.paymentMode === "ECOCASH" ? preference.phoneNumber : ""),
       address: prev.address || preference.address || "",
       city: prev.city || preference.city || "",
       state: prev.state || preference.state || "",
@@ -205,6 +245,8 @@ function CheckoutPageContent() {
     setFormData((prev) => ({
       ...prev,
       paymentMode: mode,
+      // Most customers pay from the number they gave us
+      ecocashNumber: mode === "ECOCASH" && !prev.ecocashNumber ? prev.phoneNumber : prev.ecocashNumber,
     }));
   };
 
@@ -255,6 +297,16 @@ function CheckoutPageContent() {
       isValid = false;
     }
 
+    errors.ecocashNumber = "";
+    if (formData.paymentMode === "ECOCASH") {
+      // Same rule as the backend: an Econet 077 / 078 number, with or without 0 / 263
+      const digits = formData.ecocashNumber.replace(/\D/g, "").replace(/^263/, "").replace(/^0/, "");
+      if (!/^7[78]\d{7}$/.test(digits)) {
+        errors.ecocashNumber = "Enter a valid EcoCash number (077 or 078)";
+        isValid = false;
+      }
+    }
+
     setFormErrors(errors);
     return isValid;
   };
@@ -283,13 +335,6 @@ function CheckoutPageContent() {
     }
 
     const paymentMode = formData.paymentMode;
-    if (paymentMode === "ONLINE") {
-      setFormErrors((prev) => ({
-        ...prev,
-        paymentMode: "Online payment is not available yet",
-      }));
-      return;
-    }
 
     if (!pickupData) {
         toast({
@@ -316,12 +361,11 @@ function CheckoutPageContent() {
         ? [formData.address, formData.city, formData.state].filter(Boolean).join(", ")
         : `${selectedHub.name} hub, ${selectedHub.address}`;
 
-      const orderData = {
+      const checkoutDetails = {
         email: formData.email,
         phoneNumber: formData.phoneNumber,
         address: completeAddress,
         cartId: cartId!,
-        paymentMode,
         fulfillmentType,
         pickupLocationId: selectedHub.id,
         pickupDate: pickupData.pickupDate,
@@ -331,7 +375,13 @@ function CheckoutPageContent() {
           : undefined,
       };
 
-      const response = await createOrder(orderData);
+      if (paymentMode === "ECOCASH") {
+        // No order yet: the backend creates it after the customer approves on their phone
+        await startEcocashPayment({ ...checkoutDetails, ecocashNumber: formData.ecocashNumber });
+        return;
+      }
+
+      const response = await createOrder({ ...checkoutDetails, paymentMode });
       trackOrder(response.id, total, "USD", formData.phoneNumber);
 
       toast({
@@ -643,20 +693,39 @@ function CheckoutPageContent() {
                         whileHover={{ x: 2 }}
                         transition={{ type: "spring", stiffness: 400 }}>
                         <Checkbox
-                          aria-label="Online Payment"
-                          id="ONLINE"
-                          checked={formData.paymentMode === "ONLINE"}
+                          aria-label="Pay now with EcoCash"
+                          id="ECOCASH"
+                          checked={formData.paymentMode === "ECOCASH"}
                           onCheckedChange={() =>
-                            handlePaymentModeChange("ONLINE")
+                            handlePaymentModeChange("ECOCASH")
                           }
-                          disabled
                         />
-                        <Label
-                          htmlFor="ONLINE"
-                          className="pointer-events-none opacity-50">
-                          Online Payment
+                        <Label htmlFor="ECOCASH">
+                          Pay now with EcoCash
                         </Label>
                       </motion.div>
+                      {formData.paymentMode === "ECOCASH" && (
+                        <div className="pl-6 pt-1 max-w-sm">
+                          <Label htmlFor="ecocashNumber">EcoCash number</Label>
+                          <Input
+                            name="ecocashNumber"
+                            id="ecocashNumber"
+                            type="tel"
+                            inputMode="tel"
+                            placeholder="077 123 4567"
+                            value={formData.ecocashNumber}
+                            onChange={handleInputChange}
+                            className={formErrors.ecocashNumber ? "border-red-500" : ""}
+                          />
+                          {formErrors.ecocashNumber ? (
+                            <p className="text-sm text-red-500 mt-1">{formErrors.ecocashNumber}</p>
+                          ) : (
+                            <p className="text-xs text-gray-500 mt-1">
+                              You&apos;ll get a prompt on this phone to enter your EcoCash PIN.
+                            </p>
+                          )}
+                        </div>
+                      )}
                       {formErrors.paymentMode && (
                         <motion.p
                           className="text-sm text-red-500 mt-1"
@@ -822,18 +891,18 @@ function CheckoutPageContent() {
                       onClick={handlePlaceOrderClick}
                       // Not truly disabled for blockers, so a click can explain what's missing
                       aria-disabled={!!placeOrderBlocker}
-                      disabled={loading}>
-                      {loading ? (
+                      disabled={loading || ecocash.starting || ecocash.isPending}>
+                      {loading || ecocash.starting || ecocash.isPending ? (
                         <motion.span
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ repeat: Infinity, repeatType: "reverse", duration: 0.8 }}>
-                          Placing Order...
+                          {formData.paymentMode === "ECOCASH" ? "Waiting for EcoCash..." : "Placing Order..."}
                         </motion.span>
                       ) : (
                         <>
                           <motion.span initial={{ x: -5 }} animate={{ x: 0 }}>
-                            Place Order
+                            {formData.paymentMode === "ECOCASH" ? "Pay with EcoCash" : "Place Order"}
                           </motion.span>
                         </>
                       )}
@@ -845,6 +914,18 @@ function CheckoutPageContent() {
           </motion.div>
         </div>
       </div>
+
+      <EcocashPaymentDialog
+        payment={ecocash.payment}
+        isPending={ecocash.isPending}
+        timedOut={ecocash.timedOut}
+        onClose={ecocash.reset}
+        onRetry={() => {
+          const request = lastEcocashRequest.current;
+          ecocash.reset();
+          if (request) startEcocashPayment(request);
+        }}
+      />
     </motion.div>
   );
 }

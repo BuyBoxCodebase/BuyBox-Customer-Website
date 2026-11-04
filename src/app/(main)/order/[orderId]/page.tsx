@@ -193,7 +193,9 @@ function OrderConfirmationPage() {
               <p className="font-medium">
                 {orderDetails.paymentMode === "CASH_ON_DELIVERY"
                   ? "Cash on Delivery"
-                  : "Online Payment"}
+                  : orderDetails.paymentMode === "ECOCASH"
+                    ? "EcoCash (paid)"
+                    : "Online Payment"}
               </p>
             </div>
           </div>
