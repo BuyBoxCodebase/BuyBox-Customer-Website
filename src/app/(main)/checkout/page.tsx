@@ -32,6 +32,8 @@ import { Coordinates, useDeliveryQuote, useHubs } from "@/hooks/checkout/useDeli
 import useEcocashPayment, { ecocashErrorMessage } from "@/hooks/order/useEcocashPayment";
 import EcocashPaymentDialog from "@/components/checkout/EcocashPaymentDialog";
 import type { InitiateEcocashPaymentRequest } from "@/types/order/ecocash_payment";
+import { useMyReferrals, validateReferralCode } from "@/hooks/referral/useReferral";
+import type { ValidatedReferralCode } from "@/types/referral";
 
 type PaymentMode = BackendPaymentMode;
 
@@ -178,8 +180,36 @@ function CheckoutPageContent() {
     fetchPickupDate();
   }, []);
 
+  const [referralInput, setReferralInput] = useState("");
+  const [referral, setReferral] = useState<ValidatedReferralCode | null>(null);
+  const [referralError, setReferralError] = useState("");
+  const [referralChecking, setReferralChecking] = useState(false);
+
+  const applyReferralCode = async () => {
+    const code = referralInput.trim();
+    if (!code) return;
+    setReferralChecking(true);
+    setReferralError("");
+    try {
+      setReferral(await validateReferralCode(code));
+    } catch (error) {
+      setReferralError(ecocashErrorMessage(error, "We couldn't check this code. Please try again."));
+    } finally {
+      setReferralChecking(false);
+    }
+  };
+
   const subtotal = cart.reduce((acc, item) => acc + item.totalPrice, 0);
-  const total = subtotal + (quote?.totalFee ?? 0);
+  // Display only, the backend works out the amount charged. It applies to products, not fees.
+  const referralDiscount = referral ? Math.round(subtotal * referral.rate * 100) / 100 : 0;
+  // Credit is only spent if the customer ticks the box, and only ever covers products
+  const { data: myReferrals } = useMyReferrals();
+  const [useCredit, setUseCredit] = useState(false);
+  const availableCredit = myReferrals?.availableCredit ?? 0;
+  const creditApplied = useCredit
+    ? Math.min(availableCredit, Math.round((subtotal - referralDiscount) * 100) / 100)
+    : 0;
+  const total = subtotal + (quote?.totalFee ?? 0) - referralDiscount - creditApplied;
 
   // Why Place Order can't be used yet, in the order the customer should fix things. null = ready.
   const placeOrderBlocker =
@@ -373,6 +403,8 @@ function CheckoutPageContent() {
         deliveryAddress: fulfillmentType === "DELIVERY"
           ? { address: formData.address, city: formData.city, state: formData.state || undefined }
           : undefined,
+        referralCode: referral?.code,
+        creditAmount: creditApplied > 0 ? creditApplied : undefined,
       };
 
       if (paymentMode === "ECOCASH") {
@@ -394,8 +426,7 @@ function CheckoutPageContent() {
     } catch (error) {
       toast({
         title: "Failed to place order",
-        description:
-          error instanceof Error ? error.message : "Please try again later",
+        description: ecocashErrorMessage(error, "Please try again later"),
         variant: "destructive",
         className: "top-[4rem]",
       });
@@ -808,6 +839,72 @@ function CheckoutPageContent() {
                     )}
                   </motion.div>
 
+                  <div className="space-y-2">
+                    <Label htmlFor="referralCode">Referral code</Label>
+                    {referral ? (
+                      <div className="flex items-center justify-between gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+                        <span className="flex items-center gap-1 font-medium">
+                          <Check className="w-4 h-4" />
+                          {referral.code}: {Math.round(referral.rate * 100)}% off
+                        </span>
+                        <button
+                          type="button"
+                          className="underline"
+                          onClick={() => {
+                            setReferral(null);
+                            setReferralInput("");
+                          }}>
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          id="referralCode"
+                          placeholder="Enter a friend's code"
+                          autoComplete="off"
+                          value={referralInput}
+                          onChange={(e) => {
+                            setReferralInput(e.target.value.toUpperCase());
+                            setReferralError("");
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              applyReferralCode();
+                            }
+                          }}
+                          className={referralError ? "border-red-500" : ""}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={referralChecking || !referralInput.trim()}
+                          onClick={applyReferralCode}>
+                          {referralChecking ? "Checking..." : "Apply"}
+                        </Button>
+                      </div>
+                    )}
+                    {referralError && <p className="text-sm text-red-500">{referralError}</p>}
+                  </div>
+
+                  {availableCredit > 0 && (
+                    <div className="flex items-start gap-2">
+                      <Checkbox
+                        id="useCredit"
+                        className="mt-0.5"
+                        checked={useCredit}
+                        onCheckedChange={(checked) => setUseCredit(checked === true)}
+                      />
+                      <Label htmlFor="useCredit" className="font-normal leading-snug">
+                        Use my referral credit
+                        <span className="block text-xs text-gray-500 mt-0.5">
+                          ${availableCredit.toFixed(2)} available, for product prices only
+                        </span>
+                      </Label>
+                    </div>
+                  )}
+
                   <motion.div
                     className="space-y-2"
                     variants={staggerContainer}
@@ -854,6 +951,18 @@ function CheckoutPageContent() {
                               ? "Choose a hub"
                               : "Share your location"}
                         </span>
+                      </div>
+                    )}
+                    {referral && (
+                      <div className="flex justify-between text-sm text-green-700">
+                        <span>Referral discount</span>
+                        <span>-${referralDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {creditApplied > 0 && (
+                      <div className="flex justify-between text-sm text-green-700">
+                        <span>Referral credit</span>
+                        <span>-${creditApplied.toFixed(2)}</span>
                       </div>
                     )}
                     <motion.div

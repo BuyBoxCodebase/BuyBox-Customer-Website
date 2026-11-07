@@ -281,7 +281,7 @@ function OrderConfirmationPage() {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Subtotal</span>
               <span className="font-medium">
-                ${(orderDetails.totalAmount - deliveryFeesTotal).toFixed(2)}
+                ${(orderDetails.totalAmount - deliveryFeesTotal + (orderDetails.referralDiscount ?? 0) + (orderDetails.creditUsed ?? 0)).toFixed(2)}
               </span>
             </div>
             {hasFeeBreakdown ? (
@@ -311,6 +311,18 @@ function OrderConfirmationPage() {
                     ? `$${orderDetails.pickupFee.toFixed(2)}`
                     : "$0.00"}
                 </span>
+              </div>
+            )}
+            {!!orderDetails.referralDiscount && (
+              <div className="flex justify-between items-center text-green-700">
+                <span>Referral discount</span>
+                <span className="font-medium">-${orderDetails.referralDiscount.toFixed(2)}</span>
+              </div>
+            )}
+            {!!orderDetails.creditUsed && (
+              <div className="flex justify-between items-center text-green-700">
+                <span>Referral credit</span>
+                <span className="font-medium">-${orderDetails.creditUsed.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between items-center border-t pt-3 mt-3">

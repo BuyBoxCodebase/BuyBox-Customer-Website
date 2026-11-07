@@ -10,11 +10,13 @@ import { useAuth } from "../../../../context/AuthContext";
 import { usePageTracking } from "@/hooks/analytics";
 import PasswordSection from "@/components/auth/PasswordSection";
 import { cn } from "@/lib/utils";
+import { useMyReferrals } from "@/hooks/referral/useReferral";
+import type { ReferralStatus } from "@/types/referral";
 
 const SECTIONS = [
   { id: "orders", label: "Orders", icon: Package, description: "Track and review what you've bought." },
   { id: "password", label: "Password", icon: KeyRound, description: "How you log in with your email." },
-  { id: "invite", label: "Invite friends", icon: Gift, description: "Invite a friend, get free delivery." },
+  { id: "invite", label: "Invite friends", icon: Gift, description: "Your friend gets 10% off their first order and you earn 10% of it as credit." },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
@@ -22,6 +24,12 @@ type SectionId = (typeof SECTIONS)[number]["id"];
 const statusStyles: Record<string, string> = {
   COMPLETED: "bg-green-50 text-green-700",
   PENDING: "bg-yellow-50 text-yellow-700",
+};
+
+const referralStatus: Record<ReferralStatus, { label: string; className: string }> = {
+  PENDING: { label: "Pending", className: "bg-yellow-50 text-yellow-700" },
+  EARNED: { label: "Earned", className: "bg-green-50 text-green-700" },
+  REVERSED: { label: "Cancelled", className: "bg-red-50 text-red-700" },
 };
 
 function OrdersSection() {
@@ -76,16 +84,15 @@ function OrdersSection() {
 }
 
 function InviteSection() {
-  const [inviteLink, setInviteLink] = useState("");
+  const { data, loading, error } = useMyReferrals();
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setInviteLink(window.location.origin);
-  }, []);
+  if (loading) return <Loader2 className="h-6 w-6 animate-spin text-gray-400" />;
+  if (error || !data) return <p className="text-sm text-red-500">Couldn&apos;t load your referrals. Refresh to try again.</p>;
 
-  const handleCopyLink = async () => {
+  const handleCopyCode = async () => {
     try {
-      await navigator.clipboard.writeText(inviteLink);
+      await navigator.clipboard.writeText(data.code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -94,19 +101,57 @@ function InviteSection() {
   };
 
   return (
-    <div className="max-w-md space-y-3">
-      <p className="text-sm text-gray-600">Share this link with your friends.</p>
-      <div className="flex gap-2">
-        <div className="flex h-11 min-w-0 flex-1 items-center rounded-lg border bg-white px-4 text-sm text-gray-700">
-          <span className="truncate">{inviteLink}</span>
+    <div className="space-y-6">
+      <div className="max-w-md space-y-3">
+        <p className="text-sm text-gray-600">
+          Friends enter this code at checkout on their first order.
+        </p>
+        <div className="flex gap-2">
+          <div className="flex h-11 min-w-0 flex-1 items-center rounded-lg border bg-white px-4 font-mono font-medium tracking-wider text-gray-900">
+            <span className="truncate">{data.code}</span>
+          </div>
+          <Button
+            onClick={handleCopyCode}
+            className="h-11 rounded-lg px-5 bg-black text-white hover:bg-black/85"
+          >
+            {copied ? "Copied!" : "Copy code"}
+          </Button>
         </div>
-        <Button
-          onClick={handleCopyLink}
-          className="h-11 rounded-lg px-5 bg-black text-white hover:bg-black/85"
-        >
-          {copied ? "Copied!" : "Copy link"}
-        </Button>
       </div>
+
+      <div>
+        <p className="text-sm text-gray-500">Your earnings</p>
+        <p className="text-3xl font-semibold">${data.totalAmount.toFixed(2)}</p>
+        <p className="mt-1 text-sm font-medium text-green-700">
+          ${data.availableCredit.toFixed(2)} credit available to spend on products at checkout
+        </p>
+        {data.pendingAmount > 0 && (
+          <p className="mt-1 text-sm text-gray-500">
+            ${data.pendingAmount.toFixed(2)} pending until your friends&apos; orders are completed
+          </p>
+        )}
+      </div>
+
+      {data.referrals.length === 0 ? (
+        <p className="text-sm text-gray-500">No referrals yet. Share your code to start earning.</p>
+      ) : (
+        <ul className="-mx-2 divide-y divide-black/5">
+          {data.referrals.map((referral) => (
+            <li key={referral.id} className="flex items-center gap-4 px-2 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{referral.referredName}</p>
+                <p className="text-sm text-gray-500">{new Date(referral.createdAt).toLocaleDateString()}</p>
+              </div>
+              <span className={cn("rounded-md px-2 py-0.5 text-xs font-medium", referralStatus[referral.status].className)}>
+                {referralStatus[referral.status].label}
+              </span>
+              <p className={cn("font-semibold", referral.status === "REVERSED" && "text-gray-400 line-through")}>
+                ${referral.rewardAmount.toFixed(2)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
