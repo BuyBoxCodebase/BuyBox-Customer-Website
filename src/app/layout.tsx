@@ -14,8 +14,8 @@ import ActivityTracker from "@/components/analytics/ActivityTracker";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Treides - Shopping that comes to you",
-  description: "Shop the latest in fashion, beauty, and more",
+  title: "Treides.com Official Site | Shop Now Online",
+  description: "Great prices, reliable delivery around Zimbabwe. Use Treides Ai Agent to help you find the right deals and answer your shopping questions. Shop now and experience the convenience of online shopping with us.",
   verification: {
     google: "7jNi_sOZvDz9zyHHP1tMi3DF7ZEI46AQp2XFyPnlVvY",
   },
