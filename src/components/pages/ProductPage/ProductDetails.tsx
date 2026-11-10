@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
+import { useCity } from "@/hooks/city/useCity";
 import { trackEvent } from "@/lib/analytics/core";
 import { UserEventType } from "@/lib/analytics/constants";
 
@@ -62,6 +63,7 @@ export default function ProductDetails({
   selectedOptions: { [groupName: string]: string };
 }) {
   const router = useRouter();
+  const { priceFor, cityName } = useCity();
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(
     product.selectedVariant || null
   );
@@ -232,8 +234,14 @@ export default function ProductDetails({
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3, delay: 0.6 }}
         className="font-semibold">
-        {formatPriceWithSuperscriptCents(selectedVariant?.price || displayPrice)}
+        {formatPriceWithSuperscriptCents(priceFor(selectedVariant?.price || displayPrice))}
       </motion.div>
+
+      {inventoryQuantity > 0 && (
+        <p className="text-sm font-medium text-green-700">
+          🟢 In Stock — Free Delivery to {cityName}
+        </p>
+      )}
 
       <div className="md:max-w-3xl lg:max-w-4xl">
         <ProductVariantCards

@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCartContext } from "../../context/CartContext";
+import { useCity } from "@/hooks/city/useCity";
 import { CartProduct } from "@/types/cart/get-my-cart/cart-response";
 
 export default function CartTable() {
   const { cart, removeFromCart, updateQuantity, addProductToCart, fetchCart } =
     useCartContext();
+  const { lineTotal } = useCity();
 
   if (!cart || cart.length === 0) {
     return (
@@ -154,7 +156,7 @@ export default function CartTable() {
                   </div>
                 </td>
                 <td className="py-5">
-                  <p className="font-medium">{formatPrice(item.totalPrice)}</p>
+                  <p className="font-medium">{formatPrice(lineTotal(item.totalPrice, item.quantity))}</p>
                 </td>
                 <td className="py-5 text-right">
                   <Button
@@ -245,7 +247,7 @@ export default function CartTable() {
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="font-medium">{formatPrice(item.totalPrice)}</p>
+              <p className="font-medium">{formatPrice(lineTotal(item.totalPrice, item.quantity))}</p>
               <Button
                 aria-label="Remove from cart"
                 variant="ghost"

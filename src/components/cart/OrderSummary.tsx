@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useCartContext } from "../../context/CartContext";
+import { useCity } from "@/hooks/city/useCity";
 import { trackEvent } from "@/lib/analytics/core";
 import { UserEventType } from "@/lib/analytics/constants";
 import { Loader2, Trash2 } from "lucide-react";
@@ -13,6 +14,7 @@ import { useRouter } from "next/navigation";
 
 export default function OrderSummary() {
   const { cart, clearCart } = useCartContext();
+  const { lineTotal, shippingLabel } = useCity();
   const { deleteCart } = useCartStore();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
@@ -28,9 +30,8 @@ export default function OrderSummary() {
     }
   };
 
-  // Calculate subtotal using totalPrice from each cart item
-  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const shippingCost = cart.length > 0 ? 5.0 : 0;
+  const subtotal = cart.reduce((sum, item) => sum + lineTotal(item.totalPrice, item.quantity), 0);
+  const shippingCost = 0;
   const total = subtotal + shippingCost;
 
   return (
@@ -42,7 +43,7 @@ export default function OrderSummary() {
           <span>${subtotal.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-sm text-gray-600 mb-1">
-          <span>Shipping</span>
+          <span>Shipping{cart.length > 0 ? ` (${shippingLabel})` : ""}</span>
           <span>${shippingCost.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-lg font-medium border-t pt-2">

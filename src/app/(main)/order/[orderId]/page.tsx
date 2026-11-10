@@ -266,7 +266,7 @@ function OrderConfirmationPage() {
                     </div>
                   </div>
                   <div className="flex-shrink-0 bg-gray-50 p-4 flex items-center justify-center">
-                    <p className="font-medium">${item.totalPrice.toFixed(2)}</p>
+                    <p className="font-medium">${(item.totalPrice + (orderDetails.cityMarkupPerUnit ?? 0) * item.quantity).toFixed(2)}</p>
                   </div>
                 </motion.div>
               ))}
@@ -284,7 +284,12 @@ function OrderConfirmationPage() {
                 ${(orderDetails.totalAmount - deliveryFeesTotal + (orderDetails.referralDiscount ?? 0) + (orderDetails.creditUsed ?? 0)).toFixed(2)}
               </span>
             </div>
-            {hasFeeBreakdown ? (
+            {orderDetails.deliveryCity ? (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Shipping</span>
+                <span className="font-medium text-green-700">Free — $0.00</span>
+              </div>
+            ) : hasFeeBreakdown ? (
               <>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Handling</span>

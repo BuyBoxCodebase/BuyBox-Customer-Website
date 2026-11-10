@@ -11,8 +11,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useEventTracking } from "@/hooks/analytics/useEventTracking";
 import Navbar from "@/components/navbar/Navbar";
 import { useCartContext } from "@/context/CartContext";
+import { useCity } from "@/hooks/city/useCity";
 
 const ForYouPage = () => {
+  const { priceFor } = useCity();
   const { videos, loading } = useGetAllVideo();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [muted, setMuted] = useState(true);
@@ -278,7 +280,7 @@ const ForYouPage = () => {
                     </p>
                     <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
                       <span className="text-white text-sm font-medium">
-                        Size: {video.size} : Price: ${video.product.basePrice}
+                        Size: {video.size} : Price: ${priceFor(video.product.basePrice).toFixed(2)}
                       </span>
                     </div>
                   </div>

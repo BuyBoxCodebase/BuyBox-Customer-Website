@@ -1,12 +1,13 @@
 "use client";
 
-import { Menu, X, ArrowLeft, User as UserIcon } from "lucide-react";
+import { Menu, X, ArrowLeft, Search, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { SearchBar } from "./components/SearchBar";
 import { CartIcon } from "./components/CartIcon";
+import { CitySwitcher } from "./components/CitySwitcher";
 import { UserDropdown } from "./components/UserDropdown";
 import { MobileMenu } from "./components/MobileMenu";
 import { Button } from "../ui/button";
@@ -16,13 +17,18 @@ import { useEventTracking } from "@/hooks/analytics";
 import { motion } from "framer-motion";
 
 export default function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const [searchOpen, setSearchOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const { trackClick } = useEventTracking();
 
   const pathname = usePathname();
   const router = useRouter();
   const showBackButton = pathname !== "/";
+
+  useEffect(() => {
+    setSearchOpen(false);
+  }, [pathname]);
 
   return (
     <>
@@ -42,6 +48,7 @@ export default function Navbar() {
             </div>
 
             <div className="hidden lg:flex items-center gap-4 ml-auto">
+              <CitySwitcher />
               <CartIcon />
               {isAuthenticated ? (
                 <UserDropdown user={user as User} onLogout={logout} />
@@ -75,35 +82,52 @@ export default function Navbar() {
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               </div>
-              
-              <div
-                className="flex-1 min-w-0 transition-all duration-300 ease-in-out"
-                style={{ marginLeft: showBackButton ? "0px" : "-40px" }}>
-                  <SearchBar className={`${showBackButton ? "" : "pl-8"}`} />
-              </div>
 
-              <div className="flex items-center gap-2 ml-auto">
-                <CartIcon />
-                <div className="sm:hidden">
-                  {isAuthenticated ? (
-                    <Link
-                      href={`/user/profile`}
-                      className="text-sm font-medium hover:text-gray-800">
-                      <UserIcon className="w-6 h-6" />
-                    </Link>
-                  ) : (
-                    <Link href="/user/login">
-                      <Button
-                        variant="ghost"
-                        size="lg"
-                        className="flex items-center gap-1 px-2">
-                        <span className="text-sm font-medium">Sign in</span>
-                        <UserIcon className="w-6 h-6" />
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              </div>
+              {searchOpen ? (
+                <>
+                  <div className="flex-1 min-w-0">
+                    <SearchBar autoFocus />
+                  </div>
+                  <button
+                    aria-label="Close search"
+                    onClick={() => setSearchOpen(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full">
+                    <X className="w-5 h-5" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <CitySwitcher />
+                  <div className="flex items-center gap-2 ml-auto">
+                    <button
+                      aria-label="Search"
+                      onClick={() => setSearchOpen(true)}
+                      className="p-2 hover:bg-gray-100 rounded-full">
+                      <Search className="w-6 h-6" />
+                    </button>
+                    <CartIcon />
+                    <div className="sm:hidden">
+                      {isAuthenticated ? (
+                        <Link
+                          href={`/user/profile`}
+                          className="text-sm font-medium hover:text-gray-800">
+                          <UserIcon className="w-6 h-6" />
+                        </Link>
+                      ) : (
+                        <Link href="/user/login">
+                          <Button
+                            variant="ghost"
+                            size="lg"
+                            className="flex items-center gap-1 px-2">
+                            <span className="text-sm font-medium">Sign in</span>
+                            <UserIcon className="w-6 h-6" />
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

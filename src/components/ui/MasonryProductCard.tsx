@@ -1,5 +1,6 @@
 "use client";
 
+import { useCity } from "@/hooks/city/useCity";
 import React, {useState} from "react";
 import Link from "next/link";
 import { Product } from "@/types/product";
@@ -20,7 +21,8 @@ export function MasonryProductCard({
   dynamicBackground?: boolean
 }) {
 
-  const salePrice = product.price ?? product.basePrice;
+  const { priceFor } = useCity();
+  const salePrice = priceFor(product.price ?? product.basePrice);
   const [dollars, cents] = salePrice.toLocaleString().split(".");
   
   // Use the first image or fallback

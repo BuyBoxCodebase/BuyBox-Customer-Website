@@ -1,5 +1,6 @@
 "use client";
 
+import { useCity } from "@/hooks/city/useCity";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -24,12 +25,11 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const { priceFor } = useCity();
 
   const quantity = product.inventory?.quantity ?? 0;
-  const isOutOfStock = quantity === 0;
 
-  const salePrice = product.price ?? product.basePrice;
-  const discountPercent = Math.floor(Math.random() * (40 - 10 + 1)) + 10;
+  const salePrice = priceFor(product.price ?? product.basePrice);
 
   // Get all available images
   const allImages = [
@@ -49,7 +49,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const renderImageGrid = () => {
     const imageCount = Math.min(images.length, 4); // Max 4 images to display
     const totalImages = allImages.length; // Total images for "+more" indicator
-    
+
     if (imageCount === 1) {
       return (
         <div className="relative w-full h-full overflow-hidden bg-gray-50" style={{ aspectRatio: '1/1' }}>
@@ -62,13 +62,13 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       );
     }
-    
+
     if (imageCount === 2) {
       return (
         <div className="flex gap-2 h-full">
           {images.slice(0, 2).map((image, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="relative w-1/2 overflow-hidden bg-gray-50"
               style={{ aspectRatio: '1/1' }}
             >
@@ -83,7 +83,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       );
     }
-    
+
     if (imageCount === 3) {
       return (
         <div className="flex gap-2 h-full">
@@ -118,14 +118,14 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       );
     }
-    
+
     // 4 images - 2x2 grid
     if (imageCount === 4) {
       return (
         <div className="grid grid-cols-2 gap-2 h-full">
           {images.slice(0, 4).map((image, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="relative overflow-hidden bg-gray-50"
             >
               <Image
@@ -147,15 +147,15 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       );
     }
-    
+
     // Fallback - should not reach here with max 4 images
     return null;
   };
 
   return (
     <TrackShown productId={product.id} categoryId={product.categoryId || undefined} subCategoryId={product.subCategoryId || undefined}>
-      <Link 
-        href={`/product/${product.id}`} 
+      <Link
+        href={`/product/${product.id}`}
         data-track={product.name}
         data-track-product-id={product.id}
         className="block group h-full"
@@ -169,55 +169,55 @@ export function ProductCard({ product }: ProductCardProps) {
         }}
       >
         <Card className="flex flex-col bg-white hover:shadow-xl transition-all duration-300 h-full overflow-hidden border border-gray-200 shadow-md">
-        {/* Dynamic Image Grid - Enhanced styling */}
-        <div className="relative w-full aspect-[4/4] p-3">
-          {renderImageGrid()}
-        </div>
-
-        {/* Product Details - Same as before */}
-        <div className="flex flex-col justify-between flex-1 min-w-0 p-4 sm:p-5">
-          <div className="flex-1">
-            {/* Title & Description */}
-            <div className="mb-4">
-              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight min-h-[2.5em]">
-                {product.name}
-              </h1>
-              <h2 className="text-sm sm:text-sm text-gray-600 mt-2 line-clamp-3 min-h-[3.75rem]">
-                {product.description}
-              </h2>
-            </div>
-
-            {/* Price Section */}
-            <div className="mb-4">
-              <div className="flex flex-wrap items-baseline gap-2">
-                <div className="inline-flex items-baseline">
-                  <span className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
-                    ${dollars}
-                  </span>
-                  <span className="text-sm font-semibold text-gray-900 ml-1">
-                    {cents || "00"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Delivery Info */}
-              <p className="text-xs sm:text-sm text-green-700 font-medium mt-2 flex items-center">
-                <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                {deliveryText}
-              </p>
-            </div>
+          {/* Dynamic Image Grid - Enhanced styling */}
+          <div className="relative w-full aspect-[4/4] p-3">
+            {renderImageGrid()}
           </div>
 
-          {/* Add to Cart Button */}
-          <AddToCartButton 
-            product={product} 
-            className="w-full sm:w-48 h-9 sm:h-10 px-4 py-2 text-xs sm:text-sm font-medium rounded-full"
-          />
-        </div>
-      </Card>
-    </Link>
+          {/* Product Details - Same as before */}
+          <div className="flex flex-col justify-between flex-1 min-w-0 p-4 sm:p-5">
+            <div className="flex-1">
+              {/* Title & Description */}
+              <div className="mb-4">
+                <h1 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight min-h-[2.5em]">
+                  {product.name}
+                </h1>
+                <h2 className="text-sm sm:text-sm text-gray-600 mt-2 line-clamp-3 min-h-[3.75rem]">
+                  {product.description}
+                </h2>
+              </div>
+
+              {/* Price Section */}
+              <div className="mb-4">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <div className="inline-flex items-baseline">
+                    <span className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+                      ${dollars}
+                    </span>
+                    <span className="text-sm font-semibold text-gray-900 ml-1">
+                      {cents || "00"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Delivery Info */}
+                <p className="text-xs sm:text-sm text-green-700 font-medium mt-2 flex items-center">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  {deliveryText}
+                </p>
+              </div>
+            </div>
+
+            {/* Add to Cart Button */}
+            <AddToCartButton
+              product={product}
+              className="w-full sm:w-48 h-9 sm:h-10 px-4 py-2 text-xs sm:text-sm font-medium rounded-full"
+            />
+          </div>
+        </Card>
+      </Link>
     </TrackShown>
   );
 }

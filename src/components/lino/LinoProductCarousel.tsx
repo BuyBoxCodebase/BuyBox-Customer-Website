@@ -1,7 +1,11 @@
+"use client";
+
+import { useCity } from "@/hooks/city/useCity";
 import Link from "next/link";
 import Image from "next/image";
 
 export function LinoProductCarousel({ products }: { products: any[] }) {
+  const { priceFor } = useCity();
   if (!products || products.length === 0) return null;
 
   return (
@@ -16,7 +20,7 @@ export function LinoProductCarousel({ products }: { products: any[] }) {
             )}
           </div>
           <h4 className="font-semibold text-sm line-clamp-1 text-black sys-dark:text-white">{product.name}</h4>
-          <p className="text-black sys-dark:text-white font-bold text-sm mt-1">${product.price}</p>
+          <p className="text-black sys-dark:text-white font-bold text-sm mt-1">${priceFor(Number(product.price) || 0).toFixed(2)}</p>
         </Link>
       ))}
     </div>

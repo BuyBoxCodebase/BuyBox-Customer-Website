@@ -100,6 +100,8 @@ export interface OrderDetails {
   referralCode?: string | null;
   referralDiscount?: number | null;
   creditUsed?: number | null;
+  deliveryCity?: string | null;
+  cityMarkupPerUnit?: number | null;
   // Fee breakdown for orders placed after delivery pricing; older orders only have pickupFee
   transferFee?: number | null;
   handlingFee?: number | null;

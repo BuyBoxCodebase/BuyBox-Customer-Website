@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCartContext } from "../../../context/CartContext";
+import { useCity } from "@/hooks/city/useCity";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/toast/use-toast";
@@ -155,7 +156,7 @@ function CheckoutPageContent() {
   }, [preference]);
 
   const { hubs, loading: hubsLoading, error: hubsError, retry: retryHubs } = useHubs();
-  const { quote, loading: quoteLoading, error: quoteError } = useDeliveryQuote({
+  const { error: quoteError } = useDeliveryQuote({
     productIds: cart.map((item) => item.productId),
     method: fulfillmentType,
     hubId,
@@ -199,7 +200,8 @@ function CheckoutPageContent() {
     }
   };
 
-  const subtotal = cart.reduce((acc, item) => acc + item.totalPrice, 0);
+  const { city, shippingLabel, lineTotal } = useCity();
+  const subtotal = cart.reduce((acc, item) => acc + lineTotal(item.totalPrice, item.quantity), 0);
   // Display only, the backend works out the amount charged. It applies to products, not fees.
   const referralDiscount = referral ? Math.round(subtotal * referral.rate * 100) / 100 : 0;
   // Credit is only spent if the customer ticks the box, and only ever covers products
@@ -209,7 +211,7 @@ function CheckoutPageContent() {
   const creditApplied = useCredit
     ? Math.min(availableCredit, Math.round((subtotal - referralDiscount) * 100) / 100)
     : 0;
-  const total = subtotal + (quote?.totalFee ?? 0) - referralDiscount - creditApplied;
+  const total = subtotal - referralDiscount - creditApplied;
 
   // Why Place Order can't be used yet, in the order the customer should fix things. null = ready.
   const placeOrderBlocker =
@@ -222,7 +224,6 @@ function CheckoutPageContent() {
         : "Please choose the hub to deliver from."
     : fulfillmentType === "DELIVERY" && !deliveryCoordinates ? "Please share your delivery location."
     : quoteError ? quoteError
-    : !quote ? "Delivery fees are still being calculated. Please wait a moment."
     : null;
 
   const handlePlaceOrderClick = (e: FormEvent) => {
@@ -376,10 +377,10 @@ function CheckoutPageContent() {
         return;
     }
 
-    if (!quote || !selectedHub) {
+    if (!selectedHub) {
       toast({
-        title: "Delivery fees not ready",
-        description: quoteError || "Please wait for the delivery fees to be calculated.",
+        title: "Hub not ready",
+        description: quoteError || "Please choose a hub.",
         variant: "destructive",
         className: "top-[4rem]",
       });
@@ -403,6 +404,7 @@ function CheckoutPageContent() {
         deliveryAddress: fulfillmentType === "DELIVERY"
           ? { address: formData.address, city: formData.city, state: formData.state || undefined }
           : undefined,
+        deliveryCity: city,
         referralCode: referral?.code,
         creditAmount: creditApplied > 0 ? creditApplied : undefined,
       };
@@ -832,7 +834,7 @@ function CheckoutPageContent() {
                             </p>
                           </div>
                           <p className="font-medium">
-                            ${item.totalPrice.toFixed(2)}
+                            ${lineTotal(item.totalPrice, item.quantity).toFixed(2)}
                           </p>
                         </motion.div>
                       ))
@@ -917,42 +919,10 @@ function CheckoutPageContent() {
                       <span>Subtotal</span>
                       <span>${subtotal.toFixed(2)}</span>
                     </motion.div>
-                    {quote ? (
-                      <>
-                        <div className="flex justify-between text-sm text-gray-600">
-                          <span>Handling ({quote.hubName})</span>
-                          <span>${quote.handlingFee.toFixed(2)}</span>
-                        </div>
-                        {/* Inter-hub transfer is shown as part of delivery, it confused customers as its own line */}
-                        <div className="flex justify-between text-sm text-gray-600">
-                          <span>
-                            Delivery fee
-                            {fulfillmentType === "DELIVERY" && quote.deliveryDistanceKm !== null && ` (${quote.deliveryDistanceKm.toFixed(1)} km)`}
-                          </span>
-                          <span>${(quote.transferFee + quote.deliveryFee).toFixed(2)}</span>
-                        </div>
-                      </>
-                    ) : quoteLoading ? (
-                      <div className="space-y-2" aria-busy="true" aria-label="Calculating delivery fees">
-                        {[0, 1].map((i) => (
-                          <div key={i} className="flex justify-between">
-                            <div className="h-4 w-28 rounded bg-gray-200 animate-pulse" />
-                            <div className="h-4 w-12 rounded bg-gray-200 animate-pulse" />
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>Delivery fees</span>
-                        <span className={quoteError ? "text-red-500 text-right" : "text-right"}>
-                          {quoteError
-                            ? quoteError
-                            : !hubId
-                              ? "Choose a hub"
-                              : "Share your location"}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Shipping ({shippingLabel})</span>
+                      <span className="text-green-700 font-medium">$0.00</span>
+                    </div>
                     {referral && (
                       <div className="flex justify-between text-sm text-green-700">
                         <span>Referral discount</span>
@@ -969,20 +939,13 @@ function CheckoutPageContent() {
                       className="flex justify-between font-medium text-lg border-t pt-2"
                       variants={fadeIn}>
                       <span>Total</span>
-                      {/* Never show a total without the delivery fees, it would understate the price */}
-                      {quote ? (
-                        <motion.span
-                          key={total}
-                          initial={{ scale: 0.8 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring" }}>
-                          ${total.toFixed(2)}
-                        </motion.span>
-                      ) : quoteLoading ? (
-                        <span className="h-6 w-20 rounded bg-gray-200 animate-pulse" aria-label="Calculating total" />
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
+                      <motion.span
+                        key={total}
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring" }}>
+                        ${total.toFixed(2)}
+                      </motion.span>
                     </motion.div>
                   </motion.div>
 

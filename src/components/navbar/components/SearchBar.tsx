@@ -1,5 +1,6 @@
 "use client";
 
+import { useCity } from "@/hooks/city/useCity";
 import { Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,11 +10,13 @@ import { AskButton } from "@/components/lino/AskButton";
 
 interface SearchBarProps {
   className?: string;
+  autoFocus?: boolean;
 }
 
 const SUGGEST_DELAY_MS = 150;
 
-export const SearchBar = ({ className = "" }: SearchBarProps) => {
+export const SearchBar = ({ className = "", autoFocus = false }: SearchBarProps) => {
+  const { priceFor } = useCity();
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<SuggestResponse | null>(null);
   const [open, setOpen] = useState(false);
@@ -72,6 +75,7 @@ export const SearchBar = ({ className = "" }: SearchBarProps) => {
           type="search"
           enterKeyHint="search"
           autoComplete="off"
+          autoFocus={autoFocus}
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);
@@ -117,7 +121,7 @@ export const SearchBar = ({ className = "" }: SearchBarProps) => {
                 <div className="truncate">{product.name}</div>
                 {product.brand && <div className="text-xs text-gray-500">{product.brand}</div>}
               </div>
-              <span className="font-medium">${product.price}</span>
+              <span className="font-medium">${priceFor(product.price).toFixed(2)}</span>
             </button>
           ))}
 

@@ -1,7 +1,28 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { CITY_COOKIE, toCity } from "@/lib/city"
 
 export function middleware(request: NextRequest) {
+  const response = authMiddleware(request)
+  if (!request.cookies.has(CITY_COOKIE)) {
+    const header = request.headers.get("x-vercel-ip-city")
+    let detected: string | null = null
+    try {
+      detected = header ? decodeURIComponent(header) : null
+    } catch {
+      detected = header
+    }
+    console.log("DETECTED ", detected);
+    response.cookies.set(CITY_COOKIE, toCity(detected), {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    })
+  }
+  return response
+}
+
+function authMiddleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value
   const accessToken = request.cookies.get("activationToken")?.value
   const { pathname } = request.nextUrl
@@ -18,7 +39,7 @@ export function middleware(request: NextRequest) {
   // redirect to /user/login. Cart, checkout and orders stay behind the wall,
   // and add-to-cart still prompts guests to log in.
   const publicBrowsePaths = ["/product", "/category", "/subcategory", "/search", "/cart", "/shop"]
-  if(
+  if (
     pathname === "/" ||
     publicBrowsePaths.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/user/privacy") ||
@@ -27,7 +48,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/user/forgot-password") ||
     pathname.startsWith("/user/reset-password") ||
     pathname.startsWith("/customer")
-  ){
+  ) {
     return NextResponse.next()
   }
 
@@ -71,7 +92,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/",                  
+    "/",
     // Crawler + static files must never hit the auth wall
     "/((?!api|_next|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|txt|xml)).*)",
     "/user/login",

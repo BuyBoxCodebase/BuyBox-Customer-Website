@@ -1,5 +1,6 @@
 "use client";
 
+import { useCity } from "@/hooks/city/useCity";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,6 +19,7 @@ interface ProductCardProps {
 
 export function SubCatCard({ product }: ProductCardProps) {
   const router = useRouter();
+  const { priceFor } = useCity();
   const { toast } = useToast();
   const { addProductToCart } = useCartContext();
   const [isAdding, setIsAdding] = useState(false);
@@ -109,7 +111,7 @@ export function SubCatCard({ product }: ProductCardProps) {
             {product.description}
           </h4>
           <p className="text-sm text-muted-foreground">
-            {formatPrice(product.basePrice)}
+            {formatPrice(priceFor(product.basePrice))}
           </p>
 
           {/* {getInventoryMessage()} */}

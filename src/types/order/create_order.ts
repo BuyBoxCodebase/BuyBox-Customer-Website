@@ -15,6 +15,7 @@ export interface CreateOrderRequest {
   deliveryCoordinates?: { latitude: number; longitude: number };
   // Saved by the backend so the next checkout can prefill it
   deliveryAddress?: { address: string; city: string; state?: string };
+  deliveryCity?: string;
   // A friend's referral code; the backend checks it and works out the discount
   referralCode?: string;
   // Referral earnings to spend on the products, in dollars
