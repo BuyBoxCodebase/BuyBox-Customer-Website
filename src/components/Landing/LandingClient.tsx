@@ -198,6 +198,7 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
      
       <div className="absolute top-4 md:top-6 inset-x-0 px-4 z-30">
         <div className={`flex items-center justify-between ${heroWidth}`}>
+          {/* Chat history button - commented out for now
           <button
             onClick={() => setIsPanelOpen(true)}
             className="relative p-2 hover:bg-gray-100 sys-dark:hover:bg-white/10 rounded-full hover:text-gray-800 sys-dark:hover:text-white text-black sys-dark:text-white transition-colors"
@@ -205,8 +206,9 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
           >
             <MessageSquare className="w-6 h-6" />
           </button>
+          */}
 
-          <div className="flex items-center gap-2 md:gap-4 text-black sys-dark:text-white">
+          <div className="ml-auto flex items-center gap-2 md:gap-4 text-black sys-dark:text-white">
             <CartIcon />
             <div className="hidden sm:block">
               {isAuthenticated ? (
