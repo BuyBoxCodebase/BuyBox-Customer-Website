@@ -13,7 +13,7 @@ export const AskButton = ({ onClick, disabled, className = "" }: AskButtonProps)
     type="button"
     onClick={onClick}
     disabled={disabled}
-    aria-label="Ask Treides"
+    aria-label="Talk to Treides"
     className={`flex items-center gap-1.5 rounded-full bg-gray-100 px-3 text-sm font-medium text-black hover:bg-gray-200 disabled:opacity-40 transition-colors ${className}`}
   >
     <Sparkles className="h-4 w-4 text-fuchsia-500" />

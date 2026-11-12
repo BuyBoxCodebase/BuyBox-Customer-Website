@@ -96,7 +96,7 @@ export default function SearchResultsView({
             href={askLinoHref}
             className="flex items-center gap-1.5 h-9 px-4 rounded-md bg-black text-white text-sm font-medium hover:bg-black/80"
           >
-            <MessageSquare className="w-4 h-4" /> Ask Treides
+            <MessageSquare className="w-4 h-4" /> Talk to Treides
           </Link>
           <button
             onClick={() => setFiltersOpen((open) => !open)}
