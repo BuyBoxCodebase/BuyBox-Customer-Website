@@ -170,13 +170,8 @@ export default function AlertsSection() {
           <ul className="-mx-2 divide-y divide-black/5">
             {watches.map((watch) => {
               const href = watchLink(watch);
-              const details = [watch.sizeLabel && `Size ${watch.sizeLabel}`, watch.colourLabel].filter(Boolean).join(" · ");
               return (
                 <li key={watch.id} className="flex items-center gap-3 px-2 py-3">
-                  {watch.image && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={watch.image} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
-                  )}
                   <div className="min-w-0 flex-1">
                     {href ? (
                       <Link href={href} className="block truncate font-medium hover:underline">
@@ -185,10 +180,7 @@ export default function AlertsSection() {
                     ) : (
                       <p className="truncate font-medium">{watch.displayName}</p>
                     )}
-                    {details && <p className="truncate text-sm text-gray-600">{details}</p>}
-                    <p className="text-xs text-gray-500">
-                      Set up {new Date(watch.createdAt).toLocaleDateString()} · expires {new Date(watch.expiresAt).toLocaleDateString()}
-                    </p>
+                    <p className="text-xs text-gray-500">Added {new Date(watch.createdAt).toLocaleDateString()}</p>
                   </div>
                   <Button
                     type="button"

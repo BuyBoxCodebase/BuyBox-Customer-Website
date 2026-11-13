@@ -10,21 +10,15 @@ export type WatchTarget = { variantId: string };
 export interface WatchSubscription {
   id: string;
   displayName: string;
-  sizeLabel: string | null;
-  colourLabel: string | null;
-  image: string | null;
-  status: "ACTIVE" | "CANCELLED" | "EXPIRED" | "OPTED_OUT";
+  status: "ACTIVE" | "NOTIFIED" | "CANCELLED" | "OPTED_OUT";
   sourceVariantId: string | null;
   createdAt: string;
-  expiresAt: string;
-  notificationCount: number;
-  lastNotifiedAt: string | null;
+  notifiedAt: string | null;
 }
 
 export interface WatchSettings {
   phoneNumber: string | null;
   hasValidPhone: boolean;
-  expiresAfterDays: number;
 }
 
 export function getToken(): string | null {
