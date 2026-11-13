@@ -12,6 +12,7 @@ import QuantitySelector from "./QuantitySelector";
 import InventoryMessage from "./InventoryMessage";
 import AddToCartButton from "./AddToCartButton";
 import ProductVariantCards from "./ProductVariantCards";
+import NotifyMeButton from "@/components/product-watch/NotifyMeButton";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
@@ -24,7 +25,7 @@ import { UserEventType } from "@/lib/analytics/constants";
 // Updated currency formatter to support the new format
 const formatPriceWithSuperscriptCents = (price: number) => {
   const [dollars, cents] = price.toLocaleString().split('.');
-  
+
   return (
     <div className="inline-flex flex-wrap">
       <span className="text-xl sm:text-2xl md:text-3xl font-semibold">
@@ -274,6 +275,12 @@ export default function ProductDetails({
           optionsSelected={optionsSelected}
         />
       </div>
+      {inventoryQuantity === 0 && (selectedVariant?.id || product.defaultVariant?.id) && (
+        <NotifyMeButton
+          target={{ variantId: (selectedVariant?.id || product.defaultVariant?.id) as string }}
+          trigger="OUT_OF_STOCK_PRODUCT_PAGE"
+        />
+      )}
     </motion.div>
   );
 }

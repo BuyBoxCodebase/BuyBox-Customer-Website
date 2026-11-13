@@ -8,6 +8,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCartContext } from "../../context/CartContext";
 import { useCity } from "@/hooks/city/useCity";
 import { CartProduct } from "@/types/cart/get-my-cart/cart-response";
+import NotifyMeButton from "@/components/product-watch/NotifyMeButton";
 
 export default function CartTable() {
   const { cart, removeFromCart, updateQuantity, addProductToCart, fetchCart } =
@@ -48,6 +49,18 @@ export default function CartTable() {
     }
     return item.description;
   };
+
+  const renderSoldOut = (item: CartProduct) =>
+    item.stock === 0 ? (
+      <div className="mt-2 space-y-2">
+        <p className="text-xs font-medium text-red-600">
+          Out of stock. Remove it to check out the rest of your cart, or get notified when it&apos;s back.
+        </p>
+        {item.variantId && (
+          <NotifyMeButton display="inline" target={{ variantId: item.variantId }} trigger="CART" />
+        )}
+      </div>
+    ) : null;
 
   const formatPrice = (price: number | undefined): string => {
     if (price === undefined || price === null) return "$0.00";
@@ -102,6 +115,7 @@ export default function CartTable() {
                       {item.variantId && (
                         <p className="text-xs text-gray-400">{item.name}</p>
                       )}
+                      {renderSoldOut(item)}
                     </div>
                   </div>
                 </td>
@@ -196,6 +210,7 @@ export default function CartTable() {
                   {item.variantId && (
                     <p className="text-xs text-gray-400 mt-1">{item.name}</p>
                   )}
+                  {renderSoldOut(item)}
                 </div>
 
                 <div className="flex flex-wrap gap-2 mt-2">

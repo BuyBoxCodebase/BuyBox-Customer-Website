@@ -2,19 +2,21 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import useGetAllOrders from "@/hooks/order/useGetAllOrders";
-import { ArrowLeft, ChevronRight, Gift, KeyRound, Loader2, Package } from "lucide-react";
+import { ArrowLeft, Bell, ChevronRight, Gift, KeyRound, Loader2, Package } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "../../../../context/AuthContext";
 import { usePageTracking } from "@/hooks/analytics";
 import PasswordSection from "@/components/auth/PasswordSection";
+import AlertsSection from "@/components/product-watch/AlertsSection";
 import { cn } from "@/lib/utils";
 import { useMyReferrals } from "@/hooks/referral/useReferral";
 import type { ReferralStatus } from "@/types/referral";
 
 const SECTIONS = [
   { id: "orders", label: "Orders", icon: Package, description: "Track and review what you've bought." },
+  { id: "alerts", label: "Watch list", icon: Bell, description: "Products you want. We'll WhatsApp you when they're available from any seller." },
   { id: "password", label: "Password", icon: KeyRound, description: "How you log in with your email." },
   { id: "invite", label: "Invite friends", icon: Gift, description: "Your friend gets 10% off their first order and you earn 10% of it as credit." },
 ] as const;
@@ -227,6 +229,7 @@ function ProfilePageContent() {
           <h2 className="text-lg font-semibold">{activeSection.label}</h2>
           <p className="mb-6 text-sm text-gray-500">{activeSection.description}</p>
           {active === "orders" && <OrdersSection />}
+          {active === "alerts" && <AlertsSection />}
           {active === "password" && <PasswordSection />}
           {active === "invite" && <InviteSection />}
         </section>

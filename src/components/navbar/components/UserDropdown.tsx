@@ -35,6 +35,11 @@ export const UserDropdown = ({ user, onLogout }: UserDropdownProps) => {
             Account
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/user/profile?tab=alerts" className="cursor-pointer">
+            My watch list
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={onLogout}

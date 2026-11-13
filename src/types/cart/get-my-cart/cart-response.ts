@@ -35,6 +35,7 @@ export interface CartProduct extends ProductDetails {
   price: number;
   totalPrice: number;
   options: FormattedOption[];
+  stock?: number; // units available right now; 0 = sold out
 }
 
 export interface CartResponse {
