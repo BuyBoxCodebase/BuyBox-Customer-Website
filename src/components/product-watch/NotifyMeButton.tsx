@@ -14,20 +14,17 @@ import {
   takePending,
   targetKey,
   WatchTarget,
-  WatchTrigger,
   watchError,
 } from "@/lib/product-watch";
 import { cn } from "@/lib/utils";
 
 export default function NotifyMeButton({
   target,
-  trigger,
   label = "Notify me when available",
   className,
   display = "full",
 }: {
   target: WatchTarget;
-  trigger: WatchTrigger;
   label?: string;
   className?: string;
   // full: button with a short explanation (product page). inline: small button (cart rows).
@@ -44,10 +41,10 @@ export default function NotifyMeButton({
   const comeBackHere = () => `${window.location.pathname}${window.location.search}`;
 
   const subscribe = useCallback(
-    async (watchTrigger: WatchTrigger) => {
+    async () => {
       setState("saving");
       try {
-        const { created, subscription } = await createWatch(targetRef.current, watchTrigger);
+        const { created, subscription } = await createWatch(targetRef.current);
         setSubscriptionId(subscription.id);
         setState("subscribed");
         toast({
@@ -60,7 +57,7 @@ export default function NotifyMeButton({
         const { code, message } = watchError(error);
         if (code === "PHONE_REQUIRED") {
           // Needs a WhatsApp number first. Come back and finish after they've added it.
-          rememberPending(targetRef.current, watchTrigger);
+          rememberPending(targetRef.current);
           router.push(`/user/profile?tab=alerts&addPhone=1&returnTo=${encodeURIComponent(comeBackHere())}`);
           return;
         }
@@ -77,7 +74,7 @@ export default function NotifyMeButton({
 
     const pending = takePending(key);
     if (pending) {
-      void subscribe(pending.trigger);
+      void subscribe();
       return;
     }
 
@@ -98,11 +95,11 @@ export default function NotifyMeButton({
 
   const handleClick = () => {
     if (!getToken()) {
-      rememberPending(target, trigger);
+      rememberPending(target);
       router.push(`/user/login?redirect=${encodeURIComponent(comeBackHere())}`);
       return;
     }
-    void subscribe(trigger);
+    void subscribe();
   };
 
   const handleCancel = async () => {

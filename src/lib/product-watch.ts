@@ -7,8 +7,6 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 // A Notify me button is for one sold-out product variant (shown on its product page and in the cart).
 export type WatchTarget = { variantId: string };
 
-export type WatchTrigger = "OUT_OF_STOCK_PRODUCT_PAGE" | "CART";
-
 export interface WatchSubscription {
   id: string;
   displayName: string;
@@ -16,7 +14,6 @@ export interface WatchSubscription {
   colourLabel: string | null;
   image: string | null;
   status: "ACTIVE" | "CANCELLED" | "EXPIRED" | "OPTED_OUT";
-  triggerSource: string;
   sourceVariantId: string | null;
   createdAt: string;
   expiresAt: string;
@@ -50,10 +47,10 @@ export function watchError(error: unknown): { code?: string; message: string } {
   return { code: data?.code, message: message || "Something went wrong. Please try again." };
 }
 
-export async function createWatch(target: WatchTarget, triggerSource: WatchTrigger) {
+export async function createWatch(target: WatchTarget) {
   const response = await axios.post<{ created: boolean; subscription: WatchSubscription }>(
     `${BACKEND_URL}/product-watch/subscriptions`,
-    { ...target, triggerSource },
+    { variantId: target.variantId },
     { headers: authHeaders() },
   );
   return response.data;
@@ -97,19 +94,19 @@ export function targetKey(target: WatchTarget): string {
   return target.variantId;
 }
 
-export function rememberPending(target: WatchTarget, trigger: WatchTrigger) {
+export function rememberPending(target: WatchTarget) {
   try {
-    sessionStorage.setItem(PENDING_KEY, JSON.stringify({ target, trigger, at: Date.now() }));
+    sessionStorage.setItem(PENDING_KEY, JSON.stringify({ target, at: Date.now() }));
   } catch {
     // Private mode: the customer just taps the button again.
   }
 }
 
-export function takePending(key: string): { target: WatchTarget; trigger: WatchTrigger } | null {
+export function takePending(key: string): { target: WatchTarget } | null {
   try {
     const raw = sessionStorage.getItem(PENDING_KEY);
     if (!raw) return null;
-    const pending = JSON.parse(raw) as { target: WatchTarget; trigger: WatchTrigger; at: number };
+    const pending = JSON.parse(raw) as { target: WatchTarget; at: number };
     if (targetKey(pending.target) !== key || Date.now() - pending.at > 30 * 60 * 1000) return null;
     sessionStorage.removeItem(PENDING_KEY);
     return pending;

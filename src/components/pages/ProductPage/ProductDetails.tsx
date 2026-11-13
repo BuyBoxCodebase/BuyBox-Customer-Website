@@ -278,7 +278,6 @@ export default function ProductDetails({
       {inventoryQuantity === 0 && (selectedVariant?.id || product.defaultVariant?.id) && (
         <NotifyMeButton
           target={{ variantId: (selectedVariant?.id || product.defaultVariant?.id) as string }}
-          trigger="OUT_OF_STOCK_PRODUCT_PAGE"
         />
       )}
     </motion.div>

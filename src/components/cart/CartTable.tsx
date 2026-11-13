@@ -57,7 +57,7 @@ export default function CartTable() {
           Out of stock. Remove it to check out the rest of your cart, or get notified when it&apos;s back.
         </p>
         {item.variantId && (
-          <NotifyMeButton display="inline" target={{ variantId: item.variantId }} trigger="CART" />
+          <NotifyMeButton display="inline" target={{ variantId: item.variantId }} />
         )}
       </div>
     ) : null;
