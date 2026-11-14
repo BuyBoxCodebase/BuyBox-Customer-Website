@@ -2,7 +2,52 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { CITY_COOKIE, toCity } from "@/lib/city"
 
+const BLOCKED_COUNTRIES = new Set(["IN"])
+
+const MAINTENANCE_HTML = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>We are under maintenance</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fafafa;color:#111;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;text-align:center;padding:24px}
+  h1{font-size:1.75rem;margin:0 0 12px}
+  p{margin:0;color:#555;line-height:1.5}
+</style>
+</head>
+<body>
+  <main>
+    <h1>We are under maintenance</h1>
+    <p>We are working on some improvements.<br>Please check back soon.</p>
+  </main>
+</body>
+</html>`
+
+function maintenanceResponse(request: NextRequest) {
+  const headers = {
+    "Cache-Control": "no-store",
+    "Retry-After": "3600",
+  }
+  if (request.nextUrl.pathname.startsWith("/api")) {
+    return NextResponse.json(
+      { message: "We are under maintenance" },
+      { status: 503, headers },
+    )
+  }
+  return new NextResponse(MAINTENANCE_HTML, {
+    status: 503,
+    headers: { ...headers, "Content-Type": "text/html; charset=utf-8" },
+  })
+}
+
 export function middleware(request: NextRequest) {
+  const country = request.headers.get("x-vercel-ip-country")?.toUpperCase()
+  if (country && BLOCKED_COUNTRIES.has(country)) {
+    return maintenanceResponse(request)
+  }
+
   const response = authMiddleware(request)
   if (!request.cookies.has(CITY_COOKIE)) {
     const header = request.headers.get("x-vercel-ip-city")
@@ -29,6 +74,11 @@ function authMiddleware(request: NextRequest) {
   // Crawler-facing files: must stay reachable without auth or Google sees a
   // login redirect instead of robots.txt / sitemap.xml.
   if (pathname === "/robots.txt" || pathname === "/sitemap.xml") {
+    return NextResponse.next()
+  }
+
+  // API routes were previously outside the matcher; keep them free of the auth wall.
+  if (pathname.startsWith("/api")) {
     return NextResponse.next()
   }
 
@@ -93,7 +143,7 @@ export const config = {
   matcher: [
     "/",
     // Crawler + static files must never hit the auth wall
-    "/((?!api|_next|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|txt|xml)).*)",
+    "/((?!_next|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|txt|xml)).*)",
     "/user/login",
     "/user/register",
     "/user/verify",
