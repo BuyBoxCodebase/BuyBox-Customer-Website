@@ -1,7 +1,6 @@
-"use client";
-
 import ProductRail from "./ProductRail";
 import { Category } from "@/types/category";
+import { getPopularSnapshots } from "@/lib/get-products";
 
 interface HomeRecommendationsProps {
   categories: Category[];
@@ -9,18 +8,22 @@ interface HomeRecommendationsProps {
   maxCategoryRails?: number;
 }
 
-export default function HomeRecommendations({
+export default async function HomeRecommendations({
   categories,
   maxCategoryRails = 6,
 }: HomeRecommendationsProps) {
+  const shown = categories.slice(0, maxCategoryRails);
+  const rails = await Promise.all(shown.map((category) => getPopularSnapshots(category.id)));
+
   return (
     <div className="container mx-auto px-2 md:px-4 lg:px-4">
-      {categories.slice(0, maxCategoryRails).map((category) => (
+      {shown.map((category, index) => (
         <ProductRail
           key={category.id}
           title={`Popular in ${category.name}`}
           seeAllHref={`/category/${category.id}`}
           categoryId={category.id}
+          snapshots={rails[index]}
         />
       ))}
     </div>

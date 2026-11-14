@@ -33,8 +33,9 @@ const VISITOR_KEY = "buybox_visitor_id";
 const SESSION_KEY = "buybox_activity_session";
 const IDENTIFIED_KEY = "buybox_identified_customer";
 const SESSION_IDLE_MS = 3 * 24 * 60 * 60 * 1000;
-const FLUSH_INTERVAL_MS = 5000;
-const FLUSH_AT = 20;
+const FLUSH_INTERVAL_MS = 2 * 60 * 1000;
+const FLUSH_AT = 80;
+const MAX_EVENTS_PER_REQUEST = FLUSH_AT;
 
 const ACTION_SELECTOR = 'button, a[href], [role="button"], [data-track]';
 const SENSITIVE_PARAM = /token|code|otp|password|secret|email|phone/i;
@@ -42,7 +43,22 @@ const SKIPPED_INPUT_TYPES = new Set(["password", "hidden", "file", "submit", "bu
 const CARD_FIELD = /card.?(num|no|holder|name)|cc.?(num|no|name|exp|csc)|cvv|cvc|csc|security.?code|expir|exp.?(date|month|year)/i;
 const MAX_INPUT_VALUE = 500;
 
+
+export interface UserEventPayload {
+  type: string;
+  productId?: string;
+  categoryId?: string;
+  subCategoryId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface QueuedUserEvent extends UserEventPayload {
+  sessionId: string;
+  ts: number;
+}
+
 let queue: QueuedEvent[] = [];
+let userQueue: QueuedUserEvent[] = [];
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 const memoryFallback: { visitorId?: string; session?: StoredSession } = {};
 
@@ -145,7 +161,28 @@ export function trackActivity(
     metadata: data.metadata,
   });
 
-  if (queue.length >= FLUSH_AT) {
+  scheduleFlush();
+}
+
+export function trackUserEvent(payload: UserEventPayload) {
+  if (typeof window === "undefined") return;
+
+  const now = Date.now();
+  const session = touchSession(now);
+  userQueue.push({
+    sessionId: session.id,
+    ts: now,
+    type: payload.type,
+    productId: payload.productId,
+    categoryId: payload.categoryId,
+    subCategoryId: payload.subCategoryId,
+    metadata: payload.metadata,
+  });
+  scheduleFlush();
+}
+
+function scheduleFlush() {
+  if (queue.length + userQueue.length >= FLUSH_AT) {
     flush();
   } else if (!flushTimer) {
     flushTimer = setTimeout(flush, FLUSH_INTERVAL_MS);
@@ -172,7 +209,11 @@ function externalReferrer(): string | undefined {
   }
 }
 
-function send(sessionId: string, events: Omit<QueuedEvent, "sessionId">[]) {
+function send(
+  sessionId: string,
+  events: Omit<QueuedEvent, "sessionId">[],
+  userEvents: Omit<QueuedUserEvent, "sessionId">[] = [],
+) {
   const ua = navigator.userAgent;
   const body = JSON.stringify({
     sessionId,
@@ -184,6 +225,7 @@ function send(sessionId: string, events: Omit<QueuedEvent, "sessionId">[]) {
       browser: parseBrowser(ua),
     },
     events,
+    userEvents,
   });
 
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -205,21 +247,34 @@ export function flush() {
     clearTimeout(flushTimer);
     flushTimer = null;
   }
-  if (!queue.length) return;
+  if (!queue.length && !userQueue.length) return;
 
   const pending = queue;
+  const pendingUser = userQueue;
   queue = [];
+  userQueue = [];
 
-  const bySession = new Map<string, Omit<QueuedEvent, "sessionId">[]>();
-  for (const { sessionId, ...event } of pending) {
-    if (!bySession.has(sessionId)) bySession.set(sessionId, []);
-    bySession.get(sessionId)!.push(event);
-  }
-  bySession.forEach((events, sessionId) => send(sessionId, events));
+  const bySession = new Map<
+    string,
+    { events: Omit<QueuedEvent, "sessionId">[]; userEvents: Omit<QueuedUserEvent, "sessionId">[] }
+  >();
+  const bucket = (sessionId: string) => {
+    if (!bySession.has(sessionId)) bySession.set(sessionId, { events: [], userEvents: [] });
+    return bySession.get(sessionId)!;
+  };
+  for (const { sessionId, ...event } of pending) bucket(sessionId).events.push(event);
+  for (const { sessionId, ...event } of pendingUser) bucket(sessionId).userEvents.push(event);
+
+  bySession.forEach(({ events, userEvents }, sessionId) => {
+    const longest = Math.max(events.length, userEvents.length);
+    for (let i = 0; i < longest; i += MAX_EVENTS_PER_REQUEST) {
+      send(sessionId, events.slice(i, i + MAX_EVENTS_PER_REQUEST), userEvents.slice(i, i + MAX_EVENTS_PER_REQUEST));
+    }
+  });
 }
 
 export function heartbeat() {
-  if (queue.length) {
+  if (queue.length || userQueue.length) {
     flush();
     return;
   }

@@ -9,13 +9,18 @@ import PopularProducts from "@/components/recommendation/PopularProducts";
 import { MasonryGrid } from "@/components/ui/MasonryGrid";
 import { MasonryProductCard } from "@/components/ui/MasonryProductCard";
 import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPlaceholders";
+import PaginationControls from "@/components/ui/PaginationControls";
+import type { PopularProductSnapshot } from "@/hooks/products/usePopularProducts";
 interface SubcategoryPageClientProps {
-  data: { groupName: string; products: Product[] } | null;
+  products: Product[] | null;
+  page: number;
+  hasMore: boolean;
   formattedSubCategoryName: string;
   categoryId: string;
+  popular: PopularProductSnapshot[];
 }
 
-export default function SubcategoryPageClient({ data, formattedSubCategoryName, categoryId }: SubcategoryPageClientProps) {
+export default function SubcategoryPageClient({ products, page, hasMore, formattedSubCategoryName, categoryId, popular }: SubcategoryPageClientProps) {
   usePageTracking();
   const [isClient, setIsClient] = useState(false);
   useEffect(() => {
@@ -53,7 +58,7 @@ export default function SubcategoryPageClient({ data, formattedSubCategoryName, 
   }
 
   // Check if the products array is empty
-  if (!data || !data.products || data.products.length === 0) {
+  if (!products || products.length === 0) {
     return (
       <motion.div
         className="container mx-auto px-4 py-12"
@@ -88,14 +93,14 @@ export default function SubcategoryPageClient({ data, formattedSubCategoryName, 
           Browse our selection of {formattedSubCategoryName} products
         </p>
       </motion.div>
-      <PopularProducts categoryId={categoryId} />
+      <PopularProducts categoryId={categoryId} snapshots={popular} />
       <motion.div
         className="mb-12 px-2 md:px-4"
         variants={itemVariants}
         transition={{ delay: 0.1 }}>
         <h2 className="text-2xl font-bold mb-6 text-gray-900">All Products</h2>
         <MasonryGrid
-          items={data.products}
+          items={products}
           distributeLeftToRight={true}
           renderItem={(product) => (
             <motion.div key={product.id} variants={itemVariants} className="w-full relative group">
@@ -107,6 +112,7 @@ export default function SubcategoryPageClient({ data, formattedSubCategoryName, 
             <ExplorePlaceholder key="p2" />
           ]}
         />
+        <PaginationControls page={page} hasMore={hasMore} />
       </motion.div>
     </motion.div>
   );

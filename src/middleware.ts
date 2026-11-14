@@ -12,7 +12,6 @@ export function middleware(request: NextRequest) {
     } catch {
       detected = header
     }
-    console.log("DETECTED ", detected);
     response.cookies.set(CITY_COOKIE, toCity(detected), {
       path: "/",
       maxAge: 60 * 60 * 24 * 365,

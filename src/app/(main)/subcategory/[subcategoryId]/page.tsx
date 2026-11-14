@@ -1,32 +1,16 @@
+import { Suspense } from "react";
 import SubcategoryPageClient from "./SubcategoryPageClient";
+import { getPopularSnapshots, getSubcategoryProductsPage, readPage } from "@/lib/get-products";
+import { MasonrySkeleton } from "@/components/ui/MasonrySkeleton";
 
-async function getProducts(categoryId: string, subCategoryName: string) {
-  try {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-    const url = `${backendUrl}/product/get-by-subcategory?categoryId=${encodeURIComponent(categoryId)}&subCategoryName=${encodeURIComponent(subCategoryName)}`;
-    
-    // We use Next.js tags to allow on-demand revalidation when products change
-    // We also set a TTL (revalidate) of 1 hour (3600 seconds) as a fallback
-    const res = await fetch(url, {
-      next: { 
-        tags: ['subcategory-products'],
-        revalidate: 3600 
-      }
-    });
-    
-    if (!res.ok) {
-      console.error("Failed to fetch subcategory products", res.status);
-      return null;
-    }
-    
-    return res.json();
-  } catch (error) {
-    console.error("Error fetching subcategory products", error);
-    return null;
-  }
-}
 
-export default async function SubcategoryPage({ params }: { params: Promise<{ subcategoryId: string | string[] }> }) {
+export default async function SubcategoryPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ subcategoryId: string | string[] }>;
+  searchParams: Promise<{ page?: string | string[] }>;
+}) {
   const resolvedParams = await params;
   const subcategoryParam = Array.isArray(resolvedParams.subcategoryId)
     ? resolvedParams.subcategoryId[0]
@@ -34,24 +18,45 @@ export default async function SubcategoryPage({ params }: { params: Promise<{ su
 
   const decodedParam = subcategoryParam ? decodeURIComponent(subcategoryParam) : "";
   const [categoryId, subCategoryName] = decodedParam.split("/");
+  const page = readPage((await searchParams).page);
 
-  // Fetch data on the server
-  const data = await getProducts(categoryId, subCategoryName);
+  return (
+    <Suspense key={`${decodedParam}:${page}`} fallback={<MasonrySkeleton />}>
+      <SubcategoryProducts categoryId={categoryId} subCategoryName={subCategoryName} page={page} />
+    </Suspense>
+  );
+}
+
+async function SubcategoryProducts({
+  categoryId,
+  subCategoryName,
+  page,
+}: {
+  categoryId: string;
+  subCategoryName: string;
+  page: number;
+}) {
+  const [result, popular] = await Promise.all([
+    getSubcategoryProductsPage(categoryId, subCategoryName, page),
+    getPopularSnapshots(categoryId),
+  ]);
 
   // Format the subcategory name for display
   const formattedSubCategoryName = subCategoryName
     ? subCategoryName
-        .trim()
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (char) => char.toUpperCase())
+      .trim()
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase())
     : "";
 
-  // The loading UI while this renders comes from loading.tsx next to this file
   return (
     <SubcategoryPageClient
-      data={data}
+      products={result?.products ?? null}
+      page={page}
+      hasMore={result?.hasMore ?? false}
       formattedSubCategoryName={formattedSubCategoryName}
       categoryId={categoryId}
+      popular={popular}
     />
   );
 }

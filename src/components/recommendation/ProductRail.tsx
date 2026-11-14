@@ -16,14 +16,18 @@ interface ProductRailProps {
   title: string;
   categoryId?: string;
   seeAllHref?: string;
+  snapshots?: PopularProductSnapshot[];
 }
 
 export default function ProductRail({
   title,
   categoryId,
   seeAllHref,
+  snapshots,
 }: ProductRailProps) {
-  const { popularProducts, loading } = usePopularProducts(categoryId);
+  const fetched = usePopularProducts(categoryId, null, 20, snapshots === undefined);
+  const popularProducts = snapshots ?? fetched.popularProducts;
+  const loading = snapshots === undefined && fetched.loading;
 
   if (loading) return <RailSkeleton title={title} />;
 
@@ -44,7 +48,7 @@ export default function ProductRail({
       >
         <div className="flex flex-wrap items-center justify-between mb-4 pl-2 lg:pl-4 pr-2 lg:pr-4">
           <h2 className="text-xl md:text-2xl lg:text-2xl font-bold">{title}</h2>
-          
+
           <div className="flex items-center gap-4">
             {seeAllHref && (
               <Link
@@ -62,14 +66,14 @@ export default function ProductRail({
         </div>
 
         <CarouselContent className="-ml-2 md:-ml-4 px-2 lg:px-4 pb-2">
-          {popularProducts.map((snap: PopularProductSnapshot) => snap.product &&  (
-              <CarouselItem
-                key={snap.id}
-                className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
-              >
-                <ProductCard product={snap.product} />
-              </CarouselItem>
-            )
+          {popularProducts.map((snap: PopularProductSnapshot) => snap.product && (
+            <CarouselItem
+              key={snap.id}
+              className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+            >
+              <ProductCard product={snap.product} />
+            </CarouselItem>
+          )
           )}
         </CarouselContent>
       </Carousel>

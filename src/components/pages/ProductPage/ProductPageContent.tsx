@@ -14,8 +14,15 @@ import ProductImageCarousel from "./ProductImageCarousel";
 import ProductDetails from "./ProductDetails";
 import { motion } from "framer-motion";
 import PopularProducts from "@/components/recommendation/PopularProducts";
+import type { ProductPageData } from "@/lib/get-products";
+import type { PopularProductSnapshot } from "@/hooks/products/usePopularProducts";
 
-export default function ProductPageContent() {
+interface ProductPageContentProps {
+  initialData?: ProductPageData;
+  popular?: PopularProductSnapshot[];
+}
+
+export default function ProductPageContent({ initialData, popular }: ProductPageContentProps) {
   const router = useRouter();
   const { toast } = useToast();
   const params = useParams();
@@ -24,7 +31,7 @@ export default function ProductPageContent() {
     typeof window != "undefined" ? localStorage.getItem("token") : null;
   usePageTracking();
 
-  const { product, loading, error, isVariant } = useGetProductWithVariants(id);
+  const { product, loading, error, isVariant } = useGetProductWithVariants(id, initialData);
   const { addProductToCart } = useCartContext();
   const { trackAddtoCart, trackProductView } = useEventTracking();
   const [quantity, setQuantity] = useState(1);
@@ -47,19 +54,19 @@ export default function ProductPageContent() {
 
   const displayData = selectedVariant
     ? {
-        ...product,
-        images: selectedVariant.images,
-        price: selectedVariant.price,
-        inventory: selectedVariant.inventory,
-      }
+      ...product,
+      images: selectedVariant.images,
+      price: selectedVariant.price,
+      inventory: selectedVariant.inventory,
+    }
     : product?.defaultVariant
-    ? {
+      ? {
         ...product,
         images: product.defaultVariant.images,
         price: product.defaultVariant.price,
         inventory: product.defaultVariant.inventory,
       }
-    : product;
+      : product;
 
   useEffect(() => {
     if (product) {
@@ -353,7 +360,7 @@ export default function ProductPageContent() {
 
       {product?.categoryId && (
         <div className="mt-12 md:mt-16">
-          <PopularProducts categoryId={product.categoryId} />
+          <PopularProducts categoryId={product.categoryId} snapshots={popular} />
         </div>
       )}
     </motion.div>

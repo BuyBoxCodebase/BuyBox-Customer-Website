@@ -12,12 +12,18 @@ export interface PopularProductSnapshot {
   product?: Product;
 }
 
-export default function usePopularProducts(categoryId?: string | null, customerId?: string | null, limit: number = 20) {
+export default function usePopularProducts(
+  categoryId?: string | null,
+  customerId?: string | null,
+  limit: number = 20,
+  enabled: boolean = true
+) {
   const [popularProducts, setPopularProducts] = useState<PopularProductSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
     const fetchPopularProducts = async () => {
       setLoading(true);
       try {
@@ -33,7 +39,7 @@ export default function usePopularProducts(categoryId?: string | null, customerI
     };
 
     fetchPopularProducts();
-  }, [categoryId, customerId, limit]);
+  }, [categoryId, customerId, limit, enabled]);
 
   return { popularProducts, loading, error };
 }

@@ -10,8 +10,8 @@ import { MasonrySkeleton } from "@/components/ui/MasonrySkeleton";
 import { SearchPlaceholder, ExplorePlaceholder } from "@/components/ui/MasonryPlaceholders";
 
 export default function HomePagePopularProducts() {
-  const { user } = useAuth();
-  const { popularProducts, loading } = usePopularProducts(null, user?.id || null, 20);
+  const { user, loading: authLoading } = useAuth();
+  const { popularProducts, loading } = usePopularProducts(null, user?.id || null, 20, !authLoading);
 
   // Extract products from the popular product snapshots
   const trendingProducts = popularProducts.map(s => s.product).filter(Boolean) as Product[];
@@ -44,7 +44,7 @@ export default function HomePagePopularProducts() {
         items={trendingProducts}
         distributeLeftToRight={true}
         renderItem={(product) => (
-          <MasonryProductCard key={product.id} product={product} hideBadge/>
+          <MasonryProductCard key={product.id} product={product} hideBadge />
         )}
         placeholders={[
           <SearchPlaceholder key="p1" />,

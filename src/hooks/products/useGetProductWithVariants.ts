@@ -2,13 +2,17 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Product } from "@/types/product";
 
-const useGetProductWithVariants = (id: string | undefined) => {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+const useGetProductWithVariants = (
+  id: string | undefined,
+  initial?: { product: Product | null; isVariant: boolean }
+) => {
+  const [product, setProduct] = useState<Product | null>(initial?.product ?? null);
+  const [loading, setLoading] = useState(!initial);
   const [error, setError] = useState<string | null>(null);
-  const [isVariant, setIsVariant] = useState(false);
+  const [isVariant, setIsVariant] = useState(initial?.isVariant ?? false);
 
   useEffect(() => {
+    if (initial) return;
     if (!id) {
       setError("ID is required");
       setLoading(false);

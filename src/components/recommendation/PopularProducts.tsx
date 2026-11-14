@@ -2,7 +2,7 @@
 
 import { ProductCard } from "@/components/ui/ProductCard";
 import { motion } from "framer-motion";
-import usePopularProducts from "@/hooks/products/usePopularProducts";
+import usePopularProducts, { PopularProductSnapshot } from "@/hooks/products/usePopularProducts";
 
 import {
   Carousel,
@@ -15,10 +15,13 @@ import Autoplay from "embla-carousel-autoplay";
 
 interface PopularProductsProps {
   categoryId: string;
+  snapshots?: PopularProductSnapshot[];
 }
 
-export default function PopularProducts({ categoryId }: PopularProductsProps) {
-  const { popularProducts, loading } = usePopularProducts(categoryId);
+export default function PopularProducts({ categoryId, snapshots }: PopularProductsProps) {
+  const fetched = usePopularProducts(categoryId, null, 20, snapshots === undefined);
+  const popularProducts = snapshots ?? fetched.popularProducts;
+  const loading = snapshots === undefined && fetched.loading;
 
   if (loading) {
     return <PopularProductsSkeleton />;
@@ -67,11 +70,11 @@ export default function PopularProducts({ categoryId }: PopularProductsProps) {
             <CarouselNext className="static transform-none flex" />
           </div>
         </div>
-        
+
         <div className="relative">
           {/* Subtle background glow effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-purple-50/50 to-pink-50/50 rounded-2xl -z-10 blur-xl" />
-          
+
           <CarouselContent className="-ml-2 md:-ml-4 px-4 pb-2">
             {popularProducts.map((snapshot) => snapshot.product && (
               <CarouselItem key={snapshot.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2  lg:basis-1/3 xl:basis-1/4">

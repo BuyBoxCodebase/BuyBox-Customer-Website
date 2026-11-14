@@ -7,7 +7,6 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Product } from "@/types/product";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
-import { TrackShown } from "@/components/analytics/TrackShown";
 import { trackEvent } from "@/lib/analytics/core";
 import { UserEventType } from "@/lib/analytics/constants";
 
@@ -153,7 +152,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <TrackShown productId={product.id} categoryId={product.categoryId || undefined} subCategoryId={product.subCategoryId || undefined}>
+    <>
       <Link
         href={`/product/${product.id}`}
         data-track={product.name}
@@ -218,6 +217,6 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </Card>
       </Link>
-    </TrackShown>
+    </>
   );
 }

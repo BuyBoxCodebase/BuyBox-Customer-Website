@@ -5,7 +5,6 @@ import React, {useState} from "react";
 import Link from "next/link";
 import { Product } from "@/types/product";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
-import { TrackShown } from "@/components/analytics/TrackShown";
 import { trackEvent } from "@/lib/analytics/core";
 import { UserEventType } from "@/lib/analytics/constants";
 
@@ -86,7 +85,7 @@ export function MasonryProductCard({
     : "text-red-500";
 
   return (
-    <TrackShown productId={product.id} categoryId={product.categoryId || undefined} subCategoryId={product.subCategoryId || undefined}>
+    <>
       <Link 
         href={`/product/${product.id}`} 
         data-track={product.name}
@@ -178,6 +177,6 @@ export function MasonryProductCard({
 
         </div>
       </Link>
-    </TrackShown>
+    </>
   );
 }

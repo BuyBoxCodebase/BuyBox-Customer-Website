@@ -17,7 +17,6 @@ import {
   VerifyTokenCredentials,
 } from "@/types/auth";
 import Cookies from "js-cookie";
-import { headers } from "next/headers";
 import useCartStore from "@/zustand/cartStore";
 import { identifyVisitor, resetVisitorOnLogout } from "@/lib/activity/tracker";
 
@@ -103,7 +102,6 @@ const refreshAccessToken = async (): Promise<string | null> => {
     if (!refreshToken) {
       return null;
     }
-    console.log(refreshToken)
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/auth/refresh`,
