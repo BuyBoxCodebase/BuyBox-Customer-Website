@@ -12,6 +12,7 @@ import { PackageOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import ProductImageCarousel from "./ProductImageCarousel";
 import ProductDetails from "./ProductDetails";
+import ProductReviews from "./ProductReviews";
 import { motion } from "framer-motion";
 import PopularProducts from "@/components/recommendation/PopularProducts";
 import type { ProductPageData } from "@/lib/get-products";
@@ -357,6 +358,8 @@ export default function ProductPageContent({ initialData, popular }: ProductPage
           </div>
         </div>
       </div>
+
+      {product?.id && <ProductReviews productId={product.id} />}
 
       {product?.categoryId && (
         <div className="mt-12 md:mt-16">

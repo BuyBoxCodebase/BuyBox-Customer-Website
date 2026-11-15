@@ -8,6 +8,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import ActivityTracker from "@/components/analytics/ActivityTracker";
+import ConsoleCapture from "@/components/analytics/ConsoleCapture";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -50,6 +51,7 @@ export default function RootLayout({
           </CartProvider>
         </AuthProvider>
         <ActivityTracker />
+        <ConsoleCapture />
         <SpeedInsights />
         <Analytics />
       </body>

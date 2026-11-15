@@ -2,7 +2,8 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { CITY_COOKIE, toCity } from "@/lib/city"
 
-const BLOCKED_COUNTRIES = new Set(["IN"])
+// ISO country codes that get the maintenance page. Empty = nobody is blocked.
+const BLOCKED_COUNTRIES = new Set<string>()
 
 const MAINTENANCE_HTML = `<!doctype html>
 <html lang="en">

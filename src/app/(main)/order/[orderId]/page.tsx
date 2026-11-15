@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import useGetOrderDetails from "@/hooks/order/useGetOrderDetails";
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, Star } from "lucide-react";
 import { usePageTracking } from "@/hooks/analytics";
 import Image from "next/image";
 import Link from "next/link";
 import { orderStatusLabels } from "@/types/order/get_order_details";
+import { Button } from "@/components/ui/button";
+import RateProductModal from "@/components/reviews/RateProductModal";
 
 function OrderConfirmationPage() {
   const params = useParams();
@@ -17,6 +20,14 @@ function OrderConfirmationPage() {
     : params.orderId;
 
   const { orderDetails, loading, error } = useGetOrderDetails(orderId);
+
+  // Only completed (delivered/picked-up) orders qualify for rating, matching the backend's rule
+  const canRate = orderDetails?.status === "COMPLETED";
+  const [ratingProduct, setRatingProduct] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [rateOpen, setRateOpen] = useState(false);
 
   if (loading) {
     return (
@@ -265,8 +276,25 @@ function OrderConfirmationPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex-shrink-0 bg-gray-50 p-4 flex items-center justify-center">
+                  <div className="flex-shrink-0 bg-gray-50 p-4 flex flex-col items-center justify-center gap-2">
                     <p className="font-medium">${(item.totalPrice + (orderDetails.cityMarkupPerUnit ?? 0) * item.quantity).toFixed(2)}</p>
+                    {canRate && item.product.id && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setRatingProduct({
+                            id: item.product.id,
+                            name: item.variant
+                              ? `${item.product.name} - ${item.variant.name}`
+                              : item.product.name,
+                          });
+                          setRateOpen(true);
+                        }}>
+                        <Star className="h-3.5 w-3.5" />
+                        Rate
+                      </Button>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -374,6 +402,13 @@ function OrderConfirmationPage() {
           </Link>
         </motion.div>
       </motion.div>
+
+      <RateProductModal
+        productId={ratingProduct?.id ?? ""}
+        productName={ratingProduct?.name}
+        open={rateOpen}
+        onOpenChange={setRateOpen}
+      />
     </motion.div>
   );
 }
