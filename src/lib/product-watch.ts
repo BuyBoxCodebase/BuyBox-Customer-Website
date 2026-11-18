@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 
-// Client for the watch list: "Notify me when available" (backend: /product-watch/*).
+// Client for the watch list: "Notify me when available" (backend: /stock-alerts/*).
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -10,7 +10,7 @@ export type WatchTarget = { variantId: string };
 export interface WatchSubscription {
   id: string;
   displayName: string;
-  status: "ACTIVE" | "NOTIFIED" | "CANCELLED" | "OPTED_OUT";
+  status: "ACTIVE" | "QUEUED" | "NOTIFIED" | "CANCELLED" | "OPTED_OUT";
   sourceVariantId: string | null;
   createdAt: string;
   notifiedAt: string | null;
@@ -43,7 +43,7 @@ export function watchError(error: unknown): { code?: string; message: string } {
 
 export async function createWatch(target: WatchTarget) {
   const response = await axios.post<{ created: boolean; subscription: WatchSubscription }>(
-    `${BACKEND_URL}/product-watch/subscriptions`,
+    `${BACKEND_URL}/stock-alerts/subscriptions`,
     { variantId: target.variantId },
     { headers: authHeaders() },
   );
@@ -52,29 +52,29 @@ export async function createWatch(target: WatchTarget) {
 
 export async function getWatchStatus(target: WatchTarget) {
   const response = await axios.get<{ subscribed: boolean; subscriptionId: string | null }>(
-    `${BACKEND_URL}/product-watch/subscriptions/status`,
+    `${BACKEND_URL}/stock-alerts/subscriptions/status`,
     { params: { variantId: target.variantId }, headers: authHeaders() },
   );
   return response.data;
 }
 
 export async function listWatches() {
-  const response = await axios.get<{ subscriptions: WatchSubscription[] }>(`${BACKEND_URL}/product-watch/subscriptions`, {
+  const response = await axios.get<{ subscriptions: WatchSubscription[] }>(`${BACKEND_URL}/stock-alerts/subscriptions`, {
     headers: authHeaders(),
   });
   return response.data.subscriptions;
 }
 
 export async function cancelWatch(id: string) {
-  await axios.delete(`${BACKEND_URL}/product-watch/subscriptions/${id}`, { headers: authHeaders() });
+  await axios.delete(`${BACKEND_URL}/stock-alerts/subscriptions/${id}`, { headers: authHeaders() });
 }
 
 export async function cancelAllWatches() {
-  await axios.post(`${BACKEND_URL}/product-watch/subscriptions/cancel-all`, {}, { headers: authHeaders() });
+  await axios.post(`${BACKEND_URL}/stock-alerts/subscriptions/cancel-all`, {}, { headers: authHeaders() });
 }
 
 export async function getWatchSettings() {
-  const response = await axios.get<WatchSettings>(`${BACKEND_URL}/product-watch/settings`, { headers: authHeaders() });
+  const response = await axios.get<WatchSettings>(`${BACKEND_URL}/stock-alerts/settings`, { headers: authHeaders() });
   return response.data;
 }
 
