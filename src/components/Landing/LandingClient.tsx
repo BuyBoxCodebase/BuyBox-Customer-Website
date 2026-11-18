@@ -163,25 +163,16 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
           }
           className="flex-1 min-w-0 py-1.5 md:py-2 bg-transparent text-base md:text-lg focus:outline-none placeholder:text-gray-500 sys-dark:placeholder:text-gray-400 text-black sys-dark:text-white resize-none overflow-y-auto max-h-[180px] leading-normal"
         />
-        {isChatting ? (
-          <button
-            aria-label="Send"
-            type="submit"
-            disabled={!hasText || isLoading}
-            className="shrink-0 bg-black sys-dark:bg-white text-white sys-dark:text-black p-2 md:p-2.5 rounded-full hover:opacity-80 disabled:opacity-40 transition-opacity"
-          >
-            <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
-          </button>
-        ) : (
-          <AskButton
-            onClick={handleAsk}
-            disabled={isLoading}
-            // Faded until there's something to ask (or Ask has been picked), but still tappable.
-            className={`shrink-0 h-9 md:h-11 md:px-4 md:text-base sys-dark:bg-white/10 sys-dark:text-white sys-dark:hover:bg-white/20 ${
-              hasText || askMode ? "" : "opacity-60"
-            }`}
-          />
-        )}
+        {/* Submit arrow: searches before a conversation starts, sends once chatting / in Ask mode. */}
+        <button
+          aria-label={isChatting || askMode ? "Send" : "Search"}
+          type="submit"
+          disabled={!hasText || isLoading}
+          className="shrink-0 bg-black sys-dark:bg-white text-white sys-dark:text-black p-2 md:p-2.5 rounded-full hover:opacity-80 disabled:opacity-40 transition-opacity"
+        >
+          <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
+        </button>
+
       </div>
     </form>
   );
@@ -290,6 +281,17 @@ export default function LandingClient({ subcategories }: { subcategories: any[] 
           style={{ flexGrow: isChatting ? 0 : 1 }}
         />
       </main>
+
+      {/* Ask Treides: fixed bottom-right, opens chat mode (home page only, hidden once chatting) */}
+      {!isChatting && !askMode && (
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-30">
+          <AskButton
+            onClick={handleAsk}
+            disabled={isLoading}
+            className="h-11 px-4 text-base shadow-md border border-gray-200 sys-dark:border-white/10 sys-dark:bg-white/10 sys-dark:text-white sys-dark:hover:bg-white/20"
+          />
+        </div>
+      )}
     </div>
   );
 }
