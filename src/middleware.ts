@@ -2,8 +2,9 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { CITY_COOKIE, toCity } from "@/lib/city"
 
-// ISO country codes that get the maintenance page. Empty = nobody is blocked.
-const BLOCKED_COUNTRIES = new Set<string>()
+// Only these ISO country codes may access the site; every other country gets the
+// maintenance page. Zimbabwe, USA, UK, South Africa, Mozambique, Zambia, India.
+const ALLOWED_COUNTRIES = new Set<string>(["ZW", "US", "GB", "ZA", "MZ", "ZM", "IN"])
 
 const MAINTENANCE_HTML = `<!doctype html>
 <html lang="en">
@@ -45,7 +46,8 @@ function maintenanceResponse(request: NextRequest) {
 
 export function middleware(request: NextRequest) {
   const country = request.headers.get("x-vercel-ip-country")?.toUpperCase()
-  if (country && BLOCKED_COUNTRIES.has(country)) {
+  // No header (local dev, unknown origin) = let through; Vercel sets it in production.
+  if (country && !ALLOWED_COUNTRIES.has(country)) {
     return maintenanceResponse(request)
   }
 
