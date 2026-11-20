@@ -2,11 +2,13 @@
 
 import { useEffect } from "react";
 import { reportClientError } from "@/lib/client-error-reporter";
+import { reloadIfStaleChunk } from "@/lib/stale-chunk";
 
 // Last resort: used when the root layout itself crashes, so it must render its own <html>/<body>
 // and cannot rely on the app's providers or components.
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
+    if (reloadIfStaleChunk(error)) return; // old tab after a deploy: reload to get the new build
     reportClientError(error, "global-error");
   }, [error]);
 

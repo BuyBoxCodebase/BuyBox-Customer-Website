@@ -4,10 +4,12 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { reportClientError } from "@/lib/client-error-reporter";
+import { reloadIfStaleChunk } from "@/lib/stale-chunk";
 
 // Shown when a page crashes while rendering. The layout (navbar etc.) stays in place.
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
+    if (reloadIfStaleChunk(error)) return; // old tab after a deploy: reload to get the new build
     reportClientError(error, "render-error");
   }, [error]);
 
