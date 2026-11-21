@@ -4,6 +4,7 @@ import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePageTracking } from "@/hooks/analytics";
 import Cookies from "js-cookie";
+import { takePostLoginRedirect } from "@/lib/post-login-redirect";
 export default function () {
   
   return(
@@ -42,7 +43,9 @@ function CustomerPageContent(){
         sameSite: "strict",
       });
     }
-    window.location.href = "/";
+    // Only follow a remembered destination when this really was a successful sign-in.
+    const destination = token && refreshToken ? takePostLoginRedirect() : null;
+    window.location.href = destination || "/";
   }, [router, searchParams]);
 
   return null;

@@ -182,7 +182,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               loading: false,
               showWelcomeModal: false,
             });
-            router.push("/user/login");
+            // Keep the page they were on so login brings them back (e.g. the WhatsApp "Notify me" link).
+            const here = window.location.pathname + window.location.search;
+            const onAuthPage = window.location.pathname.startsWith("/user/");
+            router.push(onAuthPage || here === "/" ? "/user/login" : `/user/login?redirect=${encodeURIComponent(here)}`);
           }
         }
 

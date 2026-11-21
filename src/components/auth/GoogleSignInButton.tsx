@@ -4,9 +4,12 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useEventTracking } from "@/hooks/analytics";
 import { cn } from "@/lib/utils";
+import { rememberPostLoginRedirect, safeRedirectPath } from "@/lib/post-login-redirect";
 export default function GoogleSignInButton({ className }: { className?: string }) {
   const { trackClick } = useEventTracking();
   const handleGoogleSignIn = async () => {
+    // Remember where the login wall was sending them (e.g. a WhatsApp link); /customer sends them there after Google.
+    rememberPostLoginRedirect(safeRedirectPath(new URLSearchParams(window.location.search).get("redirect")));
     window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/customer/auth/google`;
     trackClick("Login");
   };
